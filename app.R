@@ -80,7 +80,7 @@ ui <- page_navbar(
   
   nav_item(
     tags$a(
-      href = "https://github.com/massbays-tech/MassWateR",
+      href = "https://github.com/massbays-tech/MassWateRdash",
       target = "_blank",
       "Source Code"
     )
