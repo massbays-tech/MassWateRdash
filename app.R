@@ -2,6 +2,7 @@ library(shiny)
 library(bslib)
 library(MassWateR)
 
+# ui -----
 ui <- page_navbar(
   title = "MassWateR Dashboard",
   
@@ -10,17 +11,19 @@ ui <- page_navbar(
     tags$img(src = "logo.png", height = "30px", style = "margin-right: 10px;")
   ),
   
+
+  # upload & validate -----
   nav_panel("Upload & Validate",
             page_sidebar(
               sidebar = sidebar(
                 title = "Upload Data Files",
                 width = 400,
                 card(
-                  fileInput("results", "Upload Results Data (.xlsx)", accept = ".xlsx"),
-                  fileInput("accuracy", "Upload DQO Accuracy Data (.xlsx)", accept = ".xlsx"),
-                  fileInput("frecom", "Upload DQO Frequency & Completeness Data (.xlsx)", accept = ".xlsx"),
-                  fileInput("sites", "Upload Site Data (.xlsx)", accept = ".xlsx"),
-                  fileInput("wqx", "Upload WQX Meta Data (.xlsx)", accept = ".xlsx")
+                  fileInput("resdat", "Upload Results Data (.xlsx)", accept = ".xlsx"),
+                  fileInput("accdat", "Upload DQO Accuracy Data (.xlsx)", accept = ".xlsx"),
+                  fileInput("frecomdat", "Upload DQO Frequency & Completeness Data (.xlsx)", accept = ".xlsx"),
+                  fileInput("sitdat", "Upload Site Data (.xlsx)", accept = ".xlsx"),
+                  fileInput("wqxdat", "Upload WQX Meta Data (.xlsx)", accept = ".xlsx")
                 )
               ),
               
@@ -28,23 +31,23 @@ ui <- page_navbar(
                 fill = FALSE,
                 value_box(
                   title = "Results Data",
-                  value = textOutput("results_status")
+                  value = textOutput("resdat_status")
                 ),
                 value_box(
                   title = "Accuracy Data",
-                  value = textOutput("accuracy_status")
+                  value = textOutput("accdat_status")
                 ),
                 value_box(
-                  title = "Frequency & Completeness",
-                  value = textOutput("frecom_status")
+                  title = "Frequency & Completeness Data",
+                  value = textOutput("frecomdat_status")
                 ),
                 value_box(
                   title = "Sites Data",
-                  value = textOutput("sites_status")
+                  value = textOutput("sitdat_status")
                 ),
                 value_box(
-                  title = "WQX Meta Data",
-                  value = textOutput("wqx_status")
+                  title = "WQX Data",
+                  value = textOutput("wqxdat_status")
                 )
               ),
               
@@ -55,13 +58,17 @@ ui <- page_navbar(
             )
   ),
   
+  # Visualize -----
   nav_panel("Visualize",
+            
+            # By season -----
             card(
-              card_header("Title"),
-              p("Description")
+              card_header("By season"),
+              plotOutput("season_plot")
             )
   ),
   
+  # QC reporting -----
   nav_panel("QC reporting",
             card(
               card_header("Title"),
@@ -69,6 +76,7 @@ ui <- page_navbar(
             )
   ),
   
+  # WQX output -----
   nav_panel("WQX output",
             card(
               card_header("Title"),
@@ -87,16 +95,17 @@ ui <- page_navbar(
   )
 )
 
+# server -----
 server <- function(input, output, session) {
   
   # Reactive values to store validation messages and data states
   validation_log <- reactiveVal("")
   data_states <- reactiveValues(
-    results = NULL,
-    accuracy = NULL,
-    frecom = NULL,
-    sites = NULL,
-    wqx = NULL
+    resdat = NULL,
+    accdat = NULL,
+    frecomdat = NULL,
+    sitdat = NULL,
+    wqxdat = NULL
   )
   
   # Function to capture and log messages
@@ -122,12 +131,12 @@ server <- function(input, output, session) {
   }
   
   # Observers for each data upload
-  observeEvent(input$results, {
-    req(input$results)
+  observeEvent(input$resdat, {
+    req(input$resdat)
     validation_log("")  # Clear previous messages
-    data_states$results <- tryCatch({
+    data_states$resdat <- tryCatch({
       capture_messages({
-        readMWRresults(input$results$datapath)
+        resdat <<- readMWRresults(input$resdat$datapath)
       })
     }, error = function(e) {
       validation_log(paste0("Error in results: ", e$message))
@@ -135,38 +144,38 @@ server <- function(input, output, session) {
     })
   })
   
-  observeEvent(input$accuracy, {
-    req(input$accuracy)
+  observeEvent(input$accdat, {
+    req(input$accdat)
     validation_log("")  # Clear previous messages
-    data_states$accuracy <- tryCatch({
+    data_states$accdat <- tryCatch({
       capture_messages({
-        readMWRacc(input$accuracy$datapath)
+        accdat <<- readMWRacc(input$accdat$datapath)
       })
     }, error = function(e) {
-      validation_log(paste0("Error in accuracy: ", e$message))
+      validation_log(paste0("Error in accuracy data: ", e$message))
       NULL
     })
   })
   
-  observeEvent(input$frecom, {
-    req(input$frecom)
+  observeEvent(input$frecomdat, {
+    req(input$frecomdat)
     validation_log("")  # Clear previous messages
-    data_states$frecom <- tryCatch({
+    data_states$frecomdat <- tryCatch({
       capture_messages({
-        readMWRfrecom(input$frecom$datapath)
+        frecomdat <<- readMWRfrecom(input$frecomdat$datapath)
       })
     }, error = function(e) {
-      validation_log(paste0("Error in frecom: ", e$message))
+      validation_log(paste0("Error in frequency completeness data: ", e$message))
       NULL
     })
   })
   
-  observeEvent(input$sites, {
-    req(input$sites)
+  observeEvent(input$sitdat, {
+    req(input$sitdat)
     validation_log("")  # Clear previous messages
-    data_states$sites <- tryCatch({
+    data_states$sitdat <- tryCatch({
       capture_messages({
-        readMWRsites(input$sites$datapath)
+        sitdat <<- readMWRsites(input$sitdat$datapath)
       })
     }, error = function(e) {
       validation_log(paste0("Error in sites: ", e$message))
@@ -174,49 +183,78 @@ server <- function(input, output, session) {
     })
   })
   
-  observeEvent(input$wqx, {
-    req(input$wqx)
+  observeEvent(input$wqxdat, {
+    req(input$wqxdat)
     validation_log("")  # Clear previous messages
-    data_states$wqx <- tryCatch({
+    data_states$wqxdat <- tryCatch({
       capture_messages({
-        readMWRwqx(input$wqx$datapath)
+        wqxdat <<- readMWRwqx(input$wqxdat$datapath)
       })
     }, error = function(e) {
-      validation_log(paste0("Error in wqx: ", e$message))
+      validation_log(paste0("Error in WQX data: ", e$message))
       NULL
     })
   })
   
   # Status outputs
-  output$results_status <- renderText({
-    if(is.null(input$results)) return("No file uploaded")
-    if(is.null(data_states$results)) "Error loading" else "Data loaded"
+  output$resdat_status <- renderText({
+    if(is.null(input$resdat)) return("No file uploaded")
+    if(is.null(data_states$resdat)) "Error loading" else "Data loaded"
   })
   
-  output$accuracy_status <- renderText({
-    if(is.null(input$accuracy)) return("No file uploaded")
-    if(is.null(data_states$accuracy)) "Error loading" else "Data loaded"
+  output$accdat_status <- renderText({
+    if(is.null(input$accdat)) return("No file uploaded")
+    if(is.null(data_states$accdat)) "Error loading" else "Data loaded"
   })
   
-  output$frecom_status <- renderText({
-    if(is.null(input$frecom)) return("No file uploaded")
-    if(is.null(data_states$frecom)) "Error loading" else "Data loaded"
+  output$frecomdat_status <- renderText({
+    if(is.null(input$frecomdat)) return("No file uploaded")
+    if(is.null(data_states$frecomdat)) "Error loading" else "Data loaded"
   })
   
-  output$sites_status <- renderText({
-    if(is.null(input$sites)) return("No file uploaded")
-    if(is.null(data_states$sites)) "Error loading" else "Data loaded"
+  output$sitdat_status <- renderText({
+    if(is.null(input$sitdat)) return("No file uploaded")
+    if(is.null(data_states$sitdat)) "Error loading" else "Data loaded"
   })
   
-  output$wqx_status <- renderText({
-    if(is.null(input$wqx)) return("No file uploaded")
-    if(is.null(data_states$wqx)) "Error loading" else "Data loaded"
+  output$wqxdat_status <- renderText({
+    if(is.null(input$wqxdat)) return("No file uploaded")
+    if(is.null(data_states$wqxdat)) "Error loading" else "Data loaded"
   })
   
   # Output validation messages
   output$validation_messages <- renderText({
     validation_log()
   })
+  
+  # data inputs
+  fsetls <- reactive({
+    
+    if(is.null(data_states$resdat))
+      res <- NA
+    if(is.null(data_states$accdat))
+      acc <- NA
+    if(is.null(data_states$frecomdat))
+      frecom <- NA
+    if(is.null(data_states$sitdat))
+      sit <- NA
+    if(is.null(data_states$wqxdat))
+      wqx <- NA
+
+    list(
+      res = resdat,
+      acc = accdat,
+      frecom = frecomdat,
+      sit = sitdat,
+      wqx = wqxdat
+    )
+
+  })
+  
+  output$season_plot <- renderPlot({
+    anlzMWRseason(fset = fsetls(), param = 'TSS', thresh = 'fresh')
+  })
+  
 }
 
 shinyApp(ui = ui, server = server)
