@@ -59,11 +59,29 @@ ui <- page_navbar(
   # Visualize -----
   nav_panel("Visualize",
             
-            # By season -----
-            card(
-              card_header("By season"),
-              plotOutput("season_plot")
+            page_sidebar(
+              sidebar = sidebar(
+                title = "Plot options",
+                width = 400,
+                card(
+                  selectInput("thresh", "Treshold type", choices = c('fresh', 'marine', 'none'))
+                )
+              ),
+            
+              navset_card_underline(
+                full_screen = T,
+                nav_panel(
+                  "By season",
+                  plotOutput("season_plot")
+                ),
+                nav_panel(
+                  "By site",
+                  NULL
+                )
+              )
+ 
             )
+            
   ),
   
   # QC reporting -----
@@ -190,7 +208,13 @@ server <- function(input, output, session) {
   })
   
   output$season_plot <- renderPlot({
-    anlzMWRseason(fset = fsetls(), param = 'DO', thresh = 'fresh')
+    
+    # inputs
+    thresh <- input$thresh
+    param <- input$param
+    
+    anlzMWRseason(fset = fsetls(), param = param, thresh = thresh)
+  
   })
   
 }
