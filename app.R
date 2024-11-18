@@ -27,23 +27,23 @@ ui <- page_navbar(
                 fill = FALSE,
                 value_box(
                   title = "Results Data",
-                  value = textOutput("resdat_status")
+                  value = htmlOutput("resdat_status")
                 ),
                 value_box(
                   title = "Accuracy Data",
-                  value = textOutput("accdat_status")
+                  value = htmlOutput("accdat_status")
                 ),
                 value_box(
                   title = "Frequency & Completeness Data",
-                  value = textOutput("frecomdat_status")
+                  value = htmlOutput("frecomdat_status")
                 ),
                 value_box(
                   title = "Sites Data",
-                  value = textOutput("sitdat_status")
+                  value = htmlOutput("sitdat_status")
                 ),
                 value_box(
                   title = "WQX Data",
-                  value = textOutput("wqxdat_status")
+                  value = htmlOutput("wqxdat_status")
                 )
               ),
               
@@ -144,23 +144,23 @@ server <- function(input, output, session) {
   })
   
   # Status outputs
-  output$resdat_status <- renderText({
+  output$resdat_status <- renderUI({
     fl_status(input$tester, input$resdat, data_states$resdat)
   })
   
-  output$accdat_status <- renderText({
+  output$accdat_status <- renderUI({
     fl_status(input$tester, input$accdat, data_states$accdat)
   })
   
-  output$frecomdat_status <- renderText({
+  output$frecomdat_status <- renderUI({
     fl_status(input$tester, input$frecomdat, data_states$frecomdat)
   })
   
-  output$sitdat_status <- renderText({
+  output$sitdat_status <- renderUI({
     fl_status(input$tester, input$sitdat, data_states$sitdat)
   })
   
-  output$wqxdat_status <- renderText({
+  output$wqxdat_status <- renderUI({
     fl_status(input$tester, input$wqxdat, data_states$wqxdat)
   })
   
@@ -242,7 +242,7 @@ server <- function(input, output, session) {
     
     req(param1)
     
-    anlzMWRsite(fset = fsetls(), param = param1, thresh = thresh ,type = type)
+    anlzMWRsite(fset = fsetls(), param = param1, thresh = thresh, type = type)
     
   })
   

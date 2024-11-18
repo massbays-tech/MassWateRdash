@@ -42,8 +42,8 @@ fl_upload <- function(file, read_function, data_name) {
 
 # helper function to print file status in cards
 fl_status <- function(tester, file_input, data_state) {
-  if(tester) return("Using test data")
-  if(is.null(file_input)) return("No file uploaded")
-  if(is.null(data_state)) "Error loading" else "Data loaded"
+  if(tester) return(HTML("<span style='color:#4287f5'>Using test data</span>"))
+  if(is.null(file_input)) return(HTML("No file uploaded"))
+  if(is.null(data_state)) HTML("<span style='color:#f54242'>Error loading<span>") else HTML("<span style='color:#1e9c3b'>Data loaded</span>")
 }
 
