@@ -15,14 +15,12 @@ ui <- page_navbar(
               sidebar = sidebar(
                 title = "Upload Data Files",
                 width = 400,
-                card(
-                  shinyWidgets::materialSwitch('tester', "Test mode", FALSE),
-                  fileInput("resdat", "Upload Results Data (.xlsx)", accept = ".xlsx"),
-                  fileInput("accdat", "Upload DQO Accuracy Data (.xlsx)", accept = ".xlsx"),
-                  fileInput("frecomdat", "Upload DQO Frequency & Completeness Data (.xlsx)", accept = ".xlsx"),
-                  fileInput("sitdat", "Upload Site Data (.xlsx)", accept = ".xlsx"),
-                  fileInput("wqxdat", "Upload WQX Meta Data (.xlsx)", accept = ".xlsx")
-                )
+                shinyWidgets::materialSwitch('tester', "Test mode", FALSE),
+                fileInput("resdat", "Upload Results Data (.xlsx)", accept = ".xlsx"),
+                fileInput("accdat", "Upload DQO Accuracy Data (.xlsx)", accept = ".xlsx"),
+                fileInput("frecomdat", "Upload DQO Frequency & Completeness Data (.xlsx)", accept = ".xlsx"),
+                fileInput("sitdat", "Upload Site Data (.xlsx)", accept = ".xlsx"),
+                fileInput("wqxdat", "Upload WQX Meta Data (.xlsx)", accept = ".xlsx")
               ),
               
               layout_columns(
@@ -63,9 +61,9 @@ ui <- page_navbar(
               sidebar = sidebar(
                 title = "Plot options",
                 width = 400,
-                card(
-                  selectInput("thresh", "Treshold type", choices = c('fresh', 'marine', 'none'))
-                )
+                uiOutput("prm1"),
+                selectInput("thresh", "Treshold type", choices = c('fresh', 'marine', 'none')),
+                selectInput("type", "Plot type", choices = c("box", "jitterbox", "bar", "jitterbar", "jitter"))
               ),
             
               navset_card_underline(
@@ -76,7 +74,7 @@ ui <- page_navbar(
                 ),
                 nav_panel(
                   "By site",
-                  NULL
+                  plotOutput("site_plot")
                 )
               )
  
@@ -207,14 +205,45 @@ server <- function(input, output, session) {
     
   })
   
+  output$prm1 <- renderUI({
+    
+    # inputs
+    fset <- fsetls()
+    
+    validate(
+      need(!is.na(fset$res), 'Waiting for input data...')
+    )
+  
+    tosel <- sort(unique(fset$res$`Characteristic Name`))
+
+    selectInput("param1", "Parameter", choices = tosel)
+    
+  })
+  
   output$season_plot <- renderPlot({
     
     # inputs
     thresh <- input$thresh
-    param <- input$param
+    param1 <- input$param1
+    type <- input$type
     
-    anlzMWRseason(fset = fsetls(), param = param, thresh = thresh)
+    req(param1)
+    
+    anlzMWRseason(fset = fsetls(), param = param1, thresh = thresh, type = type)
+    
+  })
   
+  output$site_plot <- renderPlot({
+    
+    # inputs
+    thresh <- input$thresh
+    param1 <- input$param1
+    type <- input$type
+    
+    req(param1)
+    
+    anlzMWRsite(fset = fsetls(), param = param1, thresh = thresh ,type = type)
+    
   })
   
 }
