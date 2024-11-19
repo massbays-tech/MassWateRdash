@@ -229,7 +229,7 @@ server <- function(input, output, session) {
     
     req(param1)
     
-    anlzMWRseason(fset = fsetls(), param = param1, thresh = thresh, type = type)
+    anlzMWRseason(fset = fsetls(), param = param1, thresh = thresh, type = type, bssize = 18)
     
   })
   
@@ -242,7 +242,7 @@ server <- function(input, output, session) {
     
     req(param1)
     
-    anlzMWRsite(fset = fsetls(), param = param1, thresh = thresh, type = type)
+    anlzMWRsite(fset = fsetls(), param = param1, thresh = thresh, type = type, bssize = 18)
     
   })
   
