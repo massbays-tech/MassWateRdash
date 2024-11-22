@@ -16,7 +16,7 @@ ui <- page_navbar(
       
       sidebar = sidebar(
         title = "Upload Data Files",
-        width = 400,
+        width = 500,
         shinyWidgets::materialSwitch('tester', "Test mode", FALSE),
         fileInput("resdat", "Upload Results Data (.xlsx)", accept = ".xlsx"),
         fileInput("accdat", "Upload DQO Accuracy Data (.xlsx)", accept = ".xlsx"),
@@ -75,7 +75,7 @@ ui <- page_navbar(
           
           sidebar = sidebar(
             title = "Options",
-            width = 400,
+            width = 500,
             uiOutput("prm1"),
             uiOutput("dtrng1"),
             selectInput("group1", "Group by", choices = c("month", "week", "site")),
@@ -93,7 +93,7 @@ ui <- page_navbar(
             ),
             nav_panel(
               "Report",
-              NULL
+              uiOutput("dwnldoutbutt")
             )
           )
         )
@@ -117,7 +117,7 @@ ui <- page_navbar(
     page_sidebar(
       sidebar = sidebar(
         title = "Plot options",
-        width = 400,
+        width = 500,
         uiOutput("prm2"),
         uiOutput("dtrng2"),
         selectInput("thresh", "Treshold type", choices = c('fresh', 'marine', 'none')),
@@ -206,7 +206,7 @@ server <- function(input, output, session) {
       range() |> 
       as.Date()
     
-    sliderInput("dtrng1", "Date range", min = tosel[1], max = tosel[2], value = tosel)
+    sliderInput("dtrng1", "Date range", min = tosel[1], max = tosel[2], value = tosel, width = '95%')
     
   })
   
@@ -224,7 +224,15 @@ server <- function(input, output, session) {
       range() |> 
       as.Date()
     
-    sliderInput("dtrng2", "Date range", min = tosel[1], max = tosel[2], value = tosel)
+    sliderInput("dtrng2", "Date range", min = tosel[1], max = tosel[2], value = tosel, width = '95%')
+    
+  })
+  
+  output$dwnldoutbutt <- renderUI({
+    
+    req(input$param1)
+    
+    shinyWidgets::downloadBttn('dwnldout', 'Download outlier report: Word', style = 'simple', block = T, color = 'success')
     
   })
   
@@ -361,6 +369,23 @@ server <- function(input, output, session) {
     return(out)
                               
   })
+  
+  # download outlier report
+  output$dwnldout <- downloadHandler(
+    filename = function(){'outlierreport.docx'},
+    content = function(file){
+      
+      # inputs
+      dtrng1 <- as.character(input$dtrng1)
+      group1 <- input$group1
+      type1 <- input$type1
+
+      anlzMWRoutlierall(fset = fsetls(), group = group1, type = type1, dtrng = dtrng1, format = 'word', 
+                        output_dir = dirname(file), 
+                        output_file = basename(file))
+      
+    }
+  )
   
   # Visualize ----
   output$season_plot <- renderPlot({
