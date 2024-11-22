@@ -93,7 +93,8 @@ ui <- page_navbar(
             ),
             nav_panel(
               "Report",
-              uiOutput("dwnldoutbutt")
+              uiOutput("dwnldoutwrdbutt"),
+              uiOutput("dwnldoutzipbutt")
             )
           )
         )
@@ -228,11 +229,19 @@ server <- function(input, output, session) {
     
   })
   
-  output$dwnldoutbutt <- renderUI({
+  output$dwnldoutwrdbutt <- renderUI({
     
     req(input$param1)
     
-    shinyWidgets::downloadBttn('dwnldout', 'Download outlier report: Word', style = 'simple', block = T, color = 'success')
+    shinyWidgets::downloadBttn('dwnldoutwrd', 'Download outlier report: Word', style = 'simple', block = T, color = 'success')
+    
+  })
+  
+  output$dwnldoutzipbutt <- renderUI({
+    
+    req(input$param1)
+    
+    shinyWidgets::downloadBttn('dwnldoutzip', 'Download outlier report: Zipped images', style = 'simple', block = T, color = 'success')
     
   })
   
@@ -371,7 +380,7 @@ server <- function(input, output, session) {
   })
   
   # download outlier report
-  output$dwnldout <- downloadHandler(
+  output$dwnldoutwrd <- downloadHandler(
     filename = function(){'outlierreport.docx'},
     content = function(file){
       
@@ -386,6 +395,24 @@ server <- function(input, output, session) {
       
     }
   )
+  
+  # download outlier report
+  output$dwnldoutzip <- downloadHandler(
+    filename = function(){'outlierreport.zip'},
+    content = function(file){
+      
+      # inputs
+      dtrng1 <- as.character(input$dtrng1)
+      group1 <- input$group1
+      type1 <- input$type1
+      
+      anlzMWRoutlierall(fset = fsetls(), group = group1, type = type1, dtrng = dtrng1, format = 'zip', 
+                        output_dir = dirname(file), 
+                        output_file = basename(file))
+      
+    }
+  )
+  
   
   # Visualize ----
   output$season_plot <- renderPlot({
