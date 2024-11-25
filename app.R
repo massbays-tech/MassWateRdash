@@ -66,7 +66,25 @@ ui <- page_navbar(
       
       nav_panel(
         "QC report",
-        NULL
+        navset_card_underline(
+          full_screen = T,
+          nav_panel(
+            "Accuracy",
+            NULL
+          ),
+          nav_panel(
+            "Frequency",
+            NULL
+          ),
+          nav_panel(
+            "Completeness",
+            NULL
+          ),
+          nav_panel(
+            "Report",
+            uiOutput("dwnldqcbutt")
+          )
+        )
       ),
       
       nav_panel(
@@ -176,7 +194,7 @@ server <- function(input, output, session) {
     fset <- fsetls()
     
     validate(
-      need(!is.na(fset$res), 'Waiting for input data...')
+      need(!is.null(fset$res), 'Waiting for input data...')
     )
     
     tosel <- sort(unique(fset$res$`Characteristic Name`))
@@ -191,7 +209,7 @@ server <- function(input, output, session) {
     fset <- fsetls()
     
     validate(
-      need(!is.na(fset$res), 'Waiting for input data...')
+      need(!is.null(fset$res), 'Waiting for input data...')
     )
     
     tosel <- sort(unique(fset$res$`Characteristic Name`))
@@ -207,7 +225,7 @@ server <- function(input, output, session) {
     fset <- fsetls()
     
     req(param1)
-    
+
     tosel <- fset$res |> 
       dplyr::filter(`Characteristic Name` == param1) |> 
       dplyr::pull(`Activity Start Date`) |> 
@@ -256,9 +274,17 @@ server <- function(input, output, session) {
     
   })
   
+  output$dwnldqcbutt <- renderUI({
+    
+    req(input$tester | (!is.null(data_states$resdat) & !is.null(data_states$accdat) & !is.null(data_states$frecomdat))) 
+        
+    shinyWidgets::downloadBttn('dwnldqc', 'Download quality control report', style = 'simple', block = T, color = 'success')
+    
+  })
+  
   output$dwnldoutwrdbutt <- renderUI({
     
-    req(input$param1)
+    req(input$tester | (!is.null(data_states$resdat) & !is.null(data_states$accdat))) 
     
     shinyWidgets::downloadBttn('dwnldoutwrd', 'Download outlier report: Word', style = 'simple', block = T, color = 'success')
     
@@ -266,7 +292,7 @@ server <- function(input, output, session) {
   
   output$dwnldoutzipbutt <- renderUI({
     
-    req(input$param1)
+    req(input$tester | (!is.null(data_states$resdat) & !is.null(data_states$accdat)))
     
     shinyWidgets::downloadBttn('dwnldoutzip', 'Download outlier report: Zipped images', style = 'simple', block = T, color = 'success')
     
@@ -334,16 +360,11 @@ server <- function(input, output, session) {
   fsetls <- reactive({
     
     if(!input$tester){
-      if(is.null(data_states$resdat))
-        resdat <- NA
-      if(is.null(data_states$accdat))
-        accdat <- NA
-      if(is.null(data_states$frecomdat))
-        frecomdat <- NA
-      if(is.null(data_states$sitdat))
-        sitdat <- NA
-      if(is.null(data_states$wqxdat))
-        wqxdat <- NA
+        resdat <- data_states$resdat
+        accdat <- data_states$accdat
+        frecomdat <- data_states$frecomdat
+        sitdat <- data_states$sitdat
+        wqxdat <- data_states$wqxdat
     }
     
     if(input$tester == T){
@@ -353,7 +374,7 @@ server <- function(input, output, session) {
       sitdat <- readMWRsites(system.file("extdata", "ExampleSites.xlsx", package = "MassWateR"), runchk = F)
       wqxdat <- readMWRwqx(system.file("extdata", "ExampleWQX.xlsx", package = "MassWateR"), runchk = F) 
     }
-    
+
     out <- list(
       res = resdat,
       acc = accdat,
@@ -367,6 +388,19 @@ server <- function(input, output, session) {
   })
   
   # QC reporting -----
+  
+  # download qc report word
+  output$dwnldqc <- downloadHandler(
+    filename = function(){'qcreport.docx'},
+    content = function(file){
+      
+      qcMWRreview(fset = fsetls(), 
+                        output_dir = dirname(file), 
+                        output_file = basename(file))
+      
+    }
+  )
+  
   output$outlier_plot <- renderPlot({
     
     # inputs
@@ -407,7 +441,7 @@ server <- function(input, output, session) {
                               
   })
   
-  # download outlier report
+  # download outlier report word
   output$dwnldoutwrd <- downloadHandler(
     filename = function(){'outlierreport.docx'},
     content = function(file){
@@ -424,7 +458,7 @@ server <- function(input, output, session) {
     }
   )
   
-  # download outlier report
+  # download outlier report zip
   output$dwnldoutzip <- downloadHandler(
     filename = function(){'outlierreport.zip'},
     content = function(file){
