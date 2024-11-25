@@ -121,9 +121,10 @@ ui <- page_navbar(
         width = 500,
         uiOutput("prm2"),
         uiOutput("dtrng2"),
-        selectInput("thresh", "Treshold type", choices = c('fresh', 'marine', 'none')),
+        uiOutput("sites2"),
+        selectInput("thresh", "Treshold type (excludes map)", choices = c('fresh', 'marine', 'none')),
         selectInput("type2", "Plot type (season, site plots only)", choices = c("box", "jitterbox", "bar", "jitterbar", "jitter")),
-        selectInput("confint2", "Show confidence", choices = c(F, T)),
+        selectInput("confint2", "Show confidence (excludes map)", choices = c(F, T)),
         selectInput("group2", "Plot grouping (date plot only)", choices = c("site", "locgroup", "all"))
       ),
       
@@ -140,6 +141,12 @@ ui <- page_navbar(
         nav_panel(
           "Site",
           plotOutput("site_plot")
+        ),
+        nav_panel(
+          "Map",
+          selectInput('watsel', 'Water feature detail', choices = c('low', 'medium', 'high', "none" = 'NULL')),
+          selectInput('mapsel', 'Basemap selection', choices = c("none" = 'NULL', "OpenStreetMap", "OpenStreetMap.DE", "OpenStreetMap.France", "OpenStreetMap.HOT", "OpenTopoMap", "Esri.WorldStreetMap", "Esri.DeLorme", "Esri.WorldTopoMap", "Esri.WorldImagery", "Esri.WorldTerrain", "Esri.WorldShadedRelief", "Esri.OceanBasemap", "Esri.NatGeoWorldMap", "Esri.WorldGrayCanvas", "CartoDB.Positron", "CartoDB.PositronNoLabels", "CartoDB.PositronOnlyLabels", "CartoDB.DarkMatter", "CartoDB.DarkMatterNoLabels", "CartoDB.DarkMatterOnlyLabels", "CartoDB.Voyager", "CartoDB.VoyagerNoLabels", "CartoDB.VoyagerOnlyLabels")),
+          plotOutput("map_plot")
         )
       )
       
@@ -226,6 +233,26 @@ server <- function(input, output, session) {
       as.Date()
     
     sliderInput("dtrng2", "Date range", min = tosel[1], max = tosel[2], value = tosel, width = '95%')
+    
+  })
+  
+  output$sites2 <- renderUI({
+    
+    # inputs
+    param2 <- input$param2
+    dtrng2 <- input$dtrng2
+    fset <- fsetls()
+    
+    req(dtrng2)
+
+    tosel <- fset$res |> 
+      dplyr::filter(`Characteristic Name` == param2) |> 
+      dplyr::filter(`Activity Start Date` >= dtrng2[1] & `Activity Start Date` <= dtrng2[2]) |> 
+      dplyr::pull(`Monitoring Location ID`) |> 
+      unique() |> 
+      sort()
+    
+    selectInput("sites2", "Select sites", choices = tosel, selected = tosel, selectize = T, multiple = T)
     
   })
   
@@ -350,7 +377,8 @@ server <- function(input, output, session) {
     
     req(dtrng1)
     
-    anlzMWRoutlier(fset = fsetls(), param = param1, group = group1, type = type1, dtrng = dtrng1, bssize = 18)
+    anlzMWRoutlier(fset = fsetls(), param = param1, group = group1, type = type1, dtrng = dtrng1, bssize = 18) + 
+      ggplot2::labs(title = NULL)
     
   })
   
@@ -421,12 +449,14 @@ server <- function(input, output, session) {
     thresh <- input$thresh
     param2 <- input$param2
     dtrng2 <- as.character(input$dtrng2)
+    sites2 <- input$sites2
     type2 <- input$type2
     confint2 <- as.logical(input$confint2)
     
     req(dtrng2)
 
-    anlzMWRseason(fset = fsetls(), param = param2, thresh = thresh, type = type2, dtrng = dtrng2, confint = confint2, bssize = 18)
+    anlzMWRseason(fset = fsetls(), param = param2, thresh = thresh, type = type2, dtrng = dtrng2, site = sites2, confint = confint2, bssize = 18) + 
+      ggplot2::labs(title = NULL)
     
   })
   
@@ -436,12 +466,14 @@ server <- function(input, output, session) {
     thresh <- input$thresh
     param2 <- input$param2
     dtrng2 <- as.character(input$dtrng2)
+    sites2 <- input$sites2
     group2 <- input$group2
     confint2 <- as.logical(input$confint2)
     
     req(dtrng2)
     
-    anlzMWRdate(fset = fsetls(), param = param2, thresh = thresh, group = group2, dtrng = dtrng2, confint = confint2, bssize = 18)
+    anlzMWRdate(fset = fsetls(), param = param2, thresh = thresh, group = group2, dtrng = dtrng2, site = sites2, confint = confint2, bssize = 18) + 
+      ggplot2::labs(title = NULL)
     
   })
   
@@ -451,12 +483,35 @@ server <- function(input, output, session) {
     thresh <- input$thresh
     param2 <- input$param2
     dtrng2 <- as.character(input$dtrng2)
+    sites2 <- input$sites2
     type2 <- input$type2
     confint2 <- as.logical(input$confint2)
     
     req(dtrng2)
     
-    anlzMWRsite(fset = fsetls(), param = param2, thresh = thresh, type = type2, dtrng = dtrng2, confint = confint2, bssize = 18)
+    anlzMWRsite(fset = fsetls(), param = param2, thresh = thresh, type = type2, dtrng = dtrng2, site = sites2, confint = confint2, bssize = 18) + 
+      ggplot2::labs(title = NULL)
+    
+  })
+  
+  output$map_plot <- renderPlot({
+    
+    # inputs
+    param2 <- input$param2
+    dtrng2 <- as.character(input$dtrng2)
+    sites2 <- input$sites2
+    watsel <- input$watsel
+    mapsel <- input$mapsel
+    
+    req(dtrng2)
+    
+    if(watsel == 'NULL')
+      watsel <- NULL
+    if(mapsel == 'NULL')
+      mapsel <- NULL
+    
+    anlzMWRmap(fset = fsetls(), param = param2, dtrng = dtrng2, site = sites2, addwater = watsel, maptype = mapsel, bssize = 18) + 
+      ggplot2::labs(title = NULL)
     
   })
   
