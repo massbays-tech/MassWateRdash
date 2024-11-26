@@ -75,7 +75,8 @@ ui <- page_navbar(
           ),
           nav_panel(
             "Accuracy",
-            NULL
+            uiOutput("tabaccper"),
+            uiOutput("tabaccsum")
           ),
           nav_panel(
             "Frequency",
@@ -84,6 +85,10 @@ ui <- page_navbar(
           ),
           nav_panel(
             "Completeness",
+            uiOutput("tabcom")
+          ),
+          nav_panel(
+            "Raw Data",
             NULL
           ),
           nav_panel(
@@ -432,6 +437,42 @@ server <- function(input, output, session) {
     tabMWRfre(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'summary', warn = F) |>
       thmsum(wd = wd) |> 
       flextable::htmltools_value()
+    
+  })
+  
+  # accuracy table percent
+  output$tabaccper <- renderUI({
+    
+    req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
+    
+    tabMWRacc(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'percent', warn = F) |>
+      thmsum(wd = wd) |> 
+      flextable::htmltools_value()
+    
+  })
+  
+  # accuracy table summary
+  output$tabaccsum <- renderUI({
+    
+    req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
+    
+    tabMWRacc(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'summary', warn = F) |>
+      thmsum(wd = wd) |> 
+      flextable::htmltools_value()
+    
+  })
+  
+  # completeness table
+  output$tabcom <- renderUI({
+    
+    req(fsetls()$res, fsetls()$frecom)
+    
+    out <- tabMWRcom(res = fsetls()$res, frecom = fsetls()$frecom, warn = F, parameterwd = 1.15)
+    out <- out |> 
+      flextable::width(width = (wd - 3.15) / (flextable::ncol_keys(out) - 2), j = 2:(flextable::ncol_keys(out) - 1)) |>
+      flextable::htmltools_value()
+    
+    return(out)
     
   })
   
