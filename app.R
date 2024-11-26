@@ -69,6 +69,11 @@ ui <- page_navbar(
         navset_card_underline(
           full_screen = T,
           nav_panel(
+            "DQO tables", 
+            uiOutput("frecomdat_table"),
+            uiOutput("accdat_table")
+          ),
+          nav_panel(
             "Accuracy",
             NULL
           ),
@@ -388,6 +393,24 @@ server <- function(input, output, session) {
   })
   
   # QC reporting -----
+  
+  # dqo table frecomdat
+  output$frecomdat_table <- renderUI({
+    
+    req(fsetls()$frecom)
+    
+    frecomdat_tab(fsetls()$frecom, dqofontsize, padding, wd)
+
+  })
+  
+  # dqo table accdat
+  output$accdat_table <- renderUI({
+    
+    req(fsetls()$acc)
+    
+    accdat_tab(fsetls()$acc, dqofontsize, padding, wd)
+    
+  })
   
   # download qc report word
   output$dwnldqc <- downloadHandler(
