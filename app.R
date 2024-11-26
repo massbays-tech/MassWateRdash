@@ -79,7 +79,8 @@ ui <- page_navbar(
           ),
           nav_panel(
             "Frequency",
-            NULL
+            uiOutput("tabfreper"), 
+            uiOutput("tabfresum")
           ),
           nav_panel(
             "Completeness",
@@ -409,6 +410,28 @@ server <- function(input, output, session) {
     req(fsetls()$acc)
     
     accdat_tab(fsetls()$acc, dqofontsize, padding, wd)
+    
+  })
+  
+  # frequency table percent
+  output$tabfreper <- renderUI({
+
+    req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
+    
+    tabMWRfre(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'percent', warn = F) |>
+      thmsum(wd = wd) |> 
+      flextable::htmltools_value()
+    
+  })
+  
+  # frequency summary table
+  output$tabfresum <- renderUI({
+    
+    req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
+    
+    tabMWRfre(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'summary', warn = F) |>
+      thmsum(wd = wd) |> 
+      flextable::htmltools_value()
     
   })
   

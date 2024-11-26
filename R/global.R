@@ -4,7 +4,7 @@ library(MassWateR)
 
 source(here::here('R/funcs.R'))
 
-tabfontsize <- 9 
+tabfontsize <- 10 
 padding <- 0
 dqofontsize <- 10
 wd <- 6.5

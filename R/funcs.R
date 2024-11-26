@@ -54,6 +54,12 @@ thmdqo <- function(x, dqofontsize, padding){
     flextable::padding(padding = padding, part = 'all')
 }
 
+# dqo summary table theme
+thmsum <- function(x, wd){
+  if(!is.null(x))
+    flextable::width(x, width = wd / flextable::ncol_keys(x))
+}
+
 # frecomdat table
 frecomdat_tab <- function(frecomdat, dqofontsize, padding, wd){
 
