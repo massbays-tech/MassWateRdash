@@ -59,82 +59,112 @@ ui <- page_navbar(
   ),
   
   # QC reporting -----
-  nav_panel("QC reporting and outlier assessment",
-      
+  nav_panel("QC reporting",
     navset_card_underline(
-      full_screen = F,
-      
+      full_screen = T,
       nav_panel(
-        "QC report",
-        navset_card_underline(
-          full_screen = T,
+        "DQO tables", 
+        navset_pill(
           nav_panel(
-            "DQO tables", 
-            uiOutput("frecomdat_table"),
-            uiOutput("accdat_table")
+            "Frequency & Completeness",
+            uiOutput("frecomdat_table")
           ),
           nav_panel(
             "Accuracy",
-            uiOutput("tabaccper"),
-            uiOutput("tabaccsum")
-          ),
-          nav_panel(
-            "Frequency",
-            uiOutput("tabfreper"), 
-            uiOutput("tabfresum")
-          ),
-          nav_panel(
-            "Completeness",
-            uiOutput("tabcom")
-          ),
-          nav_panel(
-            "Raw Data",
-            uiOutput("indflddup"),
-            uiOutput("indlabdup"),
-            uiOutput("indfldblk"),
-            uiOutput("indlabblk"),
-            uiOutput("indlabins")
-          ),
-          nav_panel(
-            "Report",
-            uiOutput("dwnldqcbutt")
+            uiOutput("accdat_table")
           )
         )
       ),
-      
       nav_panel(
-        "Outliers",
-        page_sidebar(
-          
-          sidebar = sidebar(
-            title = "Options",
-            width = 500,
-            uiOutput("prm1"),
-            uiOutput("dtrng1"),
-            selectInput("group1", "Group by", choices = c("month", "week", "site")),
-            selectInput("type1", "Plot type", choices = c("box", "jitterbox", "jitter"))
-          ),
-          navset_card_underline(
-            full_screen = T,
-            nav_panel(
-              "Plot",
-              plotOutput("outlier_plot")
-            ),
-            nav_panel(
-              "Table",
-              reactable::reactableOutput("outlier_table")
-            ),
-            nav_panel(
-              "Report",
-              uiOutput("dwnldoutwrdbutt"),
-              uiOutput("dwnldoutzipbutt")
-            )
+        "Accuracy",
+        navset_pill(
+          nav_panel(
+            "Percent",
+            uiOutput("tabaccper")
+          ), 
+          nav_panel(
+            "Summary",
+            uiOutput("tabaccsum")
           )
         )
+      ),
+      nav_panel(
+        "Frequency",
+        navset_pill(
+          nav_panel(
+            "Percent",
+            uiOutput("tabfreper")
+          ),
+          nav_panel(
+            "Summary",
+            uiOutput("tabfresum")
+          )
+        )
+      ),
+      nav_panel(
+        "Completeness",
+        uiOutput("tabcom")
+      ),
+      nav_panel(
+        "Raw Data",
+        navset_pill(
+          nav_panel(
+            "Field Duplicates",
+            uiOutput("indflddup")
+          ),
+          nav_panel(
+            "Lab Duplicates",
+            uiOutput("indlabdup")
+          ),
+          nav_panel(
+            "Field Blanks",
+            uiOutput("indfldblk")
+          ),
+          nav_panel(
+            "Lab Blanks",
+            uiOutput("indlabblk")
+          ),
+          nav_panel(
+            "Lab Spikes / Instrument Checks",
+            uiOutput("indlabins")
+          )
+        )
+      ),
+      nav_panel(
+        "Report",
+        uiOutput("dwnldqcbutt")
       )
-      
     )
-          
+  ),
+  
+  # Outlier assessment -----
+  nav_panel("Outlier assessment",
+    page_sidebar(
+      sidebar = sidebar(
+        title = "Options",
+        width = 500,
+        uiOutput("prm1"),
+        uiOutput("dtrng1"),
+        selectInput("group1", "Group by", choices = c("month", "week", "site")),
+        selectInput("type1", "Plot type", choices = c("box", "jitterbox", "jitter"))
+      ),
+      navset_card_underline(
+        full_screen = T,
+        nav_panel(
+          "Plot",
+          plotOutput("outlier_plot")
+        ),
+        nav_panel(
+          "Table",
+          reactable::reactableOutput("outlier_table")
+        ),
+        nav_panel(
+          "Report",
+          uiOutput("dwnldoutwrdbutt"),
+          uiOutput("dwnldoutzipbutt")
+        )
+      )
+    )
   ),
   
   # WQX output -----
@@ -485,7 +515,7 @@ server <- function(input, output, session) {
     
     req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
     
-    tabMWRacc(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'individual', accchk = 'Field Duplicates', warn = F, caption = TRUE) |> 
+    tabMWRacc(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'individual', accchk = 'Field Duplicates', warn = F, caption = F) |> 
       thmsum(wd = wd) |> 
       flextable::htmltools_value()
     
@@ -496,7 +526,7 @@ server <- function(input, output, session) {
     
     req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
     
-    tabMWRacc(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'individual', accchk = 'Lab Duplicates', warn = F, caption = TRUE) |> 
+    tabMWRacc(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'individual', accchk = 'Lab Duplicates', warn = F, caption = F) |> 
       thmsum(wd = wd) |> 
       flextable::htmltools_value()
     
@@ -507,7 +537,7 @@ server <- function(input, output, session) {
     
     req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
     
-    tabMWRacc(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'individual', accchk = 'Field Blanks', warn = F, caption = TRUE) |> 
+    tabMWRacc(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'individual', accchk = 'Field Blanks', warn = F, caption = F) |> 
       thmsum(wd = wd) |> 
       flextable::htmltools_value()
     
@@ -518,7 +548,7 @@ server <- function(input, output, session) {
     
     req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
     
-    tabMWRacc(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'individual', accchk = 'Lab Blanks', warn = F, caption = TRUE) |> 
+    tabMWRacc(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'individual', accchk = 'Lab Blanks', warn = F, caption = F) |> 
       thmsum(wd = wd) |> 
       flextable::htmltools_value()
     
@@ -529,7 +559,7 @@ server <- function(input, output, session) {
     
     req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
     
-    tabMWRacc(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'individual', accchk = 'Lab Spikes / Instrument Checks', warn = F, caption = TRUE) |> 
+    tabMWRacc(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'individual', accchk = 'Lab Spikes / Instrument Checks', warn = F, caption = F) |> 
       thmsum(wd = wd) |> 
       flextable::htmltools_value()
     
@@ -547,6 +577,7 @@ server <- function(input, output, session) {
     }
   )
   
+  # Outlier assessment -----
   output$outlier_plot <- renderPlot({
     
     # inputs
