@@ -89,7 +89,11 @@ ui <- page_navbar(
           ),
           nav_panel(
             "Raw Data",
-            NULL
+            uiOutput("indflddup"),
+            uiOutput("indlabdup"),
+            uiOutput("indfldblk"),
+            uiOutput("indlabblk"),
+            uiOutput("indlabins")
           ),
           nav_panel(
             "Report",
@@ -473,6 +477,61 @@ server <- function(input, output, session) {
       flextable::htmltools_value()
     
     return(out)
+    
+  })
+  
+  # individual field duplicates
+  output$indflddup <- renderUI({
+    
+    req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
+    
+    tabMWRacc(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'individual', accchk = 'Field Duplicates', warn = F, caption = TRUE) |> 
+      thmsum(wd = wd) |> 
+      flextable::htmltools_value()
+    
+  })
+  
+  # individual lab duplicates
+  output$indlabdup <- renderUI({
+    
+    req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
+    
+    tabMWRacc(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'individual', accchk = 'Lab Duplicates', warn = F, caption = TRUE) |> 
+      thmsum(wd = wd) |> 
+      flextable::htmltools_value()
+    
+  })
+  
+  # individual field blanks
+  output$indfldblk <- renderUI({
+    
+    req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
+    
+    tabMWRacc(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'individual', accchk = 'Field Blanks', warn = F, caption = TRUE) |> 
+      thmsum(wd = wd) |> 
+      flextable::htmltools_value()
+    
+  })
+  
+  # individual lab blanks
+  output$indlabblk <- renderUI({
+    
+    req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
+    
+    tabMWRacc(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'individual', accchk = 'Lab Blanks', warn = F, caption = TRUE) |> 
+      thmsum(wd = wd) |> 
+      flextable::htmltools_value()
+    
+  })
+  
+  # individual lab spikes/instrument checks
+  output$indlabins <- renderUI({
+    
+    req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
+    
+    tabMWRacc(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'individual', accchk = 'Lab Spikes / Instrument Checks', warn = F, caption = TRUE) |> 
+      thmsum(wd = wd) |> 
+      flextable::htmltools_value()
     
   })
   
