@@ -58,6 +58,36 @@ ui <- page_navbar(
             
   ),
   
+  # Outlier assessment -----
+  nav_panel("Outlier assessment",
+    page_sidebar(
+      sidebar = sidebar(
+        title = "Options",
+        width = 500,
+        uiOutput("prm1"),
+        uiOutput("dtrng1"),
+        selectInput("group1", "Group by", choices = c("month", "week", "site")),
+        selectInput("type1", "Plot type", choices = c("box", "jitterbox", "jitter"))
+      ),
+      navset_card_underline(
+        full_screen = T,
+        nav_panel(
+          "Plot",
+          plotOutput("outlier_plot")
+        ),
+        nav_panel(
+          "Table",
+          reactable::reactableOutput("outlier_table")
+        ),
+        nav_panel(
+          "Report",
+          uiOutput("dwnldoutwrdbutt"),
+          uiOutput("dwnldoutzipbutt")
+        )
+      )
+    )
+  ),
+  
   # QC reporting -----
   nav_panel("QC reporting",
     navset_card_underline(
@@ -133,36 +163,6 @@ ui <- page_navbar(
       nav_panel(
         "Report",
         uiOutput("dwnldqcbutt")
-      )
-    )
-  ),
-  
-  # Outlier assessment -----
-  nav_panel("Outlier assessment",
-    page_sidebar(
-      sidebar = sidebar(
-        title = "Options",
-        width = 500,
-        uiOutput("prm1"),
-        uiOutput("dtrng1"),
-        selectInput("group1", "Group by", choices = c("month", "week", "site")),
-        selectInput("type1", "Plot type", choices = c("box", "jitterbox", "jitter"))
-      ),
-      navset_card_underline(
-        full_screen = T,
-        nav_panel(
-          "Plot",
-          plotOutput("outlier_plot")
-        ),
-        nav_panel(
-          "Table",
-          reactable::reactableOutput("outlier_table")
-        ),
-        nav_panel(
-          "Report",
-          uiOutput("dwnldoutwrdbutt"),
-          uiOutput("dwnldoutzipbutt")
-        )
       )
     )
   ),
@@ -319,14 +319,6 @@ server <- function(input, output, session) {
     
   })
   
-  output$dwnldqcbutt <- renderUI({
-    
-    req(input$tester | (!is.null(data_states$resdat) & !is.null(data_states$accdat) & !is.null(data_states$frecomdat))) 
-        
-    shinyWidgets::downloadBttn('dwnldqc', 'Download quality control report', style = 'simple', block = T, color = 'success')
-    
-  })
-  
   output$dwnldoutwrdbutt <- renderUI({
     
     req(input$tester | (!is.null(data_states$resdat) & !is.null(data_states$accdat))) 
@@ -340,6 +332,14 @@ server <- function(input, output, session) {
     req(input$tester | (!is.null(data_states$resdat) & !is.null(data_states$accdat)))
     
     shinyWidgets::downloadBttn('dwnldoutzip', 'Download outlier report: Zipped images', style = 'simple', block = T, color = 'success')
+    
+  })
+  
+  output$dwnldqcbutt <- renderUI({
+    
+    req(input$tester | (!is.null(data_states$resdat) & !is.null(data_states$accdat) & !is.null(data_states$frecomdat))) 
+    
+    shinyWidgets::downloadBttn('dwnldqc', 'Download quality control report', style = 'simple', block = T, color = 'success')
     
   })
   
@@ -432,6 +432,81 @@ server <- function(input, output, session) {
     
   })
   
+  # Outlier assessment -----
+  output$outlier_plot <- renderPlot({
+    
+    # inputs
+    param1 <- input$param1
+    dtrng1 <- as.character(input$dtrng1)
+    group1 <- input$group1
+    type1 <- input$type1
+    
+    req(dtrng1)
+    
+    anlzMWRoutlier(fset = fsetls(), param = param1, group = group1, type = type1, dtrng = dtrng1, bssize = 18) + 
+      ggplot2::labs(title = NULL)
+    
+  })
+  
+  output$outlier_table <- reactable::renderReactable({
+    
+    # inputs
+    param1 <- input$param1
+    dtrng1 <- as.character(input$dtrng1)
+    group1 <- input$group1
+    type1 <- input$type1
+    
+    req(dtrng1)
+    
+    tab <- anlzMWRoutlier(fset = fsetls(), param = param1, group = group1, dtrng = dtrng1, outliers = T)
+    
+    out <- reactable::reactable(
+      tab,
+      defaultColDef = reactable::colDef(
+        footerStyle = list(fontWeight = "bold"),
+        resizable = TRUE
+      ),
+      filterable = T
+    )
+    
+    return(out)
+                              
+  })
+  
+  # download outlier report word
+  output$dwnldoutwrd <- downloadHandler(
+    filename = function(){'outlierreport.docx'},
+    content = function(file){
+      
+      # inputs
+      dtrng1 <- as.character(input$dtrng1)
+      group1 <- input$group1
+      type1 <- input$type1
+
+      anlzMWRoutlierall(fset = fsetls(), group = group1, type = type1, dtrng = dtrng1, format = 'word', 
+                        output_dir = dirname(file), 
+                        output_file = basename(file))
+      
+    }
+  )
+  
+  # download outlier report zip
+  output$dwnldoutzip <- downloadHandler(
+    filename = function(){'outlierreport.zip'},
+    content = function(file){
+      
+      # inputs
+      dtrng1 <- as.character(input$dtrng1)
+      group1 <- input$group1
+      type1 <- input$type1
+      
+      anlzMWRoutlierall(fset = fsetls(), group = group1, type = type1, dtrng = dtrng1, format = 'zip', 
+                        output_dir = dirname(file), 
+                        output_file = basename(file))
+      
+    }
+  )
+  
   # QC reporting -----
   
   # dqo table frecomdat
@@ -440,7 +515,7 @@ server <- function(input, output, session) {
     req(fsetls()$frecom)
     
     frecomdat_tab(fsetls()$frecom, dqofontsize, padding, wd)
-
+    
   })
   
   # dqo table accdat
@@ -454,7 +529,7 @@ server <- function(input, output, session) {
   
   # frequency table percent
   output$tabfreper <- renderUI({
-
+    
     req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
     
     tabMWRfre(res = fsetls()$res, acc = fsetls()$acc, frecom = fsetls()$frecom, type = 'percent', warn = F) |>
@@ -571,87 +646,11 @@ server <- function(input, output, session) {
     content = function(file){
       
       qcMWRreview(fset = fsetls(), 
-                        output_dir = dirname(file), 
-                        output_file = basename(file))
+                  output_dir = dirname(file), 
+                  output_file = basename(file))
       
     }
   )
-  
-  # Outlier assessment -----
-  output$outlier_plot <- renderPlot({
-    
-    # inputs
-    param1 <- input$param1
-    dtrng1 <- as.character(input$dtrng1)
-    group1 <- input$group1
-    type1 <- input$type1
-    
-    req(dtrng1)
-    
-    anlzMWRoutlier(fset = fsetls(), param = param1, group = group1, type = type1, dtrng = dtrng1, bssize = 18) + 
-      ggplot2::labs(title = NULL)
-    
-  })
-  
-  output$outlier_table <- reactable::renderReactable({
-    
-    # inputs
-    param1 <- input$param1
-    dtrng1 <- as.character(input$dtrng1)
-    group1 <- input$group1
-    type1 <- input$type1
-    
-    req(dtrng1)
-    
-    tab <- anlzMWRoutlier(fset = fsetls(), param = param1, group = group1, dtrng = dtrng1, outliers = T)
-    
-    out <- reactable::reactable(
-      tab,
-      defaultColDef = reactable::colDef(
-        footerStyle = list(fontWeight = "bold"),
-        resizable = TRUE
-      ),
-      filterable = T
-    )
-    
-    return(out)
-                              
-  })
-  
-  # download outlier report word
-  output$dwnldoutwrd <- downloadHandler(
-    filename = function(){'outlierreport.docx'},
-    content = function(file){
-      
-      # inputs
-      dtrng1 <- as.character(input$dtrng1)
-      group1 <- input$group1
-      type1 <- input$type1
-
-      anlzMWRoutlierall(fset = fsetls(), group = group1, type = type1, dtrng = dtrng1, format = 'word', 
-                        output_dir = dirname(file), 
-                        output_file = basename(file))
-      
-    }
-  )
-  
-  # download outlier report zip
-  output$dwnldoutzip <- downloadHandler(
-    filename = function(){'outlierreport.zip'},
-    content = function(file){
-      
-      # inputs
-      dtrng1 <- as.character(input$dtrng1)
-      group1 <- input$group1
-      type1 <- input$type1
-      
-      anlzMWRoutlierall(fset = fsetls(), group = group1, type = type1, dtrng = dtrng1, format = 'zip', 
-                        output_dir = dirname(file), 
-                        output_file = basename(file))
-      
-    }
-  )
-  
   
   # Visualize ----
   output$season_plot <- renderPlot({
