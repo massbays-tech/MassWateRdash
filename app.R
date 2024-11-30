@@ -200,14 +200,13 @@ ui <- page_navbar(
         uiOutput("prm2"),
         uiOutput("dtrng2"),
         uiOutput("sites2"),
-        selectInput("thresh", "Treshold type (excludes map)", choices = c('fresh', 'marine', 'none')),
-        selectInput("type2", "Plot type (season, site plots only)", choices = c("box", "jitterbox", "bar", "jitterbar", "jitter")),
-        selectInput("confint2", "Show confidence (excludes map)", choices = c(F, T)),
-        selectInput("group2", "Plot grouping (date plot only)", choices = c("site", "locgroup", "all"))
+        uiOutput("notmap"),
+        uiOutput("vizui")
       ),
       
       navset_card_underline(
         full_screen = T,
+        id = "viz_selected",
         nav_panel(
           "Season",
           plotOutput("season_plot")
@@ -328,6 +327,30 @@ server <- function(input, output, session) {
       sort()
     
     selectInput("sites2", "Select sites", choices = tosel, selected = tosel, selectize = T, multiple = T)
+    
+  })
+  
+  output$notmap <- renderUI({
+
+    if(input$viz_selected != 'Map')
+      tagList(
+        selectInput("thresh", "Treshold type", choices = c('fresh', 'marine', 'none')),
+        selectInput("confint2", "Show confidence", choices = c(F, T))    
+      )
+    
+  })
+  
+  output$vizui <- renderUI({
+    
+    out <- NULL
+    
+    if(input$viz_selected %in% c('Season', 'Site'))
+      out <- selectInput("type2", "Plot type", choices = c("box", "jitterbox", "bar", "jitterbar", "jitter"))
+    
+    if(input$viz_selected == 'Date')
+      out <- selectInput("group2", "Plot grouping", choices = c("site", "locgroup", "all"))
+  
+    return(out)
     
   })
   
