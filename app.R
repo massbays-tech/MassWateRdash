@@ -282,11 +282,10 @@ server <- function(input, output, session) {
     
     # inputs
     param1 <- input$param1
-    fset <- fsetls()
-    
-    req(param1)
 
-    tosel <- fset$res |> 
+    req(fsetls()$res, param1)
+
+    tosel <- fsetls()$res |> 
       dplyr::filter(`Characteristic Name` == param1) |> 
       dplyr::pull(`Activity Start Date`) |> 
       range() |> 
@@ -300,11 +299,10 @@ server <- function(input, output, session) {
     
     # inputs
     param2 <- input$param2
-    fset <- fsetls()
     
-    req(param2)
+    req(fsetls()$res, param2)
     
-    tosel <- fset$res |> 
+    tosel <- fsetls()$res |> 
       dplyr::filter(`Characteristic Name` == param2) |> 
       dplyr::pull(`Activity Start Date`) |> 
       range() |> 
@@ -319,11 +317,10 @@ server <- function(input, output, session) {
     # inputs
     param2 <- input$param2
     dtrng2 <- input$dtrng2
-    fset <- fsetls()
     
-    req(dtrng2)
+    req(fsetls()$res, param2, dtrng2)
 
-    tosel <- fset$res |> 
+    tosel <- fsetls()$res |> 
       dplyr::filter(`Characteristic Name` == param2) |> 
       dplyr::filter(`Activity Start Date` >= dtrng2[1] & `Activity Start Date` <= dtrng2[2]) |> 
       dplyr::pull(`Monitoring Location ID`) |> 
@@ -464,9 +461,9 @@ server <- function(input, output, session) {
     group1 <- input$group1
     type1 <- input$type1
     
-    req(dtrng1)
+    req(fsetls()$res, fsetls()$acc, param1, dtrng1)
     
-    anlzMWRoutlier(fset = fsetls(), param = param1, group = group1, type = type1, dtrng = dtrng1, bssize = 18) + 
+    anlzMWRoutlier(res = fsetls()$res, param = param1, acc = fsetls()$acc, group = group1, type = type1, dtrng = dtrng1, bssize = 18) + 
       ggplot2::labs(title = NULL)
     
   })
@@ -479,9 +476,9 @@ server <- function(input, output, session) {
     group1 <- input$group1
     type1 <- input$type1
     
-    req(dtrng1)
+    req(fsetls()$res, fsetls()$acc, param1, dtrng1)
     
-    tab <- anlzMWRoutlier(fset = fsetls(), param = param1, group = group1, dtrng = dtrng1, outliers = T)
+    tab <- anlzMWRoutlier(res = fsetls()$res, param = param1, acc = fsetls()$acc, group = group1, dtrng = dtrng1, outliers = T)
     
     out <- reactable::reactable(
       tab,
@@ -754,9 +751,9 @@ server <- function(input, output, session) {
     type2 <- input$type2
     confint2 <- as.logical(input$confint2)
     
-    req(dtrng2)
+    req(fsetls()$res, fsetls()$acc, param2, dtrng2, sites2)
 
-    anlzMWRseason(fset = fsetls(), param = param2, thresh = thresh, type = type2, dtrng = dtrng2, site = sites2, confint = confint2, bssize = 18) + 
+    anlzMWRseason(res = fsetls()$res, param = param2, acc = fsetls()$acc, sit = fsetls()$sit, thresh = thresh, type = type2, dtrng = dtrng2, site = sites2, confint = confint2, bssize = 18) + 
       ggplot2::labs(title = NULL)
     
   })
@@ -771,9 +768,9 @@ server <- function(input, output, session) {
     group2 <- input$group2
     confint2 <- as.logical(input$confint2)
     
-    req(dtrng2)
+    req(fsetls()$res, fsetls()$acc, param2, dtrng2, sites2)
     
-    anlzMWRdate(fset = fsetls(), param = param2, thresh = thresh, group = group2, dtrng = dtrng2, site = sites2, confint = confint2, bssize = 18) + 
+    anlzMWRdate(res = fsetls()$res, param = param2, acc = fsetls()$acc, sit = fsetls()$sit, thresh = thresh, group = group2, dtrng = dtrng2, site = sites2, confint = confint2, bssize = 18) + 
       ggplot2::labs(title = NULL)
     
   })
@@ -788,9 +785,9 @@ server <- function(input, output, session) {
     type2 <- input$type2
     confint2 <- as.logical(input$confint2)
     
-    req(dtrng2)
+    req(fsetls()$res, fsetls()$acc, param2, dtrng2, sites2)
     
-    anlzMWRsite(fset = fsetls(), param = param2, thresh = thresh, type = type2, dtrng = dtrng2, site = sites2, confint = confint2, bssize = 18) + 
+    anlzMWRsite(res = fsetls()$res, param = param2, acc = fsetls()$acc, sit = fsetls()$sit, thresh = thresh, type = type2, dtrng = dtrng2, site = sites2, confint = confint2, bssize = 18) + 
       ggplot2::labs(title = NULL)
     
   })
@@ -804,14 +801,14 @@ server <- function(input, output, session) {
     watsel <- input$watsel
     mapsel <- input$mapsel
     
-    req(dtrng2)
+    req(fsetls()$res, fsetls()$acc, fsetls()$sit, param2, dtrng2, sites2)
     
     if(watsel == 'NULL')
       watsel <- NULL
     if(mapsel == 'NULL')
       mapsel <- NULL
     
-    anlzMWRmap(fset = fsetls(), param = param2, dtrng = dtrng2, site = sites2, addwater = watsel, maptype = mapsel, bssize = 18) + 
+    anlzMWRmap(res = fsetls()$res, param = param2, acc = fsetls()$acc, sit = fsetls()$sit, dtrng = dtrng2, site = sites2, addwater = watsel, maptype = mapsel, bssize = 18) + 
       ggplot2::labs(title = NULL)
     
   })
