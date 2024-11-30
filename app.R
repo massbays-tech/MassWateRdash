@@ -169,10 +169,25 @@ ui <- page_navbar(
   
   # WQX output -----
   nav_panel("WQX output",
-            card(
-              card_header("Title"),
-              p("Description")
-            )
+    navset_card_underline(
+      full_screen = T,
+      nav_panel(
+        "Projects", 
+        reactable::reactableOutput('tabwqxprojects')
+      ),
+      nav_panel(
+        "Locations",
+        reactable::reactableOutput('tabwqxlocations')
+      ),
+      nav_panel(
+        "Results",
+        reactable::reactableOutput('tabwqxresults')
+      ),
+      nav_panel(
+        "Workbook", 
+        uiOutput("dwnldwqxbutt")
+      )
+    )
   ),
   
   # Visualize -----
@@ -321,7 +336,7 @@ server <- function(input, output, session) {
   
   output$dwnldoutwrdbutt <- renderUI({
     
-    req(input$tester | (!is.null(data_states$resdat) & !is.null(data_states$accdat))) 
+    req(fsetls()$res, fsetls()$acc) 
     
     shinyWidgets::downloadBttn('dwnldoutwrd', 'Download outlier report: Word', style = 'simple', block = T, color = 'success')
     
@@ -329,7 +344,7 @@ server <- function(input, output, session) {
   
   output$dwnldoutzipbutt <- renderUI({
     
-    req(input$tester | (!is.null(data_states$resdat) & !is.null(data_states$accdat)))
+    req(fsetls()$res, fsetls()$acc)
     
     shinyWidgets::downloadBttn('dwnldoutzip', 'Download outlier report: Zipped images', style = 'simple', block = T, color = 'success')
     
@@ -337,9 +352,17 @@ server <- function(input, output, session) {
   
   output$dwnldqcbutt <- renderUI({
     
-    req(input$tester | (!is.null(data_states$resdat) & !is.null(data_states$accdat) & !is.null(data_states$frecomdat))) 
+    req(fsetls()$res, fsetls()$acc, fsetls()$frecom)  
     
     shinyWidgets::downloadBttn('dwnldqc', 'Download quality control report', style = 'simple', block = T, color = 'success')
+    
+  })
+  
+  output$dwnldwqxbutt <- renderUI({
+    
+    req(req(fsetls()$res, fsetls()$acc, fsetls()$sit, fsetls()$wqx)) 
+    
+    shinyWidgets::downloadBttn('dwnldwqx', 'Download WQX workbook', style = 'simple', block = T, color = 'success')
     
   })
   
@@ -646,6 +669,74 @@ server <- function(input, output, session) {
     content = function(file){
       
       qcMWRreview(fset = fsetls(), 
+                  output_dir = dirname(file), 
+                  output_file = basename(file))
+      
+    }
+  )
+  
+  # WQX -----
+  
+  # list output
+  tabwqx <- reactive({
+    
+    req(fsetls()$res, fsetls()$acc, fsetls()$sit, fsetls()$wqx)
+    
+    tabMWRwqx(fset = fsetls(), listout = T, warn = F)
+    
+  })
+  
+  # projects table
+  output$tabwqxprojects <- reactable::renderReactable({
+    
+    req(tabwqx())
+
+    reactable::reactable(
+      tabwqx()$Projects,
+      defaultColDef = reactable::colDef(
+        resizable = TRUE
+      ),
+      filterable = T
+    )
+    
+  })
+  
+  # locations table
+  output$tabwqxlocations <- reactable::renderReactable({
+    
+    req(tabwqx())
+    
+    reactable::reactable(
+      tabwqx()$Locations,
+      defaultColDef = reactable::colDef(
+        resizable = TRUE
+      ),
+      filterable = T
+    )
+    
+  })
+  
+  # results table
+  output$tabwqxresults <- reactable::renderReactable({
+    
+    req(tabwqx())
+    
+    reactable::reactable(
+      tabwqx()$Results,
+      defaultColDef = reactable::colDef(
+        resizable = TRUE
+      ),
+      filterable = T
+    )
+    
+  })
+  
+  # download wqx workbook
+  output$dwnldwqx <- downloadHandler(
+    filename = function(){'wqxtab.xlsx'},
+    content = function(file){
+      
+      tabMWRwqx(fset = fsetls(), 
                   output_dir = dirname(file), 
                   output_file = basename(file))
       
