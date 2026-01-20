@@ -1,14 +1,17 @@
 source('R/global.R')
 
+addResourcePath(
+  prefix = "toimg", 
+  directoryPath = "www"
+)
+
 # ui -----
 ui <- page_navbar(
-  title = "MassWateR Dashboard",
-  
-  # Add logo
-  nav_item(
-    tags$img(src = "logo.png", height = "30px", style = "margin-right: 10px;")
+  title = span(
+    img(src = "toimg/logo.png", height = "40px", style = "margin-right: 10px;"),
+    "MassWateR Dashboard"
   ),
-  
+
   # upload & validate -----
   nav_panel("Upload & Validate",
             
