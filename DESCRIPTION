@@ -48,4 +48,9 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Imports: 
     bslib,
-    MassWateR
+    MassWateR,
+    shiny,
+    shinyWidgets
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
