@@ -14,36 +14,53 @@ mod_format_ui <- function(id) {
         width = 500,
         # Upload files
         h2("Upload Data"),
-        fileInput("resdat", "Upload Results Data (.xlsx)", accept = ".xlsx"),
-        fileInput("sitdat", "Upload Site Data (.xlsx)", accept = ".xlsx"),
         fileInput(
-          "condat",
+          ns("in_results"),
+          "Upload Results Data (.xlsx)",
+          accept = ".xlsx"
+        ),
+        fileInput("in_sites", "Upload Site Data (.xlsx)", accept = ".xlsx"),
+        fileInput(
+          ns("in_convert"),
           "Upload Conversion Table (.xlsx)",
           accept = ".xlsx"
         ),
         # Convert, download
         h2("Process Data"),
         dropdown(
-          ns("in_format"), 
-          label = "Input Format", 
+          ns("result_format"),
+          label = "Results Format",
           choices = c(
-            "MA_BRC", "ME_FOCB", "ME_DEP", "RI_DEM", "RI_WW", "wqdashboard", 
-            "WQX", "Custom"
-          ), 
+            "MA_BRC", "ME_FOCB", "ME_DEP", "RI_DEM", "RI_WW", "wqdashboard",
+            "WQX", "custom"
+          ),
           choice_names = c(
-            "Blackstone River Coalition", "Friends of Casco Bay", "Maine DEP", 
-            "RI DEM", "URI Watershed Watch", "wqdashboard", "WQX", "Custom" 
-          ), 
+            "Blackstone River Coalition", "Friends of Casco Bay", "Maine DEP",
+            "RI DEM", "URI Watershed Watch", "WQdashboard", "WQX", "Custom"
+          ),
+          sorted = FALSE,
+          multiple = FALSE
+        ),
+        dropdown(
+          ns("site_format"),
+          label = "Site Format",
+          choices = c(
+            "MA_BRC", "ME_FOCB", "RI_WW", "wqdashboard", "WQX", "custom"
+          ),
+          choice_names = c(
+            "Blackstone River Coalition", "Friends of Casco Bay",
+            "URI Watershed Watch", "WQdashboard", "WQX", "Custom"
+          ),
           sorted = FALSE,
           multiple = FALSE
         ),
         actionButton(
-          ns("download"),
+          ns("btn_run"),
           "Convert to MassWateR",
           style = "width: fit-content;"
         ),
         downloadButton(
-          ns("download"),
+          ns("btn_download"),
           "Download Converted Files",
           style = "width: fit-content;"
         )
@@ -53,21 +70,21 @@ mod_format_ui <- function(id) {
         bslib::value_box(
           title = "Results Data",
           value = "foo"
-          # value = htmlOutput(ns("resdat_status"))
+          # value = htmlOutput(ns("status_results"))
         ),
         bslib::value_box(
           title = "Sites Data",
           value = "foo"
-          # value = htmlOutput(ns("sitdat_status"))
+          # value = htmlOutput(ns("status_sites"))
         ),
         bslib::value_box(
           title = "Conversion Table",
           value = "foo"
-          # value = htmlOutput(ns("condat_status"))
+          # value = htmlOutput(ns("status_convert"))
         )
       ),
       bslib::card(
-        bslib::card_header("Data Validation Messages")#,
+        bslib::card_header("Data Validation Messages") # ,
         # verbatimTextOutput(ns("validation_messages"), placeholder = FALSE)
       )
     )
@@ -83,6 +100,62 @@ mod_format_ui <- function(id) {
 #' @noRd
 mod_format_server <- function(id) {
   moduleServer(id, function(input, output, session) {
+    # Update UI ----
+
+    # 1 Custom conversions ----
+    val <- reactiveValues(
+      allow_custom = FALSE,
+      col_site = NA,
+      col_result = NA,
+      var_activity = NA,
+      var_parameter = NA,
+      var_unit = NA,
+      var_qualifier = NA
+    )
+
+    # Return list ---- old names, new names for each tab
+    # Trigger --- input$in_convert
+    # Must upload __correctly__ before push button - keep inactive until then
+    # ---- unless format other than "custom" is selected, of course
+
+    # use reactiveValues??
+
+    # 2 Format data -----
+    dat_results <- reactive({
+      req(input$in_results)
+      req(input$result_format)
+      req(val$allow_custom || input$result_format != "custom")
+
+      # Read in file
+      print("reading file")
+      dat <- readxl::read_excel(
+        input$in_results,
+        na = c("NA", "na", ""),
+        guess_max = Inf
+      ) |>
+        duplyr::mutate_if(function(x) !lubridate::is.POSIXct(x), as.character)
+
+      if (input$result_format == "custom") {
+        dat <- convert_results(
+          dat, 
+          col_names = val$col_result, 
+          var_activity = val$var_activity, 
+          var_param = val$var_parameter, 
+          var_unit = val$var_unit,
+          var_qualifier = val$var_qualifier
+        )
+
+        return(dat)
+      } 
+
+      dat |>
+        wqformat::format_results(input$result_format, "masswater")
+    }) |>
+      bindEvent(input$btn_run)
+
+    # 3 Download ----
+
+
     # # upload & validate -----
     # validation_log <<- reactiveVal("")
     # data_states <<- reactiveValues(
@@ -154,8 +227,10 @@ mod_format_server <- function(id) {
     # Return data ----
     return(
       list(
-        resdat = "",
-        sitdat = ""
+        dat_results = reactive({
+          dat_results()
+        }),
+        dat_sites = ""
       )
     )
   })

@@ -395,7 +395,8 @@ server <- function(input, output, session) {
   })
   
   # Modules ----
-  mod_format_server("prep")
+  wqf <- mod_format_server("prep")
+  # Refer to output as wqf$dat_sites() and wqf$dat_results()
   
   # upload & validate -----
   # Reactive values to store validation messages and data states

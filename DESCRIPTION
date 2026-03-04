@@ -48,9 +48,15 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Imports: 
     bslib,
+    dplyr,
+    lubridate,
     MassWateR,
+    readxl,
     shiny,
-    shinyWidgets
+    shinyWidgets,
+    wqformat
 Suggests: 
     testthat (>= 3.0.0)
+Remotes: 
+    massbays-tech/wqformat
 Config/testthat/edition: 3
