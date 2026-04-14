@@ -31,12 +31,13 @@ mod_format_ui <- function(id) {
           ns("result_format"),
           label = "Results Format",
           choices = c(
-            "MA_BRC", "ME_FOCB", "ME_DEP", "RI_DEM", "RI_WW", "wqdashboard",
-            "WQX", "custom"
+            "masswater", "MA_BRC", "ME_FOCB", "ME_DEP", "RI_DEM", "RI_WW",
+            "wqdashboard", "WQX", "custom"
           ),
           choice_names = c(
-            "Blackstone River Coalition", "Friends of Casco Bay", "Maine DEP",
-            "RI DEM", "URI Watershed Watch", "WQdashboard", "WQX", "Custom"
+            "MassWateR", "Blackstone River Coalition", "Friends of Casco Bay",
+            "Maine DEP", "RI DEM", "URI Watershed Watch", "WQdashboard", "WQX",
+            "Custom"
           ),
           sorted = FALSE,
           multiple = FALSE
@@ -45,10 +46,11 @@ mod_format_ui <- function(id) {
           ns("site_format"),
           label = "Site Format",
           choices = c(
-            "MA_BRC", "ME_FOCB", "RI_WW", "wqdashboard", "WQX", "custom"
+            "masswater", "MA_BRC", "ME_FOCB", "RI_WW", "wqdashboard", "WQX",
+            "custom"
           ),
           choice_names = c(
-            "Blackstone River Coalition", "Friends of Casco Bay",
+            "MassWateR", "Blackstone River Coalition", "Friends of Casco Bay",
             "URI Watershed Watch", "WQdashboard", "WQX", "Custom"
           ),
           sorted = FALSE,
@@ -65,7 +67,7 @@ mod_format_ui <- function(id) {
           style = "width: fit-content;"
         )
       ),
-      layout_columns(
+      bslib::layout_columns(
         fill = FALSE,
         bslib::value_box(
           title = "Results Data",
@@ -105,12 +107,12 @@ mod_format_server <- function(id) {
     # 1 Custom conversions ----
     val <- reactiveValues(
       allow_custom = FALSE,
-      col_site = NA,
-      col_result = NA,
-      var_activity = NA,
-      var_parameter = NA,
-      var_unit = NA,
-      var_qualifier = NA
+      col_site = NULL,
+      col_result = NULL,
+      var_activity = NULL,
+      var_parameter = NULL,
+      var_unit = NULL,
+      var_qualifier = NULL
     )
 
     # Return list ---- old names, new names for each tab
@@ -127,29 +129,62 @@ mod_format_server <- function(id) {
       req(val$allow_custom || input$result_format != "custom")
 
       # Read in file
-      print("reading file")
+      message("Reading file")
       dat <- readxl::read_excel(
         input$in_results,
         na = c("NA", "na", ""),
         guess_max = Inf
       ) |>
-        duplyr::mutate_if(function(x) !lubridate::is.POSIXct(x), as.character)
+        dplyr::mutate_if(function(x) !lubridate::is.POSIXct(x), as.character)
 
-      if (input$result_format == "custom") {
+      if (input$result_format == "masswater") {
+        dat <- wqformat::format_mwr_results(dat)
+
+        return(dat)
+      } else if (input$result_format == "custom") {
         dat <- convert_results(
-          dat, 
-          col_names = val$col_result, 
-          var_activity = val$var_activity, 
-          var_param = val$var_parameter, 
+          dat,
+          col_names = val$col_result,
+          var_activity = val$var_activity,
+          var_param = val$var_parameter,
           var_unit = val$var_unit,
           var_qualifier = val$var_qualifier
         )
 
         return(dat)
-      } 
+      }
 
-      dat |>
-        wqformat::format_results(input$result_format, "masswater")
+      wqformat::format_results(dat, input$result_format, "masswater")
+    }) |>
+      bindEvent(input$btn_run)
+
+    dat_sites <- reactive({
+      req(input$in_sites)
+      req(input$site_format)
+      req(val$allow_custom || input$site_format != "custom")
+
+      # Read in file
+      message("Reading file")
+      dat <- readxl::read_excel(
+        input$in_sites,
+        na = c("NA", "na", ""),
+        guess_max = Inf
+      ) |>
+        dplyr::mutate_if(function(x) !lubridate::is.POSIXct(x), as.character)
+      
+      in_format <- input$site_format
+
+      if (in_format == "masswater") {
+        return(dat)
+      } else if (in_format == "custom") {
+        if (!is.null(val$col_site)) {
+          dat <- wqformat::rename_col(dat, val$col_site, names(val$col_site))
+        }
+        
+        in_format <- "masswater"
+      }
+
+      wqformat::format_sites(dat, in_format, "masswater")
     }) |>
       bindEvent(input$btn_run)
 

@@ -14,7 +14,7 @@ test_that("dropdown works", {
     ),
     multiple = TRUE
   )
-  
+
   expect_equal(
     dropdown(
       id = "foo",
@@ -23,11 +23,11 @@ test_that("dropdown works", {
     ),
     picker1
   )
-  
+
   # Test - named variables, single selection, decreasing
   choices <- c("Struthio casuarius", "Arctictis binturong", "Orycteropus afer")
   names(choices) <- c("Cassowary", "Binturong", "Aardvark")
-  
+
   picker2 <- shinyWidgets::pickerInput(
     "foo",
     label = "Title",
@@ -42,7 +42,7 @@ test_that("dropdown works", {
     ),
     multiple = FALSE
   )
-  
+
   expect_equal(
     dropdown(
       id = "foo",
@@ -56,7 +56,7 @@ test_that("dropdown works", {
     ),
     picker2
   )
-  
+
   # Test - not sorted, max options
   picker3 <- shinyWidgets::pickerInput(
     "foo",
@@ -72,7 +72,7 @@ test_that("dropdown works", {
     ),
     multiple = TRUE
   )
-  
+
   expect_equal(
     dropdown(
       id = "foo",
