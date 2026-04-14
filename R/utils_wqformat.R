@@ -1,3 +1,40 @@
+#' Upload custom format
+#'
+#' @description `custom_format()` uploads a sheet from the custom conversion 
+#' excel table and produces a named list containing variables to convert. 
+#'
+#' @param .data Input excel file
+#' @param sheet_name Sheet to read. Either a string (the name of a sheet), or an 
+#' integer (the position of the sheet).
+#'
+#' @return Named list of variable names. List is composed of old variables, with
+#' the new variables set as names. If no valid entries found, returns `NULL`.
+#'
+#' @noRd
+custom_format <- function(.data, sheet_name) {
+  dat <- readxl::read_excel(
+    .data,
+    sheet = sheet_name,
+    col_types = "text",
+    na = c("NA", "na", "")
+  ) |>
+    dplyr::select("MassWateR", "Custom") |>
+    dplyr::filter(
+      !is.na(.data$MassWateR),
+      !is.na(.data$Custom)
+    )
+  
+  if (nrow(dat) == 0) {
+    return(NULL)
+  }
+  
+  out <- dat$Custom
+  names(out) <- dat$MassWateR
+  
+  return(out)
+}
+
+
 #' Rename variables in column
 #'
 #' @description `try_rename()` is a helper function for `convert_results()`

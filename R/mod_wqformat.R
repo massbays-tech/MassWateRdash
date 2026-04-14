@@ -9,6 +9,9 @@ mod_format_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
+    # Enable javascript ----
+    shinyjs::useShinyjs(),
+    # UI ----
     bslib::page_sidebar(
       sidebar = bslib::sidebar(
         width = 500,
@@ -103,8 +106,20 @@ mod_format_ui <- function(id) {
 mod_format_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     # Update UI ----
+    shinyjs::disable("btn_run")
 
-    # 1 Custom conversions ----
+    observe({
+      chk <- input$result_format != "custom" | val$allow_custom
+      chk2 <- input$site_format != "custom" | !is.null(val$col_site)
+
+      if (chk & chk2) {
+        shinyjs::enable("btn_run")
+      } else {
+        shinyjs::disable("btn_run")
+      }
+    })
+
+    # 1 Upload data ----
     val <- reactiveValues(
       allow_custom = FALSE,
       col_site = NULL,
@@ -115,12 +130,33 @@ mod_format_server <- function(id) {
       var_qualifier = NULL
     )
 
-    # Return list ---- old names, new names for each tab
-    # Trigger --- input$in_convert
-    # Must upload __correctly__ before push button - keep inactive until then
-    # ---- unless format other than "custom" is selected, of course
+    observe({
+      req(input$in_convert)
+      
+      in_dat <- input$in_convert$datapath
+      
+      print(in_dat)
 
-    # use reactiveValues??
+      val$col_site <- custom_format(in_dat, "Site Columns")
+      val$col_result <- custom_format(in_dat, "Result Columns")
+      val$var_activity <- custom_format(in_dat, "Activity Types")
+      val$var_parameter <- custom_format(in_dat, "Parameters")
+      val$var_unit <- custom_format(in_dat, "Units")
+      val$var_qualifier <- custom_format(in_dat, "Qualifiers")
+
+      # Check - allow custom result format?
+      all_val <- c(
+        val$col_result, val$var_activity, val$var_parameter, val$var_unit,
+        val$var_qualifier
+      )
+
+      if (is.null(all_val)) {
+        val$allow_custom <- FALSE
+      } else {
+        val$allow_custom <- TRUE
+      }
+    }) |>
+      bindEvent(input$in_convert)
 
     # 2 Format data -----
     dat_results <- reactive({
@@ -161,7 +197,7 @@ mod_format_server <- function(id) {
     dat_sites <- reactive({
       req(input$in_sites)
       req(input$site_format)
-      req(val$allow_custom || input$site_format != "custom")
+      req(val$col_site || input$site_format != "custom")
 
       # Read in file
       message("Reading file")
@@ -171,7 +207,7 @@ mod_format_server <- function(id) {
         guess_max = Inf
       ) |>
         dplyr::mutate_if(function(x) !lubridate::is.POSIXct(x), as.character)
-      
+
       in_format <- input$site_format
 
       if (in_format == "masswater") {
@@ -180,7 +216,7 @@ mod_format_server <- function(id) {
         if (!is.null(val$col_site)) {
           dat <- wqformat::rename_col(dat, val$col_site, names(val$col_site))
         }
-        
+
         in_format <- "masswater"
       }
 
