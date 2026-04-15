@@ -9,88 +9,128 @@ mod_format_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
-    # Enable javascript ----
-    shinyjs::useShinyjs(),
-    # UI ----
+    # Sidebar ----
     bslib::page_sidebar(
       sidebar = bslib::sidebar(
         width = 500,
-        # Upload files
-        h2("Upload Data"),
-        fileInput(
-          ns("in_results"),
-          "Upload Results Data (.xlsx)",
-          accept = ".xlsx"
-        ),
-        fileInput("in_sites", "Upload Site Data (.xlsx)", accept = ".xlsx"),
-        fileInput(
-          ns("in_convert"),
-          "Upload Conversion Table (.xlsx)",
-          accept = ".xlsx"
-        ),
-        # Convert, download
-        h2("Process Data"),
+        # * Results ----
+        h2("Results Data"),
         dropdown(
           ns("result_format"),
-          label = "Results Format",
+          label = "Select Results Format",
           choices = c(
-            "masswater", "MA_BRC", "ME_FOCB", "ME_DEP", "RI_DEM", "RI_WW",
-            "wqdashboard", "WQX", "custom"
+            "blank", "MA_BRC", "ME_FOCB", "ME_DEP", "masswater", "RI_DEM",
+            "RI_WW", "wqdashboard", "WQX", "custom"
           ),
           choice_names = c(
-            "MassWateR", "Blackstone River Coalition", "Friends of Casco Bay",
-            "Maine DEP", "RI DEM", "URI Watershed Watch", "WQdashboard", "WQX",
-            "Custom"
+            " ", "Blackstone River Coalition", "Friends of Casco Bay",
+            "Maine DEP", "MassWateR", "RI DEM", "URI Watershed Watch",
+            "WQdashboard", "WQX", "Other"
           ),
           sorted = FALSE,
           multiple = FALSE
         ),
+        conditionalPanel(
+          condition = paste0(
+            'output["', ns("show_result_custom"), '"] == "show"'
+          ),
+          fileInput(
+            ns("result_custom"),
+            "Upload Conversion Table (.xlsx)",
+            accept = ".xlsx"
+          )
+        ),
+        conditionalPanel(
+          condition = paste0(
+            'output["', ns("show_result_upload"), '"] == "show"'
+          ),
+          fileInput(
+            ns("result_upload"),
+            "Upload Results Data (.xlsx)",
+            accept = ".xlsx"
+          )
+        ),
+        conditionalPanel(
+          condition = paste0(
+            'output["', ns("show_result_download"), '"] == "show"'
+          ),
+          downloadButton(
+            ns("result_download"),
+            "Download Results (.xlsx)",
+            style = "width: fit-content;"
+          )
+        ),
+        # * Sites ----
+        h2("Site Metadata"),
         dropdown(
           ns("site_format"),
-          label = "Site Format",
+          label = "Select Site Format",
           choices = c(
-            "masswater", "MA_BRC", "ME_FOCB", "RI_WW", "wqdashboard", "WQX",
-            "custom"
+            "blank", "MA_BRC", "ME_FOCB", "masswater", "RI_WW", "wqdashboard",
+            "WQX", "custom"
           ),
           choice_names = c(
-            "MassWateR", "Blackstone River Coalition", "Friends of Casco Bay",
-            "URI Watershed Watch", "WQdashboard", "WQX", "Custom"
+            " ", "Blackstone River Coalition", "Friends of Casco Bay",
+            "MassWateR", "URI Watershed Watch", "WQdashboard", "WQX", "Other"
           ),
           sorted = FALSE,
           multiple = FALSE
         ),
-        actionButton(
-          ns("btn_run"),
-          "Convert to MassWateR",
-          style = "width: fit-content;"
+        conditionalPanel(
+          condition = paste0(
+            'output["', ns("show_site_custom"), '"] == "show"'
+          ),
+          fileInput(
+            ns("site_custom"),
+            "Upload Conversion Table (.xlsx)",
+            accept = ".xlsx"
+          )
         ),
-        downloadButton(
-          ns("btn_download"),
-          "Download Converted Files",
-          style = "width: fit-content;"
-        )
+        conditionalPanel(
+          condition = paste0(
+            'output["', ns("show_site_upload"), '"] == "show"'
+          ),
+          fileInput(
+            ns("site_upload"),
+            "Upload Site Metadata (.xlsx)",
+            accept = ".xlsx"
+          )
+        ),
+        conditionalPanel(
+          condition = paste0(
+            'output["', ns("show_site_download"), '"] == "show"'
+          ),
+          downloadButton(
+            ns("site_download"),
+            "Download Sites (.xlsx)",
+            style = "width: fit-content;"
+          )
+        ),
       ),
+      # Upload status ----
       bslib::layout_columns(
         fill = FALSE,
         bslib::value_box(
           title = "Results Data",
-          value = "foo"
-          # value = htmlOutput(ns("status_results"))
-        ),
-        bslib::value_box(
-          title = "Sites Data",
-          value = "foo"
-          # value = htmlOutput(ns("status_sites"))
+          value = htmlOutput(ns("result_status"))
         ),
         bslib::value_box(
           title = "Conversion Table",
-          value = "foo"
-          # value = htmlOutput(ns("status_convert"))
+          value = htmlOutput(ns("custom_result_status"))
+        ),
+        bslib::value_box(
+          title = "Site Metadata",
+          value = htmlOutput(ns("site_status"))
+        ),
+        bslib::value_box(
+          title = "Conversion Table",
+          value = htmlOutput(ns("custom_site_status"))
         )
       ),
+      # Validation text ----
       bslib::card(
-        bslib::card_header("Data Validation Messages") # ,
-        # verbatimTextOutput(ns("validation_messages"), placeholder = FALSE)
+        bslib::card_header("Data Validation Messages"),
+        verbatimTextOutput(ns("validation_messages"), placeholder = FALSE)
       )
     )
   )
@@ -105,44 +145,90 @@ mod_format_ui <- function(id) {
 #' @noRd
 mod_format_server <- function(id) {
   moduleServer(id, function(input, output, session) {
-    # Update UI ----
-    shinyjs::disable("btn_run")
-
-    observe({
-      chk <- input$result_format != "custom" | val$allow_custom
-      chk2 <- input$site_format != "custom" | !is.null(val$col_site)
-
-      if (chk & chk2) {
-        shinyjs::enable("btn_run")
-      } else {
-        shinyjs::disable("btn_run")
-      }
-    })
-
-    # 1 Upload data ----
+    # Set variables ----
     val <- reactiveValues(
-      allow_custom = FALSE,
-      col_site = NULL,
-      col_result = NULL,
-      var_activity = NULL,
-      var_parameter = NULL,
-      var_unit = NULL,
-      var_qualifier = NULL
+      message_log = NULL,
+      custom_result = NULL,
+      custom_site = NULL,
+      dat_result = NULL,
+      dat_site = NULL
     )
 
-    observe({
-      req(input$in_convert)
-      
-      in_dat <- input$in_convert$datapath
-      
-      print(in_dat)
+    # Toggle UI ----
+    # * Results ----
+    output$show_result_custom <- renderText({
+      if (input$result_format == "custom") {
+        "show"
+      } else {
+        "hide"
+      }
+    })
+    outputOptions(output, "show_result_custom", suspendWhenHidden = FALSE)
 
-      val$col_site <- custom_format(in_dat, "Site Columns")
-      val$col_result <- custom_format(in_dat, "Result Columns")
-      val$var_activity <- custom_format(in_dat, "Activity Types")
-      val$var_parameter <- custom_format(in_dat, "Parameters")
-      val$var_unit <- custom_format(in_dat, "Units")
-      val$var_qualifier <- custom_format(in_dat, "Qualifiers")
+    output$show_result_upload <- renderText({
+      chk <- !input$result_format %in% c("custom", "blank")
+      chk2 <- input$result_format == "custom" & !is.null(val$custom_result)
+
+      if (chk | chk2) {
+        return("show")
+      } else {
+        return("hide")
+      }
+    })
+    outputOptions(output, "show_result_upload", suspendWhenHidden = FALSE)
+
+    output$show_result_download <- renderText({
+      if (!is.null(val$dat_result)) {
+        return("show")
+      } else {
+        return("hide")
+      }
+    })
+    outputOptions(output, "show_result_download", suspendWhenHidden = FALSE)
+
+    # * Sites ----
+    output$show_site_custom <- renderText({
+      if (input$site_format == "custom") {
+        "show"
+      } else {
+        "hide"
+      }
+    })
+    outputOptions(output, "show_site_custom", suspendWhenHidden = FALSE)
+
+    output$show_site_upload <- renderText({
+      chk <- !input$site_format %in% c("custom", "blank")
+      chk2 <- input$site_format == "custom" & !is.null(val$custom_site)
+
+      if (chk | chk2) {
+        return("show")
+      } else {
+        return("hide")
+      }
+    })
+    outputOptions(output, "show_site_upload", suspendWhenHidden = FALSE)
+
+    output$show_site_download <- renderText({
+      if (!is.null(val$dat_site)) {
+        return("show")
+      } else {
+        return("hide")
+      }
+    })
+    outputOptions(output, "show_site_download", suspendWhenHidden = FALSE)
+
+    # Upload data -----
+    # * Results -----
+    observe({
+      req(input$result_custom)
+
+      in_dat <- input$result_custom$datapath
+
+      col_result <- custom_format(in_dat, "Column Names")
+      var_parameter <- custom_format(in_dat, "Parameters")
+      var_unit <- custom_format(in_dat, "Units")
+      var_qualifier <- custom_format(in_dat, "Qualifiers")
+      var_activity <- custom_format(in_dat, "Activity Types")
 
       # Check - allow custom result format?
       all_val <- c(
@@ -151,18 +237,24 @@ mod_format_server <- function(id) {
       )
 
       if (is.null(all_val)) {
-        val$allow_custom <- FALSE
+        val$custom_result <- NULL
       } else {
-        val$allow_custom <- TRUE
+        val$custom_result <- list(
+          col_name = col_result,
+          param = var_parameter,
+          param_unit = var_unit,
+          qualifier = var_qualifier,
+          activity = var_activity
+        )
       }
     }) |>
-      bindEvent(input$in_convert)
+      bindEvent(input$result_custom)
 
-    # 2 Format data -----
-    dat_results <- reactive({
-      req(input$in_results)
+    observe({
       req(input$result_format)
-      req(val$allow_custom || input$result_format != "custom")
+      req(input$result_upload)
+
+      val$dat_result <- NULL
 
       # Read in file
       message("Reading file")
@@ -175,133 +267,102 @@ mod_format_server <- function(id) {
 
       if (input$result_format == "masswater") {
         dat <- wqformat::format_mwr_results(dat)
-
-        return(dat)
       } else if (input$result_format == "custom") {
-        dat <- convert_results(
-          dat,
-          col_names = val$col_result,
-          var_activity = val$var_activity,
-          var_param = val$var_parameter,
-          var_unit = val$var_unit,
-          var_qualifier = val$var_qualifier
+        dat <- format_custom_results(dat, val$custom_result)
+      } else {
+        dat <- wqformat::format_results(dat, input$result_format, "masswater")
+      }
+
+      val$dat_result <- dat
+    }) |>
+      bindEvent(input$result_upload)
+
+    # * Sites ----
+    
+    # dat_sites <- reactive({
+    #   req(input$in_sites)
+    #   req(input$site_format)
+    #   req(val$col_site || input$site_format != "custom")
+    #
+    #   # Read in file
+    #   message("Reading file")
+    #   dat <- readxl::read_excel(
+    #     input$in_sites,
+    #     na = c("NA", "na", ""),
+    #     guess_max = Inf
+    #   ) |>
+    #     dplyr::mutate_if(function(x) !lubridate::is.POSIXct(x), as.character)
+    #
+    #   in_format <- input$site_format
+    #
+    #   if (in_format == "masswater") {
+    #     return(dat)
+    #   } else if (in_format == "custom") {
+    #     if (!is.null(val$col_site)) {
+    #       dat <- wqformat::rename_col(dat, val$col_site, names(val$col_site))
+    #     }
+    #
+    #     in_format <- "masswater"
+    #   }
+    #
+    #   wqformat::format_sites(dat, in_format, "masswater")
+    # }) |>
+    #   bindEvent(input$btn_run)
+
+    # UI messages ----
+    output$result_status <- renderUI({
+      fl_status(
+        tester = FALSE,
+        file_input = input$result_upload,
+        data_state = val$dat_result
+      )
+    })
+
+    output$custom_result_status <- renderUI({
+      if (input$result_format == "custom") {
+        fl_status(
+          tester = FALSE,
+          file_input = input$result_custom,
+          data_state = val$custom_result
         )
-
-        return(dat)
+      } else {
+        HTML("<span style='color:#9c9c9c'>N/A</span>")
       }
+    })
 
-      wqformat::format_results(dat, input$result_format, "masswater")
-    }) |>
-      bindEvent(input$btn_run)
+    output$site_status <- renderUI({
+      fl_status(
+        tester = FALSE,
+        file_input = input$site_upload,
+        data_state = val$dat_site
+      )
+    })
 
-    dat_sites <- reactive({
-      req(input$in_sites)
-      req(input$site_format)
-      req(val$col_site || input$site_format != "custom")
-
-      # Read in file
-      message("Reading file")
-      dat <- readxl::read_excel(
-        input$in_sites,
-        na = c("NA", "na", ""),
-        guess_max = Inf
-      ) |>
-        dplyr::mutate_if(function(x) !lubridate::is.POSIXct(x), as.character)
-
-      in_format <- input$site_format
-
-      if (in_format == "masswater") {
-        return(dat)
-      } else if (in_format == "custom") {
-        if (!is.null(val$col_site)) {
-          dat <- wqformat::rename_col(dat, val$col_site, names(val$col_site))
-        }
-
-        in_format <- "masswater"
+    output$custom_site_status <- renderUI({
+      if (input$site_format == "custom") {
+        fl_status(
+          tester = FALSE,
+          file_input = input$site_custom,
+          data_state = val$custom_site
+        )
+      } else {
+        HTML("<span style='color:#9c9c9c'>N/A</span>")
       }
+    })
 
-      wqformat::format_sites(dat, in_format, "masswater")
-    }) |>
-      bindEvent(input$btn_run)
-
-    # 3 Download ----
-
-
-    # # upload & validate -----
-    # validation_log <<- reactiveVal("")
-    # data_states <<- reactiveValues(
-    #   resdat = NULL,
-    #   sitdat = NULL,
-    #   condat = NULL
-    # )
-    #
-    # # Observers for each data upload
-    # observeEvent(input$resdat, {
-    #   fl_upload(input$resdat, readMWRresults, "resdat")
-    # })
-    #
-    # observeEvent(input$accdat, {
-    #   fl_upload(input$accdat, readMWRacc, "accdat")
-    # })
-    #
-    # observeEvent(input$frecomdat, {
-    #   fl_upload(input$frecomdat, readMWRfrecom, "frecomdat")
-    # })
-    #
-    # observeEvent(input$sitdat, {
-    #   fl_upload(input$sitdat, readMWRsites, "sitdat")
-    # })
-    #
-    # observeEvent(input$wqxdat, {
-    #   fl_upload(input$wqxdat, readMWRwqx, "wqxdat")
-    # })
-    #
-    # # Status outputs
-    # output$resdat_status <- renderUI({
-    #   fl_status(input$tester, input$resdat, data_states$resdat)
-    # })
-    #
-    # output$accdat_status <- renderUI({
-    #   fl_status(input$tester, input$accdat, data_states$accdat)
-    # })
-    #
-    # output$frecomdat_status <- renderUI({
-    #   fl_status(input$tester, input$frecomdat, data_states$frecomdat)
-    # })
-    #
-    # output$sitdat_status <- renderUI({
-    #   fl_status(input$tester, input$sitdat, data_states$sitdat)
-    # })
-    #
-    # output$wqxdat_status <- renderUI({
-    #   fl_status(input$tester, input$wqxdat, data_states$wqxdat)
-    # })
-    #
-    # # Output validation messages
-    # output$validation_messages <- renderText({
-    #   validation_log()
-    # })
-    #
-    # # data inputs
-    # fsetls <- reactive({
-    #   resdat <- data_states$resdat
-    #   sitdat <- data_states$sitdat
-    #   condat <- data_states$condat
-    #
-    #   list(
-    #     res = resdat,
-    #     sit = sitdat,
-    #     con = condat
-    #   )
-    # })
+    output$validation_messages <- renderText({
+      val$message_log
+    })
 
     # Return data ----
     return(
       list(
         dat_results = reactive({
-          dat_results()
+          val$dat_result
         }),
-        dat_sites = ""
+        dat_sites = reactive({
+          val$dat_site
+        })
       )
     )
   })

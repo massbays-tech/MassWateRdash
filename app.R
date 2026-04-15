@@ -14,7 +14,7 @@ ui <- page_navbar(
 
   # upload & validate -----
   bslib::nav_panel(
-    "Upload Data",
+    "Format",
     mod_format_ui("prep")
   ),
   

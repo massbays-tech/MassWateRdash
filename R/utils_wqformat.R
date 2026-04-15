@@ -63,29 +63,27 @@ try_rename <- function(.data, col_name, var_names) {
 
 #' Convert custom results to MassWateR format
 #'
-#' @description `convert_results()` converts input data from a custom
+#' @description `format_custom_results()` converts input data from a custom
 #' format to MassWateR by renaming columns and key variables.
 #'
 #' @param .data Dataframe
-#' @param col_names Named list. Old and new column names.
-#' @param var_activity Named list. Old and new activity type names.
-#' @param var_param Named list. Old and new paramater names.
-#' @param var_unit Named list. Old and new unit names.
-#' @param var_qualifer Named list. Old and new qualifier names.
+#' @param var_list List containing the following variables: col_name, param, 
+#' param_unit, qualifier, activity. Each variable is a named list containing old 
+#' and new variable names.
 #'
 #' @return Updated data frame that has been formatted for MassWateR
 #'
 #' @noRd
-convert_results <- function(
-  .data, col_names = NULL, var_activity = NULL, var_param = NULL,
-  var_unit = NULL, var_qualifier = NULL
-) {
+format_custom_results <- function(.data, var_list) {
+  dat <- .data
+  
+  # Update columns
+  col_names <- var_list$col_name
   if (!is.null(col_names)) {
-    .data <- .data |>
+    dat <- dat |>
       wqformat::rename_col(col_names, names(col_names))
   }
-  dat <- .data
-
+  
   all_col <- c(
     "Monitoring Location ID", "Activity Type", "Activity Start Date",
     "Activity Start Time", "Activity Depth/Height Measure",
@@ -95,17 +93,17 @@ convert_results <- function(
     "Result Attribute", "Sample Collection Method ID", "Project ID",
     "Local Record ID", "Result Comment"
   )
-
   missing_col <- setdiff(all_col, colnames(dat))
   if (length(missing_col) > 0) {
     dat[missing_col] <- NA
     message("\tAdded ", length(missing_col), " missing columns")
   }
 
+  # Update variables
   dat <- dat |>
-    try_rename("Activity Type", var_activity) |>
-    try_rename("Characteristic Name", var_param) |>
-    try_rename("Result Unit", var_unit) |>
-    try_rename("Result Measure Qualifier", var_qualifier) |>
+    try_rename("Characteristic Name", var_list$param) |>
+    try_rename("Result Unit", var_list$param_unit) |>
+    try_rename("Result Measure Qualifier", var_list$qualifier) |>
+    try_rename("Activity Type", var_list$activity) |>
     wqformat::format_mwr_results()
 }

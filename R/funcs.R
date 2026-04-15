@@ -36,11 +36,22 @@ fl_upload <- function(file, read_function, data_name) {
   })
 }
 
-# helper function to print file status in cards
+#' File status
+#'
+#' @description `fl_status` is a helper function to print file upload status in 
+#' cards.
+#'
+#' @param tester Boolean. If using test data, set to `TRUE`.
+#' @param file_input Input data. Set to `NULL` if no data uploaded. 
+#' @param data_state String or dataframe. Set to `NULL` if error uploading data.
+#'
+#' @return HTML message
+#'
+#' @noRd
 fl_status <- function(tester, file_input, data_state) {
   if(tester) return(HTML("<span style='color:#4287f5'>Using test data</span>"))
   if(is.null(file_input)) return(HTML("No file uploaded"))
-  if(is.null(data_state)) HTML("<span style='color:#f54242'>Error loading<span>") else HTML("<span style='color:#1e9c3b'>Data loaded</span>")
+  if(is.null(data_state)) HTML("<span style='color:#f54242'>Error loading</span>") else HTML("<span style='color:#1e9c3b'>Data loaded</span>")
 }
 
 # dqo table theme

@@ -25,7 +25,7 @@ test_that("try_rename works", {
   )
 })
 
-test_that("convert_results works", {
+test_that("format_custom_results works", {
   df_in <- data.frame(
     Site_ID = c("HBS-016", "HBS-016", NA, NA),
     Activity_Type = c(
@@ -93,7 +93,6 @@ test_that("convert_results works", {
     "Result Measure Qualifier", "Result Attribute",
     "Sample Collection Method ID", "Project ID", "Result Comment"
   )
-
   var_activity <- c("Lab Duplicate", "Calibration Check")
   names(var_activity) <- c(
     "Quality Control Sample-Lab Duplicate", "Quality Control-Calibration Check"
@@ -106,12 +105,18 @@ test_that("convert_results works", {
   var_unit <- "mg/L"
   names(var_unit) <- "mg/l"
   var_qualifier <- NULL
+  
+  all_var <- list(
+    col_name = col_names,
+    param = var_param,
+    param_unit = var_unit,
+    qualifier = var_qualifier,
+    activity = var_activity
+  )
 
   expect_equal(
     suppressMessages(
-      convert_results(
-        df_in, col_names, var_activity, var_param, var_unit, var_qualifier
-      )
+      format_custom_results(df_in, all_var)
     ),
     df_out
   )
