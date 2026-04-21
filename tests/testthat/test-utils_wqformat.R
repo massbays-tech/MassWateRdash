@@ -10,17 +10,22 @@ test_that("try_rename works", {
     )
   )
 
-  var_names <- c("DO", "DO sat")
-  names(var_names) <- c("Dissolved oxygen (DO)", "Dissolved oxygen saturation")
+  var_names <- c(
+    `Dissolved oxygen (DO)` = "DO", `Dissolved oxygen saturation` = "DO sat"
+  )
 
   expect_equal(
-    try_rename(df_in, "Param", var_names),
+    suppressMessages(
+      try_rename(df_in, "Param", var_names)
+    ),
     df_out
   )
 
   # Test edge case
   expect_equal(
-    try_rename(df_in, "Param", NULL),
+    suppressMessages(
+      try_rename(df_in, "Param", NULL)
+    ),
     df_in
   )
 })
@@ -78,40 +83,37 @@ test_that("format_custom_results works", {
     "Result Comment" = c(NA, "River was very full", NA, NA),
     check.names = FALSE
   )
-
-  col_names <- c(
-    "Site_ID", "Activity_Type", "Date", "Time", "Depth", "Depth_Unit",
-    "Parameter", "Result", "Result_Unit", "Quantitation_Limit",
-    "QC_Reference_Value", "Qualifier", "Result_Attribute", "Method_ID",
-    "Project_ID", "Comment"
-  )
-  names(col_names) <- c(
-    "Monitoring Location ID", "Activity Type", "Activity Start Date",
-    "Activity Start Time", "Activity Depth/Height Measure",
-    "Activity Depth/Height Unit", "Characteristic Name", "Result Value",
-    "Result Unit", "Quantitation Limit", "QC Reference Value",
-    "Result Measure Qualifier", "Result Attribute",
-    "Sample Collection Method ID", "Project ID", "Result Comment"
-  )
-  var_activity <- c("Lab Duplicate", "Calibration Check")
-  names(var_activity) <- c(
-    "Quality Control Sample-Lab Duplicate", "Quality Control-Calibration Check"
-  )
-  var_param <- c(
-    "Dissolved oxygen saturation", "Total suspended solids",
-    "Specific conductance"
-  )
-  names(var_param) <- c("DO saturation", "TSS", "Sp Conductance")
-  var_unit <- "mg/L"
-  names(var_unit) <- "mg/l"
-  var_qualifier <- NULL
   
   all_var <- list(
-    col_name = col_names,
-    param = var_param,
-    param_unit = var_unit,
-    qualifier = var_qualifier,
-    activity = var_activity
+    col_name = c(
+      `Monitoring Location ID` = "Site_ID", 
+      `Activity Type` = "Activity_Type", 
+      `Activity Start Date` = "Date", 
+      `Activity Start Time` = "Time", 
+      `Activity Depth/Height Measure` = "Depth", 
+      `Activity Depth/Height Unit` = "Depth_Unit",
+      `Characteristic Name` = "Parameter", 
+      `Result Value` = "Result", 
+      `Result Unit` = "Result_Unit", 
+      `Quantitation Limit` = "Quantitation_Limit",
+      `QC Reference Value` = "QC_Reference_Value", 
+      `Result Measure Qualifier` = "Qualifier", 
+      `Result Attribute` = "Result_Attribute", 
+      `Sample Collection Method ID` = "Method_ID",
+      `Project ID` = "Project_ID", 
+      `Result Comment` = "Comment"
+    ),
+    param = c(
+      `DO saturation` = "Dissolved oxygen saturation", 
+      TSS = "Total suspended solids",
+      `Sp Conductance` = "Specific conductance"
+    ),
+    param_unit = c(`mg/l` = "mg/L"),
+    qualifier = NULL,
+    activity = c(
+      `Quality Control Sample-Lab Duplicate` = "Lab Duplicate", 
+      `Quality Control-Calibration Check` = "Calibration Check"
+    )
   )
 
   expect_equal(

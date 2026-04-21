@@ -20,5 +20,6 @@
 #' @importFrom shiny renderUI
 #' @importFrom shiny req
 #' @importFrom shiny tagList
+#' @importFrom shiny verbatimTextOutput
 ## usethis namespace: end
 NULL

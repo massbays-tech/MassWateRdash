@@ -36,7 +36,7 @@ mod_format_ui <- function(id) {
           ),
           fileInput(
             ns("result_custom"),
-            "Upload Conversion Table (.xlsx)",
+            "Upload Custom Result Format (.xlsx)",
             accept = ".xlsx"
           )
         ),
@@ -82,7 +82,7 @@ mod_format_ui <- function(id) {
           ),
           fileInput(
             ns("site_custom"),
-            "Upload Conversion Table (.xlsx)",
+            "Upload Custom Site Format (.xlsx)",
             accept = ".xlsx"
           )
         ),
@@ -115,7 +115,7 @@ mod_format_ui <- function(id) {
           value = htmlOutput(ns("result_status"))
         ),
         bslib::value_box(
-          title = "Conversion Table",
+          title = "Custom Result Format",
           value = htmlOutput(ns("custom_result_status"))
         ),
         bslib::value_box(
@@ -123,7 +123,7 @@ mod_format_ui <- function(id) {
           value = htmlOutput(ns("site_status"))
         ),
         bslib::value_box(
-          title = "Conversion Table",
+          title = "Custom Site Format",
           value = htmlOutput(ns("custom_site_status"))
         )
       ),
@@ -147,7 +147,8 @@ mod_format_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     # Set variables ----
     val <- reactiveValues(
-      message_log = NULL,
+      message_log = "",
+      error_log = "",
       custom_result = NULL,
       custom_site = NULL,
       dat_result = NULL,
@@ -218,96 +219,108 @@ mod_format_server <- function(id) {
     outputOptions(output, "show_site_download", suspendWhenHidden = FALSE)
 
     # Upload data -----
-    # * Results -----
+    # * Result Format ----
     observe({
       req(input$result_custom)
 
-      in_dat <- input$result_custom$datapath
+      msg <- "Uploading custom result format..."
+      val$message_log <- msg
+      val$error_log <- ""
 
-      col_result <- custom_format(in_dat, "Column Names")
-      var_parameter <- custom_format(in_dat, "Parameters")
-      var_unit <- custom_format(in_dat, "Units")
-      var_qualifier <- custom_format(in_dat, "Qualifiers")
-      var_activity <- custom_format(in_dat, "Activity Types")
-
-      # Check - allow custom result format?
-      all_val <- c(
-        val$col_result, val$var_activity, val$var_parameter, val$var_unit,
-        val$var_qualifier
+      dat <- tryCatch(
+        {
+          capture_local_messages(
+            upload_result_format(input$result_custom)
+          )
+        },
+        error = function(e) {
+          val$error_log <- paste("Error:", e$message)
+          NULL
+        }
       )
 
-      if (is.null(all_val)) {
+      if (nchar(val$error_log) > 0) {
         val$custom_result <- NULL
+        val$message_log <- val$error_log
       } else {
-        val$custom_result <- list(
-          col_name = col_result,
-          param = var_parameter,
-          param_unit = var_unit,
-          qualifier = var_qualifier,
-          activity = var_activity
-        )
+        val$custom_result <- dat$dat
+        val$message_log <- dat$msg
       }
     }) |>
       bindEvent(input$result_custom)
 
+    # * Results Data ----
     observe({
       req(input$result_format)
       req(input$result_upload)
 
+      val$message_log <- "Uploading result data..."
+      val$error_log <- ""
+
+      dat <- tryCatch(
+        {
+          capture_local_messages(
+            upload_custom_results(
+              input$result_upload,
+              input$result_format,
+              val$custom_result
+            )
+          )
+        },
+        error = function(e) {
+          val$error_log <- paste("Error:", e$message)
+          NULL
+        }
+      )
+
+      if (nchar(val$error_log) > 0) {
+        val$dat_result <- NULL
+        val$message_log <- val$error_log
+      } else {
+        val$dat_result <- dat$dat
+        val$message_log <- dat$msg
+      }
+    }) |>
+      bindEvent(input$result_upload)
+
+    # * Sites ----
+    observe({
+      req(input$site_custom)
+
+      val$custom_site <- parse_format(
+        input$site_custom$datapath,
+        "Column Names"
+      )
+    }) |>
+      bindEvent(input$site_custom)
+
+    observe({
+      req(input$site_format)
+      req(input$site_upload)
+
       val$dat_result <- NULL
 
-      # Read in file
       message("Reading file")
       dat <- readxl::read_excel(
-        input$in_results,
+        input$site_upload,
         na = c("NA", "na", ""),
         guess_max = Inf
       ) |>
         dplyr::mutate_if(function(x) !lubridate::is.POSIXct(x), as.character)
 
-      if (input$result_format == "masswater") {
-        dat <- wqformat::format_mwr_results(dat)
-      } else if (input$result_format == "custom") {
-        dat <- format_custom_results(dat, val$custom_result)
-      } else {
-        dat <- wqformat::format_results(dat, input$result_format, "masswater")
+      if (input$site_format == "custom") {
+        dat <- wqformat::rename_col(
+          dat,
+          val$custom_site,
+          names(val$custom_site)
+        )
+      } else if (input$site_format != "masswater") {
+        dat <- wqformat::format_sites(dat, input$result_format, "masswater")
       }
 
-      val$dat_result <- dat
+      val$dat_site <- dat
     }) |>
-      bindEvent(input$result_upload)
-
-    # * Sites ----
-    
-    # dat_sites <- reactive({
-    #   req(input$in_sites)
-    #   req(input$site_format)
-    #   req(val$col_site || input$site_format != "custom")
-    #
-    #   # Read in file
-    #   message("Reading file")
-    #   dat <- readxl::read_excel(
-    #     input$in_sites,
-    #     na = c("NA", "na", ""),
-    #     guess_max = Inf
-    #   ) |>
-    #     dplyr::mutate_if(function(x) !lubridate::is.POSIXct(x), as.character)
-    #
-    #   in_format <- input$site_format
-    #
-    #   if (in_format == "masswater") {
-    #     return(dat)
-    #   } else if (in_format == "custom") {
-    #     if (!is.null(val$col_site)) {
-    #       dat <- wqformat::rename_col(dat, val$col_site, names(val$col_site))
-    #     }
-    #
-    #     in_format <- "masswater"
-    #   }
-    #
-    #   wqformat::format_sites(dat, in_format, "masswater")
-    # }) |>
-    #   bindEvent(input$btn_run)
+      bindEvent(input$site_upload)
 
     # UI messages ----
     output$result_status <- renderUI({
