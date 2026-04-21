@@ -1,6 +1,7 @@
 library(shiny)
 library(bslib)
 library(MassWateR)
+library(rhandsontable)
 
 source(here::here('R/funcs.R'))
 

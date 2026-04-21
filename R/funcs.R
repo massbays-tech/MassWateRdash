@@ -20,20 +20,90 @@ capture_messages <- function(expr) {
   return(result)
 }
 
+# Raw read functions for each file type - mirrors the Excel import step of readMWR* without checks
+raw_read_fns <- list(
+  resdat = function(path) {
+    suppressWarnings(readxl::read_excel(path, na = c('NA', 'na', ''), guess_max = Inf)) |>
+      dplyr::mutate_if(function(x) !lubridate::is.POSIXct(x), as.character)
+  },
+  accdat = function(path) {
+    dat <- readxl::read_excel(path, na = c('NA', ''), col_types = 'text')
+    if ('Value Range' %in% names(dat))
+      dat <- dplyr::mutate(dat, dplyr::across(-c(`Value Range`), ~ dplyr::na_if(.x, 'na')))
+    dat
+  },
+  frecomdat = function(path) {
+    suppressMessages(
+      readxl::read_excel(path, skip = 1, na = c('NA', 'na', ''),
+        col_types = c('text', 'numeric', 'numeric', 'numeric', 'numeric', 'numeric', 'numeric'))
+    ) |> dplyr::rename(`% Completeness` = `...7`)
+  },
+  sitdat = function(path) readxl::read_excel(path, na = c('NA', 'na', '')),
+  wqxdat = function(path) suppressWarnings(readxl::read_excel(path, na = c('NA', 'na', ''), col_types = 'text'))
+)
+
+# Retry functions: run check + format on an edited data frame from handsontable
+retry_fns <- list(
+  resdat = function(df) {
+    if ('Activity Start Date' %in% names(df) && !lubridate::is.POSIXct(df$`Activity Start Date`))
+      df$`Activity Start Date` <- as.POSIXct(as.character(df$`Activity Start Date`))
+    formMWRresults(checkMWRresults(df, warn = TRUE))
+  },
+  accdat = function(df) formMWRacc(checkMWRacc(df, warn = TRUE)),
+  frecomdat = function(df) formMWRfrecom(checkMWRfrecom(df, warn = TRUE)),
+  sitdat = function(df) checkMWRsites(df),
+  wqxdat = function(df) formMWRwqx(checkMWRwqx(df, warn = TRUE))
+)
+
 # file upload for observers
 fl_upload <- function(file, read_function, data_name) {
   req(file)
-  validation_log("")  # Clear previous messages
-  
-  data_states[[data_name]] <- tryCatch({
-    capture_messages({
-      # Use assign() to create the variable in the global environment
-      assign(data_name, read_function(file$datapath), envir = .GlobalEnv)
-    })
+  validation_log("")
+  edit_visible[[data_name]] <- FALSE
+  raw_data_states[[data_name]] <- NULL
+
+  result <- tryCatch({
+    capture_messages(read_function(file$datapath))
+  }, error = function(e) {
+    validation_log(paste0("Error in ", data_name, ": ", e$message))
+    raw <- tryCatch(raw_read_fns[[data_name]](file$datapath), error = function(e2) NULL)
+    raw_data_states[[data_name]] <<- raw
+    edit_visible[[data_name]] <<- !is.null(raw)
+    NULL
+  })
+
+  data_states[[data_name]] <- result
+}
+
+# Handle retry after user edits in handsontable
+# hot_headers_input: rhandsontable input for the column-name editor (may be NULL)
+handle_retry <- function(data_name, hot_input, hot_headers_input = NULL) {
+  req(hot_input)
+  validation_log("")
+
+  edited_df <- rhandsontable::hot_to_r(hot_input)
+
+  # Apply any edited column names from the header editor
+  if (!is.null(hot_headers_input)) {
+    new_names <- rhandsontable::hot_to_r(hot_headers_input)[["Column Name"]]
+    if (length(new_names) == ncol(edited_df))
+      names(edited_df) <- new_names
+  }
+
+  result <- tryCatch({
+    capture_messages(retry_fns[[data_name]](edited_df))
   }, error = function(e) {
     validation_log(paste0("Error in ", data_name, ": ", e$message))
     NULL
   })
+
+  data_states[[data_name]] <- result
+  # Only hide the editor on success; leave it open (with edits intact) on failure
+  if (!is.null(result)) {
+    edit_visible[[data_name]] <- FALSE
+    raw_data_states[[data_name]] <- NULL
+    removeModal()
+  }
 }
 
 # helper function to print file status in cards

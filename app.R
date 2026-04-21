@@ -55,8 +55,14 @@ ui <- page_navbar(
       card(
         card_header("Data Validation Messages"),
         verbatimTextOutput("validation_messages", placeholder = FALSE)
-      )
-      
+      ),
+
+      uiOutput("resdat_editor"),
+      uiOutput("accdat_editor"),
+      uiOutput("frecomdat_editor"),
+      uiOutput("sitdat_editor"),
+      uiOutput("wqxdat_editor")
+
     )
             
   ),
@@ -399,6 +405,20 @@ server <- function(input, output, session) {
     sitdat = NULL,
     wqxdat = NULL
   )
+  raw_data_states <<- reactiveValues(
+    resdat = NULL,
+    accdat = NULL,
+    frecomdat = NULL,
+    sitdat = NULL,
+    wqxdat = NULL
+  )
+  edit_visible <<- reactiveValues(
+    resdat = FALSE,
+    accdat = FALSE,
+    frecomdat = FALSE,
+    sitdat = FALSE,
+    wqxdat = FALSE
+  )
   
   # Observers for each data upload
   observeEvent(input$resdat, {
@@ -446,7 +466,91 @@ server <- function(input, output, session) {
   output$validation_messages <- renderText({
     validation_log()
   })
-  
+
+  # In-app data editors - shown when a file fails validation
+  file_defs <- list(
+    list(name = "resdat",    label = "Results Data"),
+    list(name = "accdat",    label = "DQO Accuracy Data"),
+    list(name = "frecomdat", label = "DQO Frequency & Completeness Data"),
+    list(name = "sitdat",    label = "Site Data"),
+    list(name = "wqxdat",    label = "WQX Meta Data")
+  )
+
+  for (fd in file_defs) {
+    local({
+      nm  <- fd$name
+      lbl <- fd$label
+
+      # Inline card: just an "Edit" button when file has a validation error
+      output[[paste0(nm, "_editor")]] <- renderUI({
+        req(isTRUE(edit_visible[[nm]]))
+        card(
+          card_header(paste(lbl, "— Validation Error")),
+          p("Validation errors were found in this file. Click below to edit the data."),
+          actionButton(paste0(nm, "_open_editor"), paste("Edit", lbl),
+                       class = "btn-warning", icon = icon("pencil"))
+        )
+      })
+
+      # Open modal with full-width editors
+      observeEvent(input[[paste0(nm, "_open_editor")]], {
+        showModal(modalDialog(
+          title = paste("Edit", lbl, "— Fix Validation Errors"),
+          size = "xl",
+          easyClose = FALSE,
+          verbatimTextOutput(paste0(nm, "_modal_msgs")),
+          br(),
+          p("Edit column names on the left or cell values on the right, then click ‘Try upload again’."),
+          layout_columns(
+            col_widths = c(3, 9),
+            card(
+              card_header("Column Names"),
+              rHandsontableOutput(paste0(nm, "_hot_headers"))
+            ),
+            card(
+              card_header("Data"),
+              rHandsontableOutput(paste0(nm, "_hot"))
+            )
+          ),
+          footer = tagList(
+            actionButton(paste0(nm, "_retry"), "Try upload again", class = "btn-primary"),
+            modalButton("Close")
+          )
+        ))
+      })
+
+      # Validation message shown inside the modal
+      output[[paste0(nm, "_modal_msgs")]] <- renderText({
+        validation_log()
+      })
+
+      # Column names editor (renders even when modal is closed so it’s ready on open)
+      output[[paste0(nm, "_hot_headers")]] <- renderRHandsontable({
+        req(raw_data_states[[nm]])
+        header_df <- data.frame(
+          `Column #` = seq_along(names(raw_data_states[[nm]])),
+          `Column Name` = names(raw_data_states[[nm]]),
+          stringsAsFactors = FALSE,
+          check.names = FALSE
+        )
+        rhandsontable(header_df, width = "100%", rowHeaders = FALSE) |>
+          hot_col("Column #", readOnly = TRUE)
+      })
+      outputOptions(output, paste0(nm, "_hot_headers"), suspendWhenHidden = FALSE)
+
+      # Data editor
+      output[[paste0(nm, "_hot")]] <- renderRHandsontable({
+        req(raw_data_states[[nm]])
+        rhandsontable(raw_data_states[[nm]], width = "100%", height = 450)
+      })
+      outputOptions(output, paste0(nm, "_hot"), suspendWhenHidden = FALSE)
+
+      observeEvent(input[[paste0(nm, "_retry")]], {
+        handle_retry(nm, input[[paste0(nm, "_hot")]], input[[paste0(nm, "_hot_headers")]])
+      })
+    })
+  }
+
   # data inputs
   fsetls <- reactive({
     
