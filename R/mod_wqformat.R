@@ -348,6 +348,25 @@ mod_format_server <- function(id) {
     }) |>
       bindEvent(input$site_upload)
 
+    # Download data ----
+    output$result_download <- downloadHandler(
+      filename = function() {
+        "masswater_results.xlsx"
+      },
+      content = function(file) {
+        writexl::write_xlsx(val$dat_result, path = file)
+      }
+    )
+
+    output$site_download <- downloadHandler(
+      filename = function() {
+        "masswater_sites.xlsx"
+      },
+      content = function(file) {
+        writexl::write_xlsx(val$dat_site, path = file)
+      }
+    )
+
     # UI messages ----
     output$result_status <- renderUI({
       fl_status(

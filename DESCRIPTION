@@ -54,7 +54,8 @@ Imports:
     readxl,
     shiny,
     shinyWidgets,
-    wqformat
+    wqformat,
+    writexl
 Suggests: 
     testthat (>= 3.0.0)
 Remotes: 
