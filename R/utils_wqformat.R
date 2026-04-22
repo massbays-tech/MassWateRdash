@@ -39,7 +39,7 @@ capture_local_messages <- function(expr) {
 #' Upload custom result format
 #'
 #' @description `custom_result_format()` is a helper function for `mod_format()`
-#' that parses
+#' that parses custom result formats.
 #'
 #' @param .data Uploaded excel file
 #'
@@ -73,6 +73,32 @@ upload_result_format <- function(.data) {
     qualifier = var_qualifier,
     activity = var_activity
   )
+}
+
+#' Upload custom site format
+#'
+#' @description `custom_site_format()` is a helper function for `mod_format()`
+#' that parses custom site formats.
+#'
+#' @param .data Uploaded excel file
+#'
+#' @return Named list of column names. List is composed of old variables, with
+#' the new variables set as names. If no valid entries found, returns `NULL`.
+#'
+#' @noRd
+upload_site_format <- function(.data) {
+  in_dat <- .data$datapath
+
+  message("Uploading custom site format...\n")
+  site_col <- parse_format(in_dat, "Column Names")
+
+  # Check - allow custom result format?
+  if (is.null(site_col)) {
+    stop("Blank file")
+  }
+
+  message("\nDone")
+  site_col
 }
 
 #' Upload custom format
@@ -116,8 +142,8 @@ parse_format <- function(.data, sheet_name) {
 
 #' Upload non-MassWateR result data
 #'
-#' @description `upload_results()` uploads an excel file containing result data
-#' and formats it for MassWateR.
+#' @description `upload_custom_results()` uploads an excel file containing
+#' result data and formats it for MassWateR.
 #'
 #' @param dat Path to excel file
 #' @param in_format String. Way the input data is formatted.
@@ -125,7 +151,7 @@ parse_format <- function(.data, sheet_name) {
 #' param, param_unit, qualifier, activity. Each variable is a named list
 #' containing old and new variable names.
 #'
-#' @return Updated data frame that has been formatted for MassWateR
+#' @return Dataframe that has been formatted for MassWateR
 #'
 #' @noRd
 upload_custom_results <- function(dat, in_format, custom_format = NULL) {
@@ -137,7 +163,7 @@ upload_custom_results <- function(dat, in_format, custom_format = NULL) {
     dplyr::mutate_if(function(x) !lubridate::is.POSIXct(x), as.character)
 
   message(msg, " ok\n")
-  
+
   if (in_format == "masswater") {
     dat <- wqformat::format_mwr_results(dat)
   } else if (in_format == "custom") {
@@ -159,14 +185,14 @@ upload_custom_results <- function(dat, in_format, custom_format = NULL) {
 #' param_unit, qualifier, activity. Each variable is a named list containing old
 #' and new variable names.
 #'
-#' @return Updated data frame that has been formatted for MassWateR
+#' @return Updated dataframe that has been formatted for MassWateR
 #'
 #' @noRd
 format_custom_results <- function(.data, var_list) {
   dat <- .data
 
-  message("Reormatting data...")
-  
+  message("Reformatting data...")
+
   # Update columns
   col_names <- var_list$col_name
   if (!is.null(col_names)) {
@@ -199,6 +225,38 @@ format_custom_results <- function(.data, var_list) {
     wqformat::format_mwr_results()
 }
 
+#' Upload non-MassWateR site metadata
+#'
+#' @description `upload_custom_sites()` uploads an excel file containing site
+#' metadata and formats it for MassWateR.
+#'
+#' @param dat Path to excel file
+#' @param in_format String. Way the input data is formatted.
+#' @param custom_format Named list containing old and new column names.
+#'
+#' @return Dataframe that has been formatted for MassWateR
+#'
+#' @noRd
+upload_custom_sites <- function(dat, in_format, custom_format = NULL) {
+  msg <- "Uploading site metadata..."
+  dat <- readxl::read_excel(
+    dat$datapath,
+    na = c("NA", "na", "")
+  ) |>
+    dplyr::mutate_if(function(x) !lubridate::is.POSIXct(x), as.character)
+
+  message(msg, " ok\n")
+
+  if (in_format == "custom") {
+    dat <- wqformat::rename_col(dat, custom_format, names(custom_format))
+    message("Renaming columns... ok\n\nDone")
+  } else if (in_format != "masswater") {
+    dat <- wqformat::format_sites(dat, in_format, "masswater")
+  }
+
+  dat
+}
+
 #' Rename variables in column
 #'
 #' @description `try_rename()` is a helper function for `convert_results()`
@@ -219,7 +277,7 @@ try_rename <- function(.data, col_name, var_names) {
   }
 
   message("\tRenamed ", col_name, " variables")
-  
+
   new_var <- names(var_names)
   old_var <- unname(var_names)
 

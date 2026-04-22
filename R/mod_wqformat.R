@@ -249,7 +249,7 @@ mod_format_server <- function(id) {
     }) |>
       bindEvent(input$result_custom)
 
-    # * Results Data ----
+    # * Result Data ----
     observe({
       req(input$result_format)
       req(input$result_upload)
@@ -283,42 +283,68 @@ mod_format_server <- function(id) {
     }) |>
       bindEvent(input$result_upload)
 
-    # * Sites ----
+    # * Site format ----
     observe({
       req(input$site_custom)
 
-      val$custom_site <- parse_format(
-        input$site_custom$datapath,
-        "Column Names"
+      msg <- "Uploading custom site format..."
+      val$message_log <- msg
+      val$error_log <- ""
+
+      dat <- tryCatch(
+        {
+          capture_local_messages(
+            upload_site_format(input$site_custom)
+          )
+        },
+        error = function(e) {
+          val$error_log <- paste("Error:", e$message)
+          NULL
+        }
       )
+
+      if (nchar(val$error_log) > 0) {
+        val$custom_site <- NULL
+        val$message_log <- val$error_log
+      } else {
+        val$custom_site <- dat$dat
+        val$message_log <- paste(dat$msg)
+      }
     }) |>
       bindEvent(input$site_custom)
 
+
+    # * Site Metadata ----
     observe({
       req(input$site_format)
       req(input$site_upload)
 
-      val$dat_result <- NULL
+      val$message_log <- "Uploading site metadata..."
+      val$error_log <- ""
 
-      message("Reading file")
-      dat <- readxl::read_excel(
-        input$site_upload,
-        na = c("NA", "na", ""),
-        guess_max = Inf
-      ) |>
-        dplyr::mutate_if(function(x) !lubridate::is.POSIXct(x), as.character)
+      dat <- tryCatch(
+        {
+          capture_local_messages(
+            upload_custom_sites(
+              input$site_upload,
+              input$site_format,
+              val$custom_site
+            )
+          )
+        },
+        error = function(e) {
+          val$error_log <- paste("Error:", e$message)
+          NULL
+        }
+      )
 
-      if (input$site_format == "custom") {
-        dat <- wqformat::rename_col(
-          dat,
-          val$custom_site,
-          names(val$custom_site)
-        )
-      } else if (input$site_format != "masswater") {
-        dat <- wqformat::format_sites(dat, input$result_format, "masswater")
+      if (nchar(val$error_log) > 0) {
+        val$dat_site <- NULL
+        val$message_log <- val$error_log
+      } else {
+        val$dat_site <- dat$dat
+        val$message_log <- dat$msg
       }
-
-      val$dat_site <- dat
     }) |>
       bindEvent(input$site_upload)
 
