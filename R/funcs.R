@@ -85,7 +85,7 @@ handle_retry <- function(data_name, hot_input, hot_headers_input = NULL) {
 
   # Apply any edited column names from the header editor
   if (!is.null(hot_headers_input)) {
-    new_names <- rhandsontable::hot_to_r(hot_headers_input)[["Column Name"]]
+    new_names <- unlist(rhandsontable::hot_to_r(hot_headers_input)[1, ], use.names = FALSE)
     if (length(new_names) == ncol(edited_df))
       names(edited_df) <- new_names
   }

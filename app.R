@@ -7,6 +7,19 @@ addResourcePath(
 
 # ui -----
 ui <- page_navbar(
+  header = tags$head(
+    tags$script(HTML(
+      "$(document).on('shown.bs.modal', function(e) {
+        $(e.target).find('.rhandsontable').each(function() {
+          var ht = HTMLWidgets.getInstance(this);
+          if (ht && ht.hot) { ht.hot.render(); }
+        });
+      });"
+    )),
+    tags$style(HTML(
+      ".rhandsontable .htCore thead th { white-space: nowrap; }"
+    ))
+  ),
   title = span(
     img(src = "toimg/logo.png", height = "40px", style = "margin-right: 10px;"),
     "MassWateR Dashboard"
@@ -500,17 +513,14 @@ server <- function(input, output, session) {
           easyClose = FALSE,
           verbatimTextOutput(paste0(nm, "_modal_msgs")),
           br(),
-          p("Edit column names on the left or cell values on the right, then click ‘Try upload again’."),
-          layout_columns(
-            col_widths = c(3, 9),
-            card(
-              card_header("Column Names"),
-              rHandsontableOutput(paste0(nm, "_hot_headers"))
-            ),
-            card(
-              card_header("Data"),
-              rHandsontableOutput(paste0(nm, "_hot"))
-            )
+          p("Edit column names above or cell values below, then click ‘Try upload again’."),
+          card(
+            card_header("Column Names"),
+            rHandsontableOutput(paste0(nm, "_hot_headers"))
+          ),
+          card(
+            card_header("Data"),
+            rHandsontableOutput(paste0(nm, "_hot"))
           ),
           footer = tagList(
             actionButton(paste0(nm, "_retry"), "Try upload again", class = "btn-primary"),
@@ -527,21 +537,21 @@ server <- function(input, output, session) {
       # Column names editor (renders even when modal is closed so it’s ready on open)
       output[[paste0(nm, "_hot_headers")]] <- renderRHandsontable({
         req(raw_data_states[[nm]])
-        header_df <- data.frame(
-          `Column #` = seq_along(names(raw_data_states[[nm]])),
-          `Column Name` = names(raw_data_states[[nm]]),
-          stringsAsFactors = FALSE,
-          check.names = FALSE
+        col_names <- names(raw_data_states[[nm]])
+        header_df <- setNames(
+          as.data.frame(as.list(col_names), stringsAsFactors = FALSE),
+          as.character(seq_along(col_names))
         )
         rhandsontable(header_df, width = "100%", rowHeaders = FALSE) |>
-          hot_col("Column #", readOnly = TRUE)
+          hot_table(wordWrap = FALSE)
       })
       outputOptions(output, paste0(nm, "_hot_headers"), suspendWhenHidden = FALSE)
 
       # Data editor
       output[[paste0(nm, "_hot")]] <- renderRHandsontable({
         req(raw_data_states[[nm]])
-        rhandsontable(raw_data_states[[nm]], width = "100%", height = 450)
+        rhandsontable(raw_data_states[[nm]], width = "100%", height = 450) |>
+          hot_table(wordWrap = FALSE)
       })
       outputOptions(output, paste0(nm, "_hot"), suspendWhenHidden = FALSE)
 
