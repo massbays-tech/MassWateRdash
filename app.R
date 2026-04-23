@@ -67,14 +67,13 @@ ui <- page_navbar(
       
       card(
         card_header("Data Validation Messages"),
-        verbatimTextOutput("validation_messages", placeholder = FALSE)
-      ),
-
-      uiOutput("resdat_editor"),
-      uiOutput("accdat_editor"),
-      uiOutput("frecomdat_editor"),
-      uiOutput("sitdat_editor"),
-      uiOutput("wqxdat_editor")
+        uiOutput("validation_messages"),
+        uiOutput("resdat_editor"),
+        uiOutput("accdat_editor"),
+        uiOutput("frecomdat_editor"),
+        uiOutput("sitdat_editor"),
+        uiOutput("wqxdat_editor")
+      )
 
     )
             
@@ -476,8 +475,13 @@ server <- function(input, output, session) {
   })
   
   # Output validation messages
-  output$validation_messages <- renderText({
-    validation_log()
+  output$validation_messages <- renderUI({
+    msg <- validation_log()
+    if (nchar(trimws(msg)) == 0) return(NULL)
+    msg <- gsub("\033\\[[0-9;]*[mGKHFABCDJK]", "", msg)  # strip ANSI codes
+    lines <- strsplit(msg, "\n")[[1]]
+    lines <- lines[nchar(trimws(lines)) > 0]
+    div(HTML(paste(lines, collapse = "<br>")))
   })
 
   # In-app data editors - shown when a file fails validation
@@ -494,15 +498,11 @@ server <- function(input, output, session) {
       nm  <- fd$name
       lbl <- fd$label
 
-      # Inline card: just an "Edit" button when file has a validation error
+      # Button shown inside the validation card when file has a validation error
       output[[paste0(nm, "_editor")]] <- renderUI({
         req(isTRUE(edit_visible[[nm]]))
-        card(
-          card_header(paste(lbl, "— Validation Error")),
-          p("Validation errors were found in this file. Click below to edit the data."),
-          actionButton(paste0(nm, "_open_editor"), paste("Edit", lbl),
-                       class = "btn-warning", icon = icon("pencil"))
-        )
+        actionButton(paste0(nm, "_open_editor"), paste("Edit", lbl),
+                     class = "btn-warning", icon = icon("pencil"))
       })
 
       # Open modal with full-width editors
@@ -511,7 +511,7 @@ server <- function(input, output, session) {
           title = paste("Edit", lbl, "— Fix Validation Errors"),
           size = "xl",
           easyClose = FALSE,
-          verbatimTextOutput(paste0(nm, "_modal_msgs")),
+          uiOutput(paste0(nm, "_modal_msgs")),
           br(),
           p("Edit column names above or cell values below, then click ‘Try upload again’."),
           card(
@@ -530,8 +530,13 @@ server <- function(input, output, session) {
       })
 
       # Validation message shown inside the modal
-      output[[paste0(nm, "_modal_msgs")]] <- renderText({
-        validation_log()
+      output[[paste0(nm, "_modal_msgs")]] <- renderUI({
+        msg <- validation_log()
+        if (nchar(trimws(msg)) == 0) return(NULL)
+        msg <- gsub("\033\\[[0-9;]*[mGKHFABCDJK]", "", msg)
+        lines <- strsplit(msg, "\n")[[1]]
+        lines <- lines[nchar(trimws(lines)) > 0]
+        div(HTML(paste(lines, collapse = "<br>")))
       })
 
       # Column names editor (renders even when modal is closed so it’s ready on open)

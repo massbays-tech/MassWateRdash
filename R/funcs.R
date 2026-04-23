@@ -20,6 +20,35 @@ capture_messages <- function(expr) {
   return(result)
 }
 
+# Distinctive columns unique to each file type — used to detect wrong-file uploads
+file_signatures <- list(
+  resdat    = c("Activity Type", "Characteristic Name", "Result Value"),
+  accdat    = c("Value Range", "MDL"),
+  frecomdat = c("% Completeness"),
+  sitdat    = c("Monitoring Location Latitude", "Monitoring Location Longitude"),
+  wqxdat    = c("Sampling Method Context", "Analytical Method Context")
+)
+
+file_labels <- c(
+  resdat    = "Results data",
+  accdat    = "DQO Accuracy data",
+  frecomdat = "DQO Frequency & Completeness data",
+  sitdat    = "Site data",
+  wqxdat    = "WQX metadata"
+)
+
+detect_wrong_file <- function(raw_df, data_name) {
+  if (is.null(raw_df)) return(NULL)
+  cols <- names(raw_df)
+  if (any(file_signatures[[data_name]] %in% cols)) return(NULL)
+  matches <- sapply(file_signatures, function(sigs) sum(sigs %in% cols))
+  best_count <- max(matches)
+  if (best_count == 0)
+    return("Error: Did you upload the wrong file? The column names do not match the expected format.")
+  best <- names(which.max(matches))
+  paste0("Error: Did you upload the wrong file? This looks like it may be ", file_labels[[best]], ".")
+}
+
 # Raw read functions for each file type - mirrors the Excel import step of readMWR* without checks
 raw_read_fns <- list(
   resdat = function(path) {
@@ -59,16 +88,23 @@ retry_fns <- list(
 fl_upload <- function(file, read_function, data_name) {
   req(file)
   validation_log("")
-  edit_visible[[data_name]] <- FALSE
+  for (nm in names(reactiveValuesToList(edit_visible))) {
+    edit_visible[[nm]] <- FALSE
+  }
   raw_data_states[[data_name]] <- NULL
 
   result <- tryCatch({
     capture_messages(read_function(file$datapath))
   }, error = function(e) {
-    validation_log(paste0("Error in ", data_name, ": ", e$message))
     raw <- tryCatch(raw_read_fns[[data_name]](file$datapath), error = function(e2) NULL)
-    raw_data_states[[data_name]] <<- raw
-    edit_visible[[data_name]] <<- !is.null(raw)
+    wrong_file_msg <- detect_wrong_file(raw, data_name)
+    if (!is.null(wrong_file_msg)) {
+      validation_log(wrong_file_msg)
+    } else {
+      validation_log(paste0("Error in ", data_name, ": ", e$message))
+      raw_data_states[[data_name]] <<- raw
+      edit_visible[[data_name]] <<- !is.null(raw)
+    }
     NULL
   })
 
