@@ -64,7 +64,7 @@ raw_read_fns <- list(
   frecomdat = function(path) {
     suppressMessages(
       readxl::read_excel(path, skip = 1, na = c('NA', 'na', ''),
-        col_types = c('text', 'numeric', 'numeric', 'numeric', 'numeric', 'numeric', 'numeric'))
+        col_types = 'text')
     ) |> dplyr::rename(`% Completeness` = `...7`)
   },
   sitdat = function(path) readxl::read_excel(path, na = c('NA', 'na', '')),
