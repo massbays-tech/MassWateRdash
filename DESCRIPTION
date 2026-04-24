@@ -1,0 +1,63 @@
+Package: MassWateRdash
+Title: What the Package Does (One Line, Title Case)
+Version: 0.0.0.9000
+Authors@R: 
+    c(
+    person(given = "Marcus",
+      family = "Beck",
+      role = c("aut", "cre"),
+      email = "mbeck@tbep.org",
+      comment = c(ORCID = "0000-0002-4996-0059")
+    ),
+    person(given = "Ben",
+      family = "Wetherill",
+      role = c("aut"),
+      email = "bwetherill@acasak.com",
+      comment = c(ORCID = "0000-0002-8791-4256")
+    ),
+    person(given = "Mariel",
+      family = "Sorlien", 
+      role = c("aut"),
+      email = "msorlien@nbep.org",
+      comment = c(ORCID = "0000-0001-7102-2918")
+    ),
+    person(given = "Christopher",
+      family = "Whitney", 
+      role = c("aut"),
+      email = "Chris.Whitney@unh.edu",
+      comment = c(ORCID = "0000-0003-2349-9134")
+    ),
+    person(given = "Janelle",
+      family = "Goeke", 
+      role = c("aut"),
+      email = "janelle.goeke@maine.edu", 
+      comment = c(ORCID = "0000-0001-8056-4540")
+    ),
+    person(given = "Jill",
+      family = "Carr",
+      role = c("aut"),
+      email = "Jillian.Carr@umb.edu",
+      comment = c(ORCID = "0000-0003-1476-6640")
+    )
+  )
+Description: What the package does (one paragraph).
+License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
+    license
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Imports: 
+    bslib,
+    dplyr,
+    lubridate,
+    MassWateR,
+    readxl,
+    shiny,
+    shinyWidgets,
+    wqformat,
+    writexl
+Suggests: 
+    testthat (>= 3.0.0)
+Remotes: 
+    massbays-tech/wqformat
+Config/testthat/edition: 3

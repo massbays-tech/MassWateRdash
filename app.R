@@ -26,6 +26,11 @@ ui <- page_navbar(
   ),
 
   # upload & validate -----
+  bslib::nav_panel(
+    "Format",
+    mod_format_ui("prep")
+  ),
+  
   nav_panel("Upload & Validate",
             
     page_sidebar(
@@ -406,6 +411,10 @@ server <- function(input, output, session) {
     shinyWidgets::downloadBttn('dwnldwqx', 'Download WQX workbook', style = 'simple', block = T, color = 'success')
     
   })
+  
+  # Modules ----
+  wqf <- mod_format_server("prep")
+  # Refer to output as wqf$dat_sites() and wqf$dat_results()
   
   # upload & validate -----
   # Reactive values to store validation messages and data states
