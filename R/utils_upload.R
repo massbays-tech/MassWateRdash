@@ -1,3 +1,80 @@
+#' File upload
+#'
+#' @description `fl_upload()` ...
+#'
+#' @param file
+#' @param read_function
+#' @param data_name
+#' @param val_log R6 class. Must contain function catch_msg and variables msg,
+#' edit_dat.
+#' @param val_dat R6 class. Must contain variables raw_dat, dat.
+#'
+#' @noRd
+fl_upload <- function(file, read_function, data_name, val_log, val_dat) {
+  req(file)
+
+  val_log$msg <- ""
+  val_log$edit_dat <- ""
+  val_dat$raw_dat <- NULL
+
+  dat_path <- if (is.character(file)) file else file$datapath # for testing
+
+  result <- tryCatch(
+    {
+      val_log$catch_msg(read_function(dat_path))
+    },
+    error = function(e) {
+      raw <- tryCatch(
+        raw_read_fns[[data_name]](dat_path),
+        error = function(e2) NULL
+      )
+      wrong_file_msg <- detect_wrong_file(raw, data_name)
+      if (!is.null(wrong_file_msg)) {
+        val_log$msg <- wrong_file_msg
+      } else {
+        val_log$msg <- paste0("Error in ", data_name, ": ", e$message)
+        val_dat$raw_dat <- raw
+        val_log$edit_dat <- if (!is.null(raw)) data_name else ""
+      }
+      NULL
+    }
+  )
+
+  val_dat$dat <- result$result
+}
+
+#' From format upload
+#'
+#' @description `from_format_upload()` ...
+#'
+#' @param df
+#' @param retry_fn
+#' @param data_name
+#' @param val_log R6 class. Must contain function catch_msg and variables msg,
+#' edit_dat.
+#' @param val_dat R6 class. Must contain variables raw_dat, dat.
+#'
+#' @noRd
+from_format_upload = function(df, retry_fn, data_name, val_log, val_dat) {
+  val_log$msg <- ""
+  val_log$edit_dat <- ""
+  val_dat$raw_dat <- NULL
+
+  result <- tryCatch(
+    {
+      val_log$catch_msg(retry_fn(df))
+    },
+    error = function(e) {
+      val_log$msg <- paste0("Error processing ", data_name, ": ", e$message)
+      val_dat$raw_dat <- df
+      val_log$edit_dat <- data_name
+      NULL
+    }
+  )
+
+  val_dat$dat <- result$result
+}
+
 detect_wrong_file <- function(raw_df, data_name) {
   if (is.null(raw_df)) {
     return(NULL)

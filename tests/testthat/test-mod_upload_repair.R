@@ -3,13 +3,8 @@ testServer(
   # Add here your module params
   args = list(
     dat_name = "resdat",
-    dat_values = reactiveValues(
-      raw_dat_state = NULL,
-      dat_state = NULL,
-      del_dat_state = NULL
-    ),
-    val_log = "",
-    edit_visible = ""
+    val_log = validationLog$new(),
+    val_dat = resdatClass$new()
   ),
   {
     ns <- session$ns
@@ -37,7 +32,7 @@ testServer(
 )
 
 test_that("module ui works", {
-  ui <- mod_upload_repair_ui(id = "test")
+  ui <- mod_upload_repair_ui(id = "test", dat_name = "resdat")
   golem::expect_shinytaglist(ui)
   # Check that formals have not been removed
   fmls <- formals(mod_upload_repair_ui)

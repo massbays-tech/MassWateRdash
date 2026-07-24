@@ -3,8 +3,6 @@ validationLog <- R6::R6Class(
   public = list(
     msg = "",
     result = NULL,
-    dat = NULL,
-    raw_dat = NULL,
     edit_dat = "",
 
     catch_msg = function(expr) {
@@ -27,63 +25,6 @@ validationLog <- R6::R6Class(
 
         self$msg <- paste0(current_log, new_msgs)
       }
-
-      invisible(self)
-    },
-
-    fl_upload = function(file, read_function, data_name) {
-      req(file)
-
-      self$msg <- ""
-      self$edit_dat <- ""
-      self$raw_dat <- NULL
-
-      dat_path <- if (is.character(file)) file else file$datapath # for testing
-
-      result <- tryCatch(
-        {
-          self$catch_msg(read_function(dat_path))
-        },
-        error = function(e) {
-          raw <- tryCatch(
-            raw_read_fns[[data_name]](dat_path),
-            error = function(e2) NULL
-          )
-          wrong_file_msg <- detect_wrong_file(raw, data_name)
-          if (!is.null(wrong_file_msg)) {
-            self$msg <- wrong_file_msg
-          } else {
-            self$msg <- paste0("Error in ", data_name, ": ", e$message)
-            self$raw_dat <- raw
-            self$edit_dat <- if (!is.null(raw)) data_name else ""
-          }
-          NULL
-        }
-      )
-
-      self$dat <- result$result
-
-      invisible(self)
-    },
-
-    from_format_upload = function(df, retry_fn, data_name) {
-      self$msg <- ""
-      self$edit_dat <- ""
-      self$raw_dat <- NULL
-
-      result <- tryCatch(
-        {
-          self$catch_msg(retry_fn(df))
-        },
-        error = function(e) {
-          self$msg <- paste0("Error processing ", data_name, ": ", e$message)
-          self$raw_dat <- df
-          self$edit_dat <- data_name
-          NULL
-        }
-      )
-
-      self$dat <- result$result
 
       invisible(self)
     },

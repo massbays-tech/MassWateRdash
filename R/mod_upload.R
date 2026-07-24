@@ -123,7 +123,7 @@ mod_upload_server <- function(id) {
     val_censdat <- censdatClass$new()
 
     # Modules ----
-    # wqf <- mod_upload_format_server("reformat")
+    wqf <- mod_upload_format_server("reformat")
     # mod_resdat <- mod_upload_repair_server(
     #   "resdat_editor",
     #   dat_name = "resdat",
@@ -192,102 +192,94 @@ mod_upload_server <- function(id) {
     # )
 
     # Format data ----
-    # observe({
-    #   req(wqf$dat_results())
-    #
-    #   new_dat <- from_format_upload(
-    #     wqf$dat_results(),
-    #     retry_fns$resdat,
-    #     "resdat"
-    #   )
-    #   showNotification(
-    #     "Results data loaded from format converter",
-    #     type = "message",
-    #     duration = 4
-    #   )
-    #
-    #   val_log$msg <- new_dat$val_log
-    #   edit_visible(new_dat$edit_visible)
-    #   val_resdat$raw_dat <- new_dat$raw_dat
-    #   val_resdat$dat <- new_dat$dat
-    # }) |>
-    #   bindEvent(wqf$dat_results())
-    #
-    # observe({
-    #   req(wqf$dat_sites())
-    #   new_dat <- from_format_upload(wqf$dat_sites(), retry_fns$sitdat, "sitdat")
-    #   showNotification(
-    #     "Sites data loaded from format converter",
-    #     type = "message",
-    #     duration = 4
-    #   )
-    #
-    #   val_log$msg <- new_dat$val_log
-    #   edit_visible(new_dat$edit_visible)
-    #   val_sitdat$raw_dat <- new_dat$raw_dat
-    #   val_sitdat$dat <- new_dat$dat
-    # }) |>
-    #   bindEvent(wqf$dat_sites())
-    #
-    # observe({
-    #   showModal(
-    #     modalDialog(
-    #       title = "Convert from Another Format",
-    #       mod_upload_format_ui(ns("reformat"), in_modal = TRUE),
-    #       size = "xl",
-    #       footer = modalButton("Close"),
-    #       easyClose = TRUE
-    #     )
-    #   )
-    # }) |>
-    #   bindEvent(input$show_format_modal)
+    observe({
+      req(wqf$dat_results())
+
+      from_format_upload(
+        wqf$dat_results(),
+        retry_fns$resdat,
+        "resdat",
+        val_log,
+        val_resdat
+      )
+      showNotification(
+        "Results data loaded from format converter",
+        type = "message",
+        duration = 4
+      )
+    }) |>
+      bindEvent(wqf$dat_results())
+
+    observe({
+      req(wqf$dat_sites())
+      from_format_upload(
+        wqf$dat_sites(),
+        retry_fns$sitdat,
+        "sitdat",
+        val_log,
+        val_sitdat
+      )
+      showNotification(
+        "Sites data loaded from format converter",
+        type = "message",
+        duration = 4
+      )
+    }) |>
+      bindEvent(wqf$dat_sites())
+
+    observe({
+      showModal(
+        modalDialog(
+          title = "Convert from Another Format",
+          mod_upload_format_ui(ns("reformat"), in_modal = TRUE),
+          size = "xl",
+          footer = modalButton("Close"),
+          easyClose = TRUE
+        )
+      )
+    }) |>
+      bindEvent(input$show_format_modal)
 
     # Upload & validate -----
     observe({
-      val_log$fl_upload(input$resdat, readMWRresults, "resdat")
-
-      val_resdat$raw_dat <- val_log$raw_dat
-      val_resdat$dat <- val_log$dat
+      fl_upload(input$resdat, readMWRresults, "resdat", val_log, val_resdat)
     }) |>
       bindEvent(input$resdat)
 
     observe({
-      val_log$fl_upload(input$accdat, readMWRacc, "accdat")
-
-      val_accdat$raw_dat <- val_log$raw_dat
-      val_accdat$datt <- val_log$dat
+      fl_upload(input$accdat, readMWRacc, "accdat", val_log, val_accdat)
     }) |>
       bindEvent(input$accdat)
 
     observe({
-      val_log$fl_upload(input$frecomdat, readMWRfrecom, "frecomdat")
-
-      val_frecomdat$raw_dat <- val_log$raw_dat
-      val_frecomdat$dat <- val_log$dat
+      fl_upload(
+        input$frecomdat,
+        readMWRfrecom,
+        "frecomdat",
+        val_log,
+        val_frecomdat
+      )
     }) |>
       bindEvent(input$frecomdat)
 
     observe({
-      val_log$fl_upload(input$sitdat, readMWRsites, "sitdat")
-
-      val_sitdat$raw_dat <- val_log$raw_dat
-      val_sitdat$dat <- val_log$dat
+      fl_upload(input$sitdat, readMWRsites, "sitdat", val_log, val_sitdat)
     }) |>
       bindEvent(input$sitdat)
 
     observe({
-      val_log$fl_upload(input$wqxdat, readMWRwqx, "wqxdat")
-
-      val_wqxdat$raw_dat <- val_log$raw_dat
-      val_wqxdat$dat <- val_log$dat
+      fl_upload(input$wqxdat, readMWRwqx, "wqxdat", val_log, val_wqxdat)
     }) |>
       bindEvent(input$wqxdat)
 
     observe({
-      val_log$fl_upload(input$censdat, readMWRcens, "censdat")
-
-      val_censdat$raw_dat <- val_log$raw_dat
-      val_censdat$dat <- val_log$dat
+      val_log$fl_upload(
+        input$censdat,
+        readMWRcens,
+        "censdat",
+        val_log,
+        val_censdat
+      )
     }) |>
       bindEvent(input$censdat)
 

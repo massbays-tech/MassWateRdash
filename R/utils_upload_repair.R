@@ -119,20 +119,20 @@ parse_error_locations <- function(msg, col_names = NULL) {
 # problem_rows: indices that were displayed in filtered view
 handle_retry <- function(
   data_name,
-  raw_dat_state,
-  edit_visible,
+  val_log,
+  val_dat,
   hot_input,
   hot_headers_input = NULL,
   show_all = TRUE,
   problem_rows = integer(0)
 ) {
-  validation_log <- ""
+  val_log$msg <- ""
 
   if (!is.null(hot_input)) {
     edited_df <- rhandsontable::hot_to_r(hot_input)
   } else {
-    req(raw_dat_state)
-    edited_df <- raw_dat_state
+    req(val_dat$raw_dat)
+    edited_df <- val_dat$raw_dat
   }
 
   # Apply any edited column names from the header editor
@@ -147,8 +147,8 @@ handle_retry <- function(
   }
 
   # When filtered view was active, merge the edited subset back into the full data
-  if (!show_all && length(problem_rows) > 0 && !is.null(raw_dat_state)) {
-    full_df <- raw_dat_state
+  if (!show_all && length(problem_rows) > 0 && !is.null(val_dat$raw_dat)) {
+    full_df <- val_dat$raw_dat
     names(full_df) <- names(edited_df)
     valid_rows <- problem_rows[
       problem_rows >= 1 & problem_rows <= nrow(full_df)
@@ -159,31 +159,22 @@ handle_retry <- function(
 
   # Persist edits into raw_data_states so they survive a failed retry and the
   # re-rendered table reflects the user's work on the next round of checks
-  raw_dat_state <- edited_df
+  val_dat$raw_dat <- edited_df
 
   result <- tryCatch(
     {
       capture_messages(retry_fns[[data_name]](edited_df))
     },
     error = function(e) {
-      validation_log <- paste0("Error in ", data_name, ": ", e$message)
+      val_log$msg <- paste0("Error in ", data_name, ": ", e$message)
       NULL
     }
   )
 
-  dat_state <- result
+  val_dat$dat <- result
 
   if (!is.null(result)) {
-    edit_visible <- FALSE
-    raw_dat_state <- NULL
+    val_msg$edit_dat <- ""
+    val_dat$raw_dat <- NULL
   }
-
-  return(
-    list(
-      validation_log = validation_log,
-      raw_dat_state = raw_dat_state,
-      dat_state = dat_state,
-      edit_visible = edit_visible
-    )
-  )
 }

@@ -1,3 +1,74 @@
+test_that("fl_upload works", {
+  # Define var
+  val_log <- validationLog$new()
+  val_dat <- sitdatClass$new()
+  df_sitdat <- system.file(
+    "extdata",
+    "ExampleSites.xlsx",
+    package = "MassWateR"
+  )
+
+  # Test
+  fl_upload(
+    file = df_sitdat,
+    read_function = readMWRsites,
+    data_name = "sitdat",
+    val_log = val_log,
+    val_dat = val_dat
+  )
+
+  expect_equal(
+    val_log$msg,
+    paste0(
+      "Running checks on site metadata...\n\n\tChecking column names... OK",
+      "\n\tChecking all required columns are present... OK",
+      "\n\tChecking for missing latitude or longitude values... OK",
+      "\n\tChecking for non-numeric values in latitude... OK",
+      "\n\tChecking for non-numeric values in longitude... OK",
+      "\n\tChecking for positive values in longitude... OK",
+      "\n\tChecking for missing entries for Monitoring Location ID... OK",
+      "\n\nAll checks passed!"
+    )
+  )
+  expect_equal(val_log$edit_dat, "")
+  expect_equal(data.frame(val_dat$dat, check.names = FALSE), tst$sitdat)
+  expect_equal(val_dat$raw_dat, NULL)
+})
+
+
+test_that("from_format_upload works", {
+  # Define var
+  val_log <- validationLog$new()
+  val_dat <- sitdatClass$new()
+
+  # Test
+  from_format_upload(
+    df = tst$sitdat,
+    retry_fn = retry_fns$sitdat,
+    data_name = "sitdat",
+    val_log = val_log,
+    val_dat = val_dat
+  )
+
+  expect_equal(
+    val_log$msg,
+    paste0(
+      "Running checks on site metadata...\n\n\tChecking column names... OK",
+      "\n\tChecking all required columns are present... OK",
+      "\n\tChecking for missing latitude or longitude values... OK",
+      "\n\tChecking for non-numeric values in latitude... OK",
+      "\n\tChecking for non-numeric values in longitude... OK",
+      "\n\tChecking for positive values in longitude... OK",
+      "\n\tChecking for missing entries for Monitoring Location ID... OK",
+      "\n\nAll checks passed!"
+    )
+  )
+  expect_equal(val_log$edit_dat, "")
+  expect_equal(val_dat$dat,tst$sitdat)
+  expect_equal(val_dat$raw_dat, NULL)
+  
+})
+
 test_that("detect_wrong_file works", {
   dat_results <- data.frame(
     "Activity Type" = NA,

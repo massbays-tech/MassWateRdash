@@ -14,7 +14,7 @@ mod_upload_repair_ui <- function(id, dat_name) {
 
   tagList(
     conditionalPanel(
-      condition = paste0('output["', ns("show_btn"), '"] == "TRUE"'),
+      condition = paste0('output["', ns("show_btn"), '"] == "', dat_name, '"'),
       actionButton(
         ns("open_editor"),
         paste("Edit", unname(file_labels[dat_name])),
@@ -33,53 +33,24 @@ mod_upload_repair_ui <- function(id, dat_name) {
 #'
 #' @param id Namespace id for module. Should match `mod_upload_repair_ui()` id.
 #' @param dat_name String. Short dataframe name.
-#' @param dat_values Reactive list. Must contain items raw_dat_state, dat_state,
-#' and del_dat_state.
-#' @param val_log Reactive string. Validation log.
-#' @param edit_visible Reactive string. Which edit module to display.
+#' @param val_log R6 class. Validation log and related functions.
+#' @param val_dat R6 class. Dataframes.
 #'
 #' @noRd
 mod_upload_repair_server <- function(
   id,
   dat_name,
-  dat_values,
   val_log,
-  edit_visible
+  val_dat
 ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Set reactive values ----
-    val <- reactiveValues(
-      val_log = "",
-      raw_dat_state = NULL,
-      dat_state = NULL,
-      del_dat_state = NULL,
-      edit_visible = FALSE
-    )
-
-    observe({
-      if (edit_visible() == dat_name) {
-        val$edit_visible <- TRUE
-      } else {
-        val$edit_visible <- FALSE
-      }
-    }) |>
-      bindEvent(edit_visible())
-
     # Toggle edit button visibility
     output$show_btn <- renderText({
-      paste(val$edit_visible)
+      paste(val_log$edit_dat)
     })
     outputOptions(output, "show_btn", suspendWhenHidden = FALSE)
-
-    # Update reactive values when "Edit" button selected
-    observe({
-      val$raw_dat_state <- dat_values$raw_dat_state()
-      val$dat_state <- dat_values$dat_state()
-      val$del_dat_state <- dat_values$del_dat_state()
-    }) |>
-      bindEvent(input$open_editor)
 
     # Create modal ----
     observe({
@@ -140,9 +111,9 @@ mod_upload_repair_server <- function(
 
     # Column names editor (renders even when modal is closed so it's ready on open)
     output$hot_headers <- rhandsontable::renderRHandsontable({
-      req(val$raw_dat_state)
+      req(val_dat$raw_dat)
 
-      col_names <- names(val$raw_dat_state)
+      col_names <- names(val_dat$raw_dat)
       locs <- parse_error_locations(val_log$msg)
       header_df <- setNames(
         as.data.frame(as.list(col_names), stringsAsFactors = FALSE),
@@ -180,7 +151,7 @@ mod_upload_repair_server <- function(
       if (length(problem_rows) == 0) {
         return(NULL)
       }
-      n_total <- if (!is.null(val$raw_dat_state)) nrow(val$raw_dat_state) else 0
+      n_total <- if (!is.null(val_dat$raw_dat)) nrow(val_dat$raw_dat) else 0
 
       div(
         class = "d-flex align-items-center gap-2",
@@ -199,8 +170,8 @@ mod_upload_repair_server <- function(
 
     # Data editor - shows only problem rows by default when they exist
     output$hot <- rhandsontable::renderRHandsontable({
-      req(val$raw_dat_state)
-      dat <- val$raw_dat_state
+      req(val_dat$raw_dat)
+      dat <- val_dat$raw_dat
       problem_rows <- parse_problem_rows(val_log$msg)
       locs <- parse_error_locations(val_log$msg, names(dat))
       show_all <- isTRUE(input$show_all_rows)
@@ -258,41 +229,18 @@ mod_upload_repair_server <- function(
     # Retry ----
     observe({
       col_err <- is_column_error(val_log$msg)
-      new_dat <- handle_retry(
+      handle_retry(
         dat_name,
-        raw_dat_state = val$raw_dat_state,
-        edit_visible = val$edit_visible,
+        val_log = val_log,
+        val_dat = val_dat,
         hot_input = if (!col_err) input$hot else NULL,
         hot_headers_input = if (col_err) input$hot_headers else NULL,
         show_all = isTRUE(input$show_all_rows),
         problem_rows = parse_problem_rows(val_log$msg)
       )
 
-      val_log$msg <- new_dat$val_log
-      val$raw_dat_state <- new_dat$raw_dat_state
-      val$dat_state <- new_dat$dat_state
-      val$edit_visible <- new_dat$edit_visible
-
-      if (!val$edit_visible) removeModal()
+      if (val_log$edit_dat != dat_name) removeModal()
     }) |>
       bindEvent(input$retry)
-
-    # Return data ----
-    return(
-      list(
-        edit_visible = reactive({
-          val$edit_visible
-        }),
-        raw_dat_state = reactive({
-          val$raw_dat_state
-        }),
-        dat_state <- reactive({
-          new_dat$dat_state
-        }),
-        del_dat_state = reactive({
-          val$del_dat_state
-        })
-      )
-    )
   })
 }
