@@ -53,7 +53,7 @@ ui <- bslib::page_navbar(
       style = "display: none; position: fixed; bottom: 15px; right: 15px; z-index: 9999;
                background: rgba(0,0,0,0.6); color: white; padding: 5px 12px;
                border-radius: 4px; font-size: 0.85em;",
-      bs_icon("arrow-repeat"),
+      bsicons::bs_icon("arrow-repeat"),
       " Loading..."
     ),
     tags$style(
@@ -65,14 +65,14 @@ ui <- bslib::page_navbar(
     "MassWateR Dashboard"
   ),
 
-  nav_panel(
+  bslib::nav_panel(
     class = 'fill-height',
     title = "Overview",
     value = 'overview',
-    navset_card_underline(
+    bslib::navset_card_underline(
       full_screen = TRUE,
       height = '100%',
-      nav_panel(
+      bslib::nav_panel(
         title = '',
         class = 'card-scroll',
         shiny::includeMarkdown('www/overview.md')
@@ -85,22 +85,22 @@ ui <- bslib::page_navbar(
     "1 Upload & Validate",
     mod_upload_ui("upload")
   ),
-  bslib::nav_panel(
-    "2 Outlier assessment",
-    mod_outlier_ui("outlier")
-  ),
-  bslib::nav_panel(
-    "3 QC reporting",
-    mod_qc_ui("qc")
-  ),
-  bslib::nav_panel(
-    "4 WQX output",
-    mod_wqx_ui("wqx")
-  ),
-  bslib::nav_panel(
-    "5 Visualize",
-    mod_visualize_ui("visualize")
-  ),
+  # bslib::nav_panel(
+  #   "2 Outlier assessment",
+  #   mod_outlier_ui("outlier")
+  # ),
+  # bslib::nav_panel(
+  #   "3 QC reporting",
+  #   mod_qc_ui("qc")
+  # ),
+  # bslib::nav_panel(
+  #   "4 WQX output",
+  #   mod_wqx_ui("wqx")
+  # ),
+  # bslib::nav_panel(
+  #   "5 Visualize",
+  #   mod_visualize_ui("visualize")
+  # ),
 
   bslib::nav_spacer(),
 
@@ -117,10 +117,10 @@ ui <- bslib::page_navbar(
 server <- function(input, output, session) {
   # Modules ----
   fsetls <- mod_upload_server("upload")
-  mod_outlier_server("outlier", fsetls)
-  mod_qc_server("qc", fsetls)
-  mod_wqx_server("wqx", fsetls)
-  mod_visualize_server("visualize", fsetls)
+  # mod_outlier_server("outlier", fsetls)
+  # mod_qc_server("qc", fsetls)
+  # mod_wqx_server("wqx", fsetls)
+  # mod_visualize_server("visualize", fsetls)
 }
 
 shinyApp(ui = ui, server = server)

@@ -62,29 +62,32 @@ validationLog <- R6::R6Class(
       )
 
       self$dat <- result$result
-      
+
       invisible(self)
     },
-    
+
     from_format_upload = function(df, retry_fn, data_name) {
       self$msg <- ""
       self$edit_dat <- ""
       self$raw_dat <- NULL
-      
-      result <- tryCatch({
-        self$catch_msg(retry_fn(df))
-      }, error = function(e) {
-        self$msg <- paste0("Error processing ", data_name, ": ", e$message)
-        self$raw_dat <- df
-        self$edit_dat <- data_name
-        NULL
-      })
-      
+
+      result <- tryCatch(
+        {
+          self$catch_msg(retry_fn(df))
+        },
+        error = function(e) {
+          self$msg <- paste0("Error processing ", data_name, ": ", e$message)
+          self$raw_dat <- df
+          self$edit_dat <- data_name
+          NULL
+        }
+      )
+
       self$dat <- result$result
-      
+
       invisible(self)
     },
-    
+
     initialize = function(msg = "") {
       self$msg <- msg
     }
@@ -93,6 +96,81 @@ validationLog <- R6::R6Class(
 
 resdatClass <- R6::R6Class(
   "resdatClass",
+  inherit = validationLog,
+  public = list(
+    raw_dat = NULL,
+    dat = NULL,
+    del_dat = NULL,
+    initialize = function(raw_dat = NULL, dat = NULL, del_dat = NULL) {
+      self$raw_dat <- raw_dat
+      self$dat <- dat
+      self$del_dat <- del_dat
+    }
+  )
+)
+
+accdatClass <- R6::R6Class(
+  "accdatClass",
+  inherit = validationLog,
+  public = list(
+    raw_dat = NULL,
+    dat = NULL,
+    del_dat = NULL,
+    initialize = function(raw_dat = NULL, dat = NULL, del_dat = NULL) {
+      self$raw_dat <- raw_dat
+      self$dat <- dat
+      self$del_dat <- del_dat
+    }
+  )
+)
+
+frecomdatClass <- R6::R6Class(
+  "frecomdatClass",
+  inherit = validationLog,
+  public = list(
+    raw_dat = NULL,
+    dat = NULL,
+    del_dat = NULL,
+    initialize = function(raw_dat = NULL, dat = NULL, del_dat = NULL) {
+      self$raw_dat <- raw_dat
+      self$dat <- dat
+      self$del_dat <- del_dat
+    }
+  )
+)
+
+sitdatClass <- R6::R6Class(
+  "sitdatClass",
+  inherit = validationLog,
+  public = list(
+    raw_dat = NULL,
+    dat = NULL,
+    del_dat = NULL,
+    initialize = function(raw_dat = NULL, dat = NULL, del_dat = NULL) {
+      self$raw_dat <- raw_dat
+      self$dat <- dat
+      self$del_dat <- del_dat
+    }
+  )
+)
+
+wqxdatClass <- R6::R6Class(
+  "wqxdatClass",
+  inherit = validationLog,
+  public = list(
+    raw_dat = NULL,
+    dat = NULL,
+    del_dat = NULL,
+    initialize = function(raw_dat = NULL, dat = NULL, del_dat = NULL) {
+      self$raw_dat <- raw_dat
+      self$dat <- dat
+      self$del_dat <- del_dat
+    }
+  )
+)
+
+censdatClass <- R6::R6Class(
+  "censdatClass",
   inherit = validationLog,
   public = list(
     raw_dat = NULL,

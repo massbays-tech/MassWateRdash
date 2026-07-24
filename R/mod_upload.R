@@ -94,13 +94,13 @@ mod_upload_ui <- function(id) {
       ),
       bslib::card(
         bslib::card_header("Data Validation Messages"),
-        uiOutput(ns("validation_messages")),
-        mod_upload_repair_ui("resdat_editor", "resdat"),
-        mod_upload_repair_ui("accdat_editor", "accdat"),
-        mod_upload_repair_ui("frecomdat_editor", "frecomdat"),
-        mod_upload_repair_ui("sitdat_editor", "sitdat"),
-        mod_upload_repair_ui("wqxdat_editor", "wqxdat"),
-        mod_upload_repair_ui("censdat_editor", "censdat")
+        uiOutput(ns("validation_messages")) #,
+        # mod_upload_repair_ui("resdat_editor", "resdat"),
+        # mod_upload_repair_ui("accdat_editor", "accdat"),
+        # mod_upload_repair_ui("frecomdat_editor", "frecomdat"),
+        # mod_upload_repair_ui("sitdat_editor", "sitdat"),
+        # mod_upload_repair_ui("wqxdat_editor", "wqxdat"),
+        # mod_upload_repair_ui("censdat_editor", "censdat")
       )
     )
   )
@@ -115,218 +115,179 @@ mod_upload_server <- function(id) {
 
     # R6 classes ----
     val_log <- validationLog$new()
-
-    # Reactive values -----
-    edit_visible <- reactiveVal("")
-    val_resdat <- reactiveValues(
-      raw_dat_state = NULL,
-      dat_state = NULL,
-      del_dat_state = NULL
-    )
-    val_accdat <- reactiveValues(
-      raw_dat_state = NULL,
-      dat_state = NULL,
-      del_dat_state = NULL
-    )
-    val_frecomdat <- reactiveValues(
-      raw_dat_state = NULL,
-      dat_state = NULL,
-      del_dat_state = NULL
-    )
-    val_sitdat <- reactiveValues(
-      raw_dat_state = NULL,
-      dat_state = NULL,
-      del_dat_state = NULL
-    )
-    val_wqxdat <- reactiveValues(
-      raw_dat_state = NULL,
-      dat_state = NULL,
-      del_dat_state = NULL
-    )
-    val_censdat <- reactiveValues(
-      raw_dat_state = NULL,
-      dat_state = NULL,
-      del_dat_state = NULL
-    )
+    val_resdat <- resdatClass$new()
+    val_accdat <- accdatClass$new()
+    val_frecomdat <- frecomdatClass$new()
+    val_sitdat <- sitdatClass$new()
+    val_wqxdat <- wqxdatClass$new()
+    val_censdat <- censdatClass$new()
 
     # Modules ----
-    wqf <- mod_upload_format_server("reformat")
-    mod_resdat <- mod_upload_repair_server(
-      "resdat_editor",
-      dat_name = "resdat",
-      dat_values = reactive({
-        val_resdat
-      }),
-      val_log = val_log,
-      edit_visible = reactive({
-        edit_visible()
-      })
-    )
-    mod_accdat <- mod_upload_repair_server(
-      "accdat_editor",
-      dat_name = "accdat",
-      dat_values = reactive({
-        val_accdat
-      }),
-      val_log = val_log,
-      edit_visible = reactive({
-        edit_visible()
-      })
-    )
-    mod_frecomdat <- mod_upload_repair_server(
-      "frecomdat_editor",
-      dat_name = "frecomdat",
-      dat_values = reactive({
-        val_frecomdat
-      }),
-      val_log = val_log,
-      edit_visible = reactive({
-        edit_visible()
-      })
-    )
-    mod_sitdat <- mod_upload_repair_server(
-      "sitdat_editor",
-      dat_name = "sitdat",
-      dat_values = reactive({
-        val_sitdat
-      }),
-      val_log = val_log,
-      edit_visible = reactive({
-        edit_visible()
-      })
-    )
-    mod_wqxdat <- mod_upload_repair_server(
-      "wqxdat_editor",
-      dat_name = "wqxdat",
-      dat_values = reactive({
-        val_wqxdat
-      }),
-      val_log = val_log,
-      edit_visible = reactive({
-        edit_visible()
-      })
-    )
-    mod_censdat <- mod_upload_repair_server(
-      "censdat_editor",
-      dat_name = "censdat",
-      dat_values = reactive({
-        val_censdat
-      }),
-      val_log = val_log,
-      edit_visible = reactive({
-        edit_visible()
-      })
-    )
+    # wqf <- mod_upload_format_server("reformat")
+    # mod_resdat <- mod_upload_repair_server(
+    #   "resdat_editor",
+    #   dat_name = "resdat",
+    #   dat_values = reactive({
+    #     val_resdat
+    #   }),
+    #   val_log = val_log,
+    #   edit_visible = reactive({
+    #     edit_visible()
+    #   })
+    # )
+    # mod_accdat <- mod_upload_repair_server(
+    #   "accdat_editor",
+    #   dat_name = "accdat",
+    #   dat_values = reactive({
+    #     val_accdat
+    #   }),
+    #   val_log = val_log,
+    #   edit_visible = reactive({
+    #     edit_visible()
+    #   })
+    # )
+    # mod_frecomdat <- mod_upload_repair_server(
+    #   "frecomdat_editor",
+    #   dat_name = "frecomdat",
+    #   dat_values = reactive({
+    #     val_frecomdat
+    #   }),
+    #   val_log = val_log,
+    #   edit_visible = reactive({
+    #     edit_visible()
+    #   })
+    # )
+    # mod_sitdat <- mod_upload_repair_server(
+    #   "sitdat_editor",
+    #   dat_name = "sitdat",
+    #   dat_values = reactive({
+    #     val_sitdat
+    #   }),
+    #   val_log = val_log,
+    #   edit_visible = reactive({
+    #     edit_visible()
+    #   })
+    # )
+    # mod_wqxdat <- mod_upload_repair_server(
+    #   "wqxdat_editor",
+    #   dat_name = "wqxdat",
+    #   dat_values = reactive({
+    #     val_wqxdat
+    #   }),
+    #   val_log = val_log,
+    #   edit_visible = reactive({
+    #     edit_visible()
+    #   })
+    # )
+    # mod_censdat <- mod_upload_repair_server(
+    #   "censdat_editor",
+    #   dat_name = "censdat",
+    #   dat_values = reactive({
+    #     val_censdat
+    #   }),
+    #   val_log = val_log,
+    #   edit_visible = reactive({
+    #     edit_visible()
+    #   })
+    # )
 
     # Format data ----
-    observe({
-      req(wqf$dat_results())
-
-      new_dat <- from_format_upload(
-        wqf$dat_results(),
-        retry_fns$resdat,
-        "resdat"
-      )
-      showNotification(
-        "Results data loaded from format converter",
-        type = "message",
-        duration = 4
-      )
-
-      val_log$msg <- new_dat$val_log
-      edit_visible(new_dat$edit_visible)
-      val_resdat$raw_dat_state <- new_dat$raw_dat_state
-      val_resdat$dat_state <- new_dat$dat_state
-    }) |>
-      bindEvent(wqf$dat_results())
-
-    observe({
-      req(wqf$dat_sites())
-      new_dat <- from_format_upload(wqf$dat_sites(), retry_fns$sitdat, "sitdat")
-      showNotification(
-        "Sites data loaded from format converter",
-        type = "message",
-        duration = 4
-      )
-
-      val_log$msg <- new_dat$val_log
-      edit_visible(new_dat$edit_visible)
-      val_sitdat$raw_dat_state <- new_dat$raw_dat_state
-      val_sitdat$dat_state <- new_dat$dat_state
-    }) |>
-      bindEvent(wqf$dat_sites())
-
-    observe({
-      showModal(
-        modalDialog(
-          title = "Convert from Another Format",
-          mod_upload_format_ui(ns("reformat"), in_modal = TRUE),
-          size = "xl",
-          footer = modalButton("Close"),
-          easyClose = TRUE
-        )
-      )
-    }) |>
-      bindEvent(input$show_format_modal)
+    # observe({
+    #   req(wqf$dat_results())
+    #
+    #   new_dat <- from_format_upload(
+    #     wqf$dat_results(),
+    #     retry_fns$resdat,
+    #     "resdat"
+    #   )
+    #   showNotification(
+    #     "Results data loaded from format converter",
+    #     type = "message",
+    #     duration = 4
+    #   )
+    #
+    #   val_log$msg <- new_dat$val_log
+    #   edit_visible(new_dat$edit_visible)
+    #   val_resdat$raw_dat <- new_dat$raw_dat
+    #   val_resdat$dat <- new_dat$dat
+    # }) |>
+    #   bindEvent(wqf$dat_results())
+    #
+    # observe({
+    #   req(wqf$dat_sites())
+    #   new_dat <- from_format_upload(wqf$dat_sites(), retry_fns$sitdat, "sitdat")
+    #   showNotification(
+    #     "Sites data loaded from format converter",
+    #     type = "message",
+    #     duration = 4
+    #   )
+    #
+    #   val_log$msg <- new_dat$val_log
+    #   edit_visible(new_dat$edit_visible)
+    #   val_sitdat$raw_dat <- new_dat$raw_dat
+    #   val_sitdat$dat <- new_dat$dat
+    # }) |>
+    #   bindEvent(wqf$dat_sites())
+    #
+    # observe({
+    #   showModal(
+    #     modalDialog(
+    #       title = "Convert from Another Format",
+    #       mod_upload_format_ui(ns("reformat"), in_modal = TRUE),
+    #       size = "xl",
+    #       footer = modalButton("Close"),
+    #       easyClose = TRUE
+    #     )
+    #   )
+    # }) |>
+    #   bindEvent(input$show_format_modal)
 
     # Upload & validate -----
     observe({
-      new_dat <- fl_upload(input$resdat, readMWRresults, "resdat")
+      val_log$fl_upload(input$resdat, readMWRresults, "resdat")
 
-      val_log$msg <- new_dat$val_log
-      edit_visible(new_dat$edit_visible)
-      val_resdat$raw_dat_state <- new_dat$raw_dat_state
-      val_resdat$dat_state <- new_dat$dat_state
+      val_resdat$raw_dat <- val_log$raw_dat
+      val_resdat$dat <- val_log$dat
     }) |>
       bindEvent(input$resdat)
 
     observe({
-      new_dat <- fl_upload(input$accdat, readMWRacc, "accdat")
+      val_log$fl_upload(input$accdat, readMWRacc, "accdat")
 
-      val_log$msg <- new_dat$val_log
-      edit_visible(new_dat$edit_visible)
-      val_accdat$raw_dat_state <- new_dat$raw_dat_state
-      val_accdat$dat_state <- new_dat$dat_state
+      val_accdat$raw_dat <- val_log$raw_dat
+      val_accdat$datt <- val_log$dat
     }) |>
       bindEvent(input$accdat)
 
     observe({
-      new_dat <- fl_upload(input$frecomdat, readMWRfrecom, "frecomdat")
+      val_log$fl_upload(input$frecomdat, readMWRfrecom, "frecomdat")
 
-      val_log$msg <- new_dat$val_log
-      edit_visible(new_dat$edit_visible)
-      val_frecomdat$raw_dat_state <- new_dat$raw_dat_state
-      val_frecomdat$dat_state <- new_dat$dat_state
+      val_frecomdat$raw_dat <- val_log$raw_dat
+      val_frecomdat$dat <- val_log$dat
     }) |>
       bindEvent(input$frecomdat)
 
     observe({
-      new_dat <- fl_upload(input$sitdat, readMWRsites, "sitdat")
+      val_log$fl_upload(input$sitdat, readMWRsites, "sitdat")
 
-      val_log$msg <- new_dat$val_log
-      edit_visible(new_dat$edit_visible)
-      val_sitdat$raw_dat_state <- new_dat$raw_dat_state
-      val_sitdat$dat_state <- new_dat$dat_state
+      val_sitdat$raw_dat <- val_log$raw_dat
+      val_sitdat$dat <- val_log$dat
     }) |>
       bindEvent(input$sitdat)
 
     observe({
-      new_dat <- fl_upload(input$wqxdat, readMWRwqx, "wqxdat")
+      val_log$fl_upload(input$wqxdat, readMWRwqx, "wqxdat")
 
-      val_log$msg <- new_dat$val_log
-      edit_visible(new_dat$edit_visible)
-      val_wqxdat$raw_dat_state <- new_dat$raw_dat_state
-      val_wqxdat$dat_state <- new_dat$dat_state
+      val_wqxdat$raw_dat <- val_log$raw_dat
+      val_wqxdat$dat <- val_log$dat
     }) |>
       bindEvent(input$wqxdat)
 
     observe({
-      new_dat <- fl_upload(input$censdat, readMWRcens, "censdat")
+      val_log$fl_upload(input$censdat, readMWRcens, "censdat")
 
-      val_log$msg <- new_dat$val_log
-      edit_visible(new_dat$edit_visible)
-      val_censdat$raw_dat_state <- new_dat$raw_dat_state
-      val_censdat$dat_state <- new_dat$dat_state
+      val_censdat$raw_dat <- val_log$raw_dat
+      val_censdat$dat <- val_log$dat
     }) |>
       bindEvent(input$censdat)
 
@@ -342,102 +303,29 @@ mod_upload_server <- function(id) {
       div(HTML(paste(lines, collapse = "<br>")))
     })
 
-    # Repair data ----
-    observe({
-      if (isTruthy(mod_resdat$edit_visible)) {
-        edit_visible("resdat")
-      } else {
-        edit_visible("")
-      }
-      val_resdat$raw_dat_state <- mod_resdat$raw_dat_state
-      val_resdat$dat_state <- mod_resdat$dat_state
-      val_resdat$del_dat_state <- mod_resdat$del_dat_state
-    }) |>
-      bindEvent(mod_resdat)
-
-    observe({
-      if (isTruthy(mod_accdat$edit_visible)) {
-        edit_visible("accdat")
-      } else {
-        edit_visible("")
-      }
-      val_accdat$raw_dat_state <- mod_accdat$raw_dat_state
-      val_accdat$dat_state <- mod_accdat$dat_state
-      val_accdat$del_dat_state <- mod_accdat$del_dat_state
-    }) |>
-      bindEvent(mod_accdat)
-
-    observe({
-      if (isTruthy(mod_frecomdat$edit_visible)) {
-        edit_visible("frecomdat")
-      } else {
-        edit_visible("")
-      }
-      val_frecomdat$raw_dat_state <- mod_frecomdat$raw_dat_state
-      val_frecomdat$dat_state <- mod_frecomdat$dat_state
-      val_frecomdat$del_dat_state <- mod_frecomdat$del_dat_state
-    }) |>
-      bindEvent(mod_frecomdat)
-
-    observe({
-      if (isTruthy(mod_sitdat$edit_visible)) {
-        edit_visible("sitdat")
-      } else {
-        edit_visible("")
-      }
-      val_sitdat$raw_dat_state <- mod_sitdat$raw_dat_state
-      val_sitdat$dat_state <- mod_sitdat$dat_state
-      val_sitdat$del_dat_state <- mod_sitdat$del_dat_state
-    }) |>
-      bindEvent(mod_sitdat)
-
-    observe({
-      if (isTruthy(mod_wqxdat$edit_visible)) {
-        edit_visible("wqxdat")
-      } else {
-        edit_visible("")
-      }
-      val_wqxdat$raw_dat_state <- mod_wqxdat$raw_dat_state
-      val_wqxdat$dat_state <- mod_wqxdat$dat_state
-      val_wqxdat$del_dat_state <- mod_wqxdat$del_dat_state
-    }) |>
-      bindEvent(mod_wqxdat)
-
-    observe({
-      if (isTruthy(mod_censdat$edit_visible)) {
-        edit_visible("censdat")
-      } else {
-        edit_visible("")
-      }
-      val_censdat$raw_dat_state <- mod_censdat$raw_dat_state
-      val_censdat$dat_state <- mod_censdat$dat_state
-      val_censdat$del_dat_state <- mod_censdat$del_dat_state
-    }) |>
-      bindEvent(mod_censdat)
-
     # Data Status ----
     output$resdat_status <- renderUI({
-      fl_status(input$tester, input$resdat, val_resdat$dat_state)
+      fl_status(input$tester, input$resdat, val_resdat$dat)
     })
 
     output$accdat_status <- renderUI({
-      fl_status(input$tester, input$accdat, val_accdat$dat_state)
+      fl_status(input$tester, input$accdat, val_accdat$dat)
     })
 
     output$frecomdat_status <- renderUI({
-      fl_status(input$tester, input$frecomdat, val_frecomdat$dat_state)
+      fl_status(input$tester, input$frecomdat, val_frecomdat$dat)
     })
 
     output$sitdat_status <- renderUI({
-      fl_status(input$tester, input$sitdat, val_sitdat$dat_state)
+      fl_status(input$tester, input$sitdat, val_sitdat$dat)
     })
 
     output$wqxdat_status <- renderUI({
-      fl_status(input$tester, input$wqxdat, val_wqxdat$dat_state)
+      fl_status(input$tester, input$wqxdat, val_wqxdat$dat)
     })
 
     output$censdat_status <- renderUI({
-      fl_status(input$tester, input$censdat, val_censdat$dat_state)
+      fl_status(input$tester, input$censdat, val_censdat$dat)
     })
 
     # Bundle data ----
@@ -492,12 +380,12 @@ mod_upload_server <- function(id) {
           runchk = FALSE
         )
       } else {
-        resdat <- val_resdat$dat_state
-        accdat <- val_accdat$dat_state
-        frecomdat <- val_frecomdat$dat_state
-        sitdat <- val_sitdat$dat_state
-        wqxdat <- val_wqxdat$dat_state
-        censdat <- val_censdat$dat_state
+        resdat <- val_resdat$dat
+        accdat <- val_accdat$dat
+        frecomdat <- val_frecomdat$dat
+        sitdat <- val_sitdat$dat
+        wqxdat <- val_wqxdat$dat
+        censdat <- val_censdat$dat
       }
 
       list(
