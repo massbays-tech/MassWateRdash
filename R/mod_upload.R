@@ -94,13 +94,13 @@ mod_upload_ui <- function(id) {
       ),
       bslib::card(
         bslib::card_header("Data Validation Messages"),
-        uiOutput(ns("validation_messages")) #,
-        # mod_upload_repair_ui("resdat_editor", "resdat"),
-        # mod_upload_repair_ui("accdat_editor", "accdat"),
-        # mod_upload_repair_ui("frecomdat_editor", "frecomdat"),
-        # mod_upload_repair_ui("sitdat_editor", "sitdat"),
-        # mod_upload_repair_ui("wqxdat_editor", "wqxdat"),
-        # mod_upload_repair_ui("censdat_editor", "censdat")
+        uiOutput(ns("validation_messages")),
+        mod_upload_repair_ui("resdat_editor", "resdat"),
+        mod_upload_repair_ui("accdat_editor", "accdat"),
+        mod_upload_repair_ui("frecomdat_editor", "frecomdat"),
+        mod_upload_repair_ui("sitdat_editor", "sitdat"),
+        mod_upload_repair_ui("wqxdat_editor", "wqxdat"),
+        mod_upload_repair_ui("censdat_editor", "censdat")
       )
     )
   )
