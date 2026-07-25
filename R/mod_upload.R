@@ -125,72 +125,48 @@ mod_upload_server <- function(id) {
 
     # Modules ----
     wqf <- mod_upload_format_server("reformat")
-    # mod_resdat <- mod_upload_repair_server(
-    #   "resdat_editor",
-    #   dat_name = "resdat",
-    #   dat_values = reactive({
-    #     val_resdat
-    #   }),
-    #   val_log = val_log,
-    #   edit_visible = reactive({
-    #     edit_visible()
-    #   })
-    # )
-    # mod_accdat <- mod_upload_repair_server(
-    #   "accdat_editor",
-    #   dat_name = "accdat",
-    #   dat_values = reactive({
-    #     val_accdat
-    #   }),
-    #   val_log = val_log,
-    #   edit_visible = reactive({
-    #     edit_visible()
-    #   })
-    # )
-    # mod_frecomdat <- mod_upload_repair_server(
-    #   "frecomdat_editor",
-    #   dat_name = "frecomdat",
-    #   dat_values = reactive({
-    #     val_frecomdat
-    #   }),
-    #   val_log = val_log,
-    #   edit_visible = reactive({
-    #     edit_visible()
-    #   })
-    # )
-    # mod_sitdat <- mod_upload_repair_server(
-    #   "sitdat_editor",
-    #   dat_name = "sitdat",
-    #   dat_values = reactive({
-    #     val_sitdat
-    #   }),
-    #   val_log = val_log,
-    #   edit_visible = reactive({
-    #     edit_visible()
-    #   })
-    # )
-    # mod_wqxdat <- mod_upload_repair_server(
-    #   "wqxdat_editor",
-    #   dat_name = "wqxdat",
-    #   dat_values = reactive({
-    #     val_wqxdat
-    #   }),
-    #   val_log = val_log,
-    #   edit_visible = reactive({
-    #     edit_visible()
-    #   })
-    # )
-    # mod_censdat <- mod_upload_repair_server(
-    #   "censdat_editor",
-    #   dat_name = "censdat",
-    #   dat_values = reactive({
-    #     val_censdat
-    #   }),
-    #   val_log = val_log,
-    #   edit_visible = reactive({
-    #     edit_visible()
-    #   })
-    # )
+    mod_resdat <- mod_upload_repair_server(
+      "resdat_editor",
+      dat_name = "resdat",
+      val_log = val_log,
+      val_edit = val_edit,
+      val_dat = val_resdat
+    )
+    mod_accdat <- mod_upload_repair_server(
+      "accdat_editor",
+      dat_name = "accdat",
+      val_log = val_log,
+      val_edit = val_edit,
+      val_dat = val_accdat
+    )
+    mod_frecomdat <- mod_upload_repair_server(
+      "frecomdat_editor",
+      dat_name = "frecomdat",
+      val_log = val_log,
+      val_edit = val_edit,
+      val_dat = val_frecomdat
+    )
+    mod_sitdat <- mod_upload_repair_server(
+      "sitdat_editor",
+      dat_name = "sitdat",
+      val_log = val_log,
+      val_edit = val_edit,
+      val_dat = val_sitdat
+    )
+    mod_wqxdat <- mod_upload_repair_server(
+      "wqxdat_editor",
+      dat_name = "wqxdat",
+      val_log = val_log,
+      val_edit = val_edit,
+      val_dat = val_wqxdat
+    )
+    mod_censdat <- mod_upload_repair_server(
+      "censdat_editor",
+      dat_name = "censdat",
+      val_log = val_log,
+      val_edit = val_edit,
+      val_dat = val_censdat
+    )
 
     # Format data ----
     observe({
