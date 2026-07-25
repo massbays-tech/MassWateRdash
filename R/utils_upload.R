@@ -2,20 +2,33 @@
 #'
 #' @description `fl_upload()` ...
 #'
-#' @param file
-#' @param read_function
-#' @param data_name
+#' @param file Input file
+#' @param read_function Read function
+#' @param data_name String. Data name.
 #' @param val_log R6 class. Must contain function catch_msg and variables msg,
 #' edit_dat.
+#' @param val_edit R6 class. TRUE and FALSE values on whether to show/hide the edits for each var
 #' @param val_dat R6 class. Must contain variables raw_dat, dat.
 #'
 #' @noRd
-fl_upload <- function(file, read_function, data_name, val_log, val_dat) {
+fl_upload <- function(
+  file,
+  read_function,
+  data_name,
+  val_log,
+  val_edit,
+  val_dat
+) {
   req(file)
 
   val_log$msg <- ""
-  val_log$edit_dat <- ""
   val_dat$raw_dat <- NULL
+
+  var_list <- c("resdat", "accdat", "frecomdat", "sitdat", "wqxdat", "censdat")
+
+  for (nm in var_list) {
+    val_edit[[nm]] <- FALSE
+  }
 
   dat_path <- if (is.character(file)) file else file$datapath # for testing
 
@@ -34,7 +47,7 @@ fl_upload <- function(file, read_function, data_name, val_log, val_dat) {
       } else {
         val_log$msg <- paste0("Error in ", data_name, ": ", e$message)
         val_dat$raw_dat <- raw
-        val_log$edit_dat <- if (!is.null(raw)) data_name else ""
+        val_edit[[data_name]] <- !is.null(raw)
       }
       NULL
     }
@@ -47,18 +60,31 @@ fl_upload <- function(file, read_function, data_name, val_log, val_dat) {
 #'
 #' @description `from_format_upload()` ...
 #'
-#' @param df
-#' @param retry_fn
-#' @param data_name
+#' @param df Dataframe
+#' @param retry_fn Function
+#' @param data_name String. Data name.
 #' @param val_log R6 class. Must contain function catch_msg and variables msg,
 #' edit_dat.
+#' @param val_edit R6 class. TRUE and FALSE values on whether to show/hide the edits for each var
 #' @param val_dat R6 class. Must contain variables raw_dat, dat.
 #'
 #' @noRd
-from_format_upload = function(df, retry_fn, data_name, val_log, val_dat) {
+from_format_upload = function(
+  df,
+  retry_fn,
+  data_name,
+  val_log,
+  val_edit,
+  val_dat
+) {
   val_log$msg <- ""
-  val_log$edit_dat <- ""
   val_dat$raw_dat <- NULL
+
+  var_list <- c("resdat", "accdat", "frecomdat", "sitdat", "wqxdat", "censdat")
+
+  for (nm in var_list) {
+    val_edit[[nm]] <- FALSE
+  }
 
   result <- tryCatch(
     {
@@ -67,7 +93,7 @@ from_format_upload = function(df, retry_fn, data_name, val_log, val_dat) {
     error = function(e) {
       val_log$msg <- paste0("Error processing ", data_name, ": ", e$message)
       val_dat$raw_dat <- df
-      val_log$edit_dat <- data_name
+      val_edit[[data_name]] <- data_name
       NULL
     }
   )

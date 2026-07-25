@@ -3,8 +3,6 @@ validationLog <- R6::R6Class(
   public = list(
     msg = "",
     result = NULL,
-    edit_dat = "",
-
     catch_msg = function(expr) {
       # Create a text connection to capture output
       temp <- textConnection("messages", "w", local = TRUE)
@@ -28,16 +26,41 @@ validationLog <- R6::R6Class(
 
       invisible(self)
     },
-
     initialize = function(msg = "") {
       self$msg <- msg
     }
   )
 )
 
+editVisible <- R6::R6Class(
+  "editVisible",
+  public = list(
+    resdat = FALSE,
+    accdat = FALSE,
+    frecomdat = FALSE,
+    sitdat = FALSE,
+    wqxdat = FALSE,
+    censdat = FALSE,
+    initialize = function(
+      resdat = FALSE,
+      accdat = FALSE,
+      frecomdat = FALSE,
+      sitdat = FALSE,
+      wqxdat = FALSE,
+      censdat = FALSE
+    ) {
+      self$resdat <- resdat
+      self$accdat <- accdat
+      self$frecomdat <- frecomdat
+      self$sitdat <- sitdat
+      self$wqxdat <- wqxdat
+      self$censdat <- censdat
+    }
+  )
+)
+
 resdatClass <- R6::R6Class(
   "resdatClass",
-  inherit = validationLog,
   public = list(
     raw_dat = NULL,
     dat = NULL,
@@ -52,7 +75,6 @@ resdatClass <- R6::R6Class(
 
 accdatClass <- R6::R6Class(
   "accdatClass",
-  inherit = validationLog,
   public = list(
     raw_dat = NULL,
     dat = NULL,
@@ -67,7 +89,6 @@ accdatClass <- R6::R6Class(
 
 frecomdatClass <- R6::R6Class(
   "frecomdatClass",
-  inherit = validationLog,
   public = list(
     raw_dat = NULL,
     dat = NULL,
@@ -82,7 +103,6 @@ frecomdatClass <- R6::R6Class(
 
 sitdatClass <- R6::R6Class(
   "sitdatClass",
-  inherit = validationLog,
   public = list(
     raw_dat = NULL,
     dat = NULL,
@@ -97,7 +117,6 @@ sitdatClass <- R6::R6Class(
 
 wqxdatClass <- R6::R6Class(
   "wqxdatClass",
-  inherit = validationLog,
   public = list(
     raw_dat = NULL,
     dat = NULL,
@@ -112,7 +131,6 @@ wqxdatClass <- R6::R6Class(
 
 censdatClass <- R6::R6Class(
   "censdatClass",
-  inherit = validationLog,
   public = list(
     raw_dat = NULL,
     dat = NULL,

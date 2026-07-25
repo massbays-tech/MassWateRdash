@@ -1,6 +1,7 @@
 test_that("fl_upload works", {
   # Define var
   val_log <- validationLog$new()
+  val_edit <- editVisible$new()
   val_dat <- sitdatClass$new()
   df_sitdat <- system.file(
     "extdata",
@@ -14,6 +15,7 @@ test_that("fl_upload works", {
     read_function = readMWRsites,
     data_name = "sitdat",
     val_log = val_log,
+    val_edit = val_edit,
     val_dat = val_dat
   )
 
@@ -30,7 +32,12 @@ test_that("fl_upload works", {
       "\n\nAll checks passed!"
     )
   )
-  expect_equal(val_log$edit_dat, "")
+  expect_false(val_edit$resdat)
+  expect_false(val_edit$accdat)
+  expect_false(val_edit$frecomdat)
+  expect_false(val_edit$sitdat)
+  expect_false(val_edit$wqxdat)
+  expect_false(val_edit$censdat)
   expect_equal(data.frame(val_dat$dat, check.names = FALSE), tst$sitdat)
   expect_equal(val_dat$raw_dat, NULL)
 })
@@ -39,6 +46,7 @@ test_that("fl_upload works", {
 test_that("from_format_upload works", {
   # Define var
   val_log <- validationLog$new()
+  val_edit <- editVisible$new()
   val_dat <- sitdatClass$new()
 
   # Test
@@ -47,6 +55,7 @@ test_that("from_format_upload works", {
     retry_fn = retry_fns$sitdat,
     data_name = "sitdat",
     val_log = val_log,
+    val_edit = val_edit,
     val_dat = val_dat
   )
 
@@ -63,10 +72,14 @@ test_that("from_format_upload works", {
       "\n\nAll checks passed!"
     )
   )
-  expect_equal(val_log$edit_dat, "")
-  expect_equal(val_dat$dat,tst$sitdat)
+  expect_false(val_edit$resdat)
+  expect_false(val_edit$accdat)
+  expect_false(val_edit$frecomdat)
+  expect_false(val_edit$sitdat)
+  expect_false(val_edit$wqxdat)
+  expect_false(val_edit$censdat)
+  expect_equal(val_dat$dat, tst$sitdat)
   expect_equal(val_dat$raw_dat, NULL)
-  
 })
 
 test_that("detect_wrong_file works", {

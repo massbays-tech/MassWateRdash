@@ -120,6 +120,7 @@ parse_error_locations <- function(msg, col_names = NULL) {
 handle_retry <- function(
   data_name,
   val_log,
+  val_edit,
   val_dat,
   hot_input,
   hot_headers_input = NULL,
@@ -163,7 +164,7 @@ handle_retry <- function(
 
   result <- tryCatch(
     {
-      capture_messages(retry_fns[[data_name]](edited_df))
+      val_log$catch_msg(retry_fns[[data_name]](edited_df))
     },
     error = function(e) {
       val_log$msg <- paste0("Error in ", data_name, ": ", e$message)
@@ -174,7 +175,7 @@ handle_retry <- function(
   val_dat$dat <- result
 
   if (!is.null(result)) {
-    val_msg$edit_dat <- ""
+    val_edit[[data_name]] <- FALSE
     val_dat$raw_dat <- NULL
   }
 }

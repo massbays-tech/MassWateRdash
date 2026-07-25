@@ -1,19 +1,3 @@
-test_that("validationLog default values", {
-  test_log <- validationLog$new()
-
-  expect_equal(
-    c(
-      test_log$msg,
-      test_log$result,
-      test_log$dat,
-      test_log$raw_dat,
-      test_log$edit_dat
-    ),
-    c("", NULL, NULL, NULL, NULL, "")
-  )
-})
-
-
 test_that("validationLog$msg works", {
   test_log <- validationLog$new()
   test_log$msg <- "foo"

@@ -14,7 +14,7 @@ mod_upload_repair_ui <- function(id, dat_name) {
 
   tagList(
     conditionalPanel(
-      condition = paste0('output["', ns("show_btn"), '"] == "', dat_name, '"'),
+      condition = paste0('output["', ns("show_btn"), '"] == "TRUE"'),
       actionButton(
         ns("open_editor"),
         paste("Edit", unname(file_labels[dat_name])),
@@ -34,6 +34,7 @@ mod_upload_repair_ui <- function(id, dat_name) {
 #' @param id Namespace id for module. Should match `mod_upload_repair_ui()` id.
 #' @param dat_name String. Short dataframe name.
 #' @param val_log R6 class. Validation log and related functions.
+#' @param val_edit R6 class. Controls UI and modal visibility.
 #' @param val_dat R6 class. Dataframes.
 #'
 #' @noRd
@@ -41,6 +42,7 @@ mod_upload_repair_server <- function(
   id,
   dat_name,
   val_log,
+  val_edit,
   val_dat
 ) {
   moduleServer(id, function(input, output, session) {
@@ -48,7 +50,7 @@ mod_upload_repair_server <- function(
 
     # Toggle edit button visibility
     output$show_btn <- renderText({
-      paste(val_log$edit_dat)
+      paste(val_edit[[dat_name]])
     })
     outputOptions(output, "show_btn", suspendWhenHidden = FALSE)
 
@@ -232,6 +234,7 @@ mod_upload_repair_server <- function(
       handle_retry(
         dat_name,
         val_log = val_log,
+        val_edit = val_edit,
         val_dat = val_dat,
         hot_input = if (!col_err) input$hot else NULL,
         hot_headers_input = if (col_err) input$hot_headers else NULL,
@@ -239,7 +242,7 @@ mod_upload_repair_server <- function(
         problem_rows = parse_problem_rows(val_log$msg)
       )
 
-      if (val_log$edit_dat != dat_name) removeModal()
+      if (!val_edit[[dat_name]]) removeModal()
     }) |>
       bindEvent(input$retry)
   })

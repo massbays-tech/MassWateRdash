@@ -115,6 +115,7 @@ mod_upload_server <- function(id) {
 
     # R6 classes ----
     val_log <- validationLog$new()
+    val_edit <- editVisible$new()
     val_resdat <- resdatClass$new()
     val_accdat <- accdatClass$new()
     val_frecomdat <- frecomdatClass$new()
@@ -200,6 +201,7 @@ mod_upload_server <- function(id) {
         retry_fns$resdat,
         "resdat",
         val_log,
+        val_edit,
         val_resdat
       )
       showNotification(
@@ -217,6 +219,7 @@ mod_upload_server <- function(id) {
         retry_fns$sitdat,
         "sitdat",
         val_log,
+        val_edit,
         val_sitdat
       )
       showNotification(
@@ -242,12 +245,26 @@ mod_upload_server <- function(id) {
 
     # Upload & validate -----
     observe({
-      fl_upload(input$resdat, readMWRresults, "resdat", val_log, val_resdat)
+      fl_upload(
+        input$resdat,
+        readMWRresults,
+        "resdat",
+        val_log,
+        val_edit,
+        val_resdat
+      )
     }) |>
       bindEvent(input$resdat)
 
     observe({
-      fl_upload(input$accdat, readMWRacc, "accdat", val_log, val_accdat)
+      fl_upload(
+        input$accdat,
+        readMWRacc,
+        "accdat",
+        val_log,
+        val_edit,
+        val_accdat
+      )
     }) |>
       bindEvent(input$accdat)
 
@@ -257,18 +274,33 @@ mod_upload_server <- function(id) {
         readMWRfrecom,
         "frecomdat",
         val_log,
+        val_edit,
         val_frecomdat
       )
     }) |>
       bindEvent(input$frecomdat)
 
     observe({
-      fl_upload(input$sitdat, readMWRsites, "sitdat", val_log, val_sitdat)
+      fl_upload(
+        input$sitdat,
+        readMWRsites,
+        "sitdat",
+        val_log,
+        val_edit,
+        val_sitdat
+      )
     }) |>
       bindEvent(input$sitdat)
 
     observe({
-      fl_upload(input$wqxdat, readMWRwqx, "wqxdat", val_log, val_wqxdat)
+      fl_upload(
+        input$wqxdat,
+        readMWRwqx,
+        "wqxdat",
+        val_log,
+        val_edit,
+        val_wqxdat
+      )
     }) |>
       bindEvent(input$wqxdat)
 
@@ -278,6 +310,7 @@ mod_upload_server <- function(id) {
         readMWRcens,
         "censdat",
         val_log,
+        val_edit,
         val_censdat
       )
     }) |>
