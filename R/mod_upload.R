@@ -95,12 +95,12 @@ mod_upload_ui <- function(id) {
       bslib::card(
         bslib::card_header("Data Validation Messages"),
         uiOutput(ns("validation_messages")),
-        mod_upload_repair_ui("resdat_editor", "resdat"),
-        mod_upload_repair_ui("accdat_editor", "accdat"),
-        mod_upload_repair_ui("frecomdat_editor", "frecomdat"),
-        mod_upload_repair_ui("sitdat_editor", "sitdat"),
-        mod_upload_repair_ui("wqxdat_editor", "wqxdat"),
-        mod_upload_repair_ui("censdat_editor", "censdat")
+        mod_upload_repair_ui(ns("resdat_editor"), "resdat"),
+        mod_upload_repair_ui(ns("accdat_editor"), "accdat"),
+        mod_upload_repair_ui(ns("frecomdat_editor"), "frecomdat"),
+        mod_upload_repair_ui(ns("sitdat_editor"), "sitdat"),
+        mod_upload_repair_ui(ns("wqxdat_editor"), "wqxdat"),
+        mod_upload_repair_ui(ns("censdat_editor"), "censdat")
       )
     )
   )
@@ -123,44 +123,47 @@ mod_upload_server <- function(id) {
     val_wqxdat <- wqxdatClass$new()
     val_censdat <- censdatClass$new()
 
+    # Gargoyle watchers ----
+    gargoyle::init("update_val")
+
     # Modules ----
     wqf <- mod_upload_format_server("reformat")
-    mod_resdat <- mod_upload_repair_server(
+    mod_upload_repair_server(
       "resdat_editor",
       dat_name = "resdat",
       val_log = val_log,
       val_edit = val_edit,
       val_dat = val_resdat
     )
-    mod_accdat <- mod_upload_repair_server(
+    mod_upload_repair_server(
       "accdat_editor",
       dat_name = "accdat",
       val_log = val_log,
       val_edit = val_edit,
       val_dat = val_accdat
     )
-    mod_frecomdat <- mod_upload_repair_server(
+    mod_upload_repair_server(
       "frecomdat_editor",
       dat_name = "frecomdat",
       val_log = val_log,
       val_edit = val_edit,
       val_dat = val_frecomdat
     )
-    mod_sitdat <- mod_upload_repair_server(
+    mod_upload_repair_server(
       "sitdat_editor",
       dat_name = "sitdat",
       val_log = val_log,
       val_edit = val_edit,
       val_dat = val_sitdat
     )
-    mod_wqxdat <- mod_upload_repair_server(
+    mod_upload_repair_server(
       "wqxdat_editor",
       dat_name = "wqxdat",
       val_log = val_log,
       val_edit = val_edit,
       val_dat = val_wqxdat
     )
-    mod_censdat <- mod_upload_repair_server(
+    mod_upload_repair_server(
       "censdat_editor",
       dat_name = "censdat",
       val_log = val_log,
@@ -180,6 +183,7 @@ mod_upload_server <- function(id) {
         val_edit,
         val_resdat
       )
+      gargoyle::trigger("update_val")
       showNotification(
         "Results data loaded from format converter",
         type = "message",
@@ -198,6 +202,7 @@ mod_upload_server <- function(id) {
         val_edit,
         val_sitdat
       )
+      gargoyle::trigger("update_val")
       showNotification(
         "Sites data loaded from format converter",
         type = "message",
@@ -229,6 +234,7 @@ mod_upload_server <- function(id) {
         val_edit,
         val_resdat
       )
+      gargoyle::trigger("update_val")
     }) |>
       bindEvent(input$resdat)
 
@@ -241,6 +247,7 @@ mod_upload_server <- function(id) {
         val_edit,
         val_accdat
       )
+      gargoyle::trigger("update_val")
     }) |>
       bindEvent(input$accdat)
 
@@ -253,6 +260,7 @@ mod_upload_server <- function(id) {
         val_edit,
         val_frecomdat
       )
+      gargoyle::trigger("update_val")
     }) |>
       bindEvent(input$frecomdat)
 
@@ -265,6 +273,7 @@ mod_upload_server <- function(id) {
         val_edit,
         val_sitdat
       )
+      gargoyle::trigger("update_val")
     }) |>
       bindEvent(input$sitdat)
 
@@ -277,11 +286,12 @@ mod_upload_server <- function(id) {
         val_edit,
         val_wqxdat
       )
+      gargoyle::trigger("update_val")
     }) |>
       bindEvent(input$wqxdat)
 
     observe({
-      val_log$fl_upload(
+      fl_upload(
         input$censdat,
         readMWRcens,
         "censdat",
@@ -289,43 +299,44 @@ mod_upload_server <- function(id) {
         val_edit,
         val_censdat
       )
+      gargoyle::trigger("update_val")
     }) |>
       bindEvent(input$censdat)
 
     # Validation messages -----
     output$validation_messages <- renderUI({
-      msg <- val_log$msg
-      if (nchar(trimws(msg)) == 0) {
-        return(NULL)
-      }
-      msg <- gsub("\033\\[[0-9;]*[mGKHFABCDJK]", "", msg) # strip ANSI codes
-      lines <- strsplit(msg, "\n")[[1]]
-      lines <- lines[nchar(trimws(lines)) > 0]
-      div(HTML(paste(lines, collapse = "<br>")))
+      gargoyle::watch("update_val")
+      format_log(val_log$msg)
     })
 
     # Data Status ----
     output$resdat_status <- renderUI({
+      gargoyle::watch("update_val")
       fl_status(input$tester, input$resdat, val_resdat$dat)
     })
 
     output$accdat_status <- renderUI({
+      gargoyle::watch("update_val")
       fl_status(input$tester, input$accdat, val_accdat$dat)
     })
 
     output$frecomdat_status <- renderUI({
+      gargoyle::watch("update_val")
       fl_status(input$tester, input$frecomdat, val_frecomdat$dat)
     })
 
     output$sitdat_status <- renderUI({
+      gargoyle::watch("update_val")
       fl_status(input$tester, input$sitdat, val_sitdat$dat)
     })
 
     output$wqxdat_status <- renderUI({
+      gargoyle::watch("update_val")
       fl_status(input$tester, input$wqxdat, val_wqxdat$dat)
     })
 
     output$censdat_status <- renderUI({
+      gargoyle::watch("update_val")
       fl_status(input$tester, input$censdat, val_censdat$dat)
     })
 
@@ -397,7 +408,8 @@ mod_upload_server <- function(id) {
         wqx = wqxdat,
         cens = censdat
       )
-    })
+    }) |>
+      bindEvent(input$tester, gargoyle::watch("update_val"))
 
     # Download data ----
     output$download_data_btn <- renderUI({

@@ -72,12 +72,7 @@ test_that("from_format_upload works", {
       "\n\nAll checks passed!"
     )
   )
-  expect_false(val_edit$resdat)
-  expect_false(val_edit$accdat)
-  expect_false(val_edit$frecomdat)
   expect_false(val_edit$sitdat)
-  expect_false(val_edit$wqxdat)
-  expect_false(val_edit$censdat)
   expect_equal(val_dat$dat, tst$sitdat)
   expect_equal(val_dat$raw_dat, NULL)
 })
@@ -131,5 +126,21 @@ test_that("fl_status works", {
   expect_equal(
     fl_status(FALSE, "foo", "bar"),
     HTML("<span style='color:#64C147'>Data loaded</span>")
+  )
+})
+
+test_that("format_log works", {
+  expect_equal(
+    format_log("foo\nbar"),
+    div(HTML("foo<br>bar"))
+  )
+
+  # Check R6
+  val_log <- validationLog$new()
+  val_log$msg <- "foo\nbar"
+
+  expect_equal(
+    format_log(val_log$msg),
+    div(HTML("foo<br>bar"))
   )
 })

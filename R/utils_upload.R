@@ -91,7 +91,8 @@ retry_fns <- list(
 #' @param data_name String. Data name.
 #' @param val_log R6 class. Must contain function catch_msg and variables msg,
 #' edit_dat.
-#' @param val_edit R6 class. TRUE and FALSE values on whether to show/hide the edits for each var
+#' @param val_edit R6 class. Contains `TRUE` and `FALSE` values on whether to 
+#' show/hide the edit modal.
 #' @param val_dat R6 class. Must contain variables raw_dat, dat.
 #'
 #' @noRd
@@ -149,11 +150,12 @@ fl_upload <- function(
 #' @param data_name String. Data name.
 #' @param val_log R6 class. Must contain function catch_msg and variables msg,
 #' edit_dat.
-#' @param val_edit R6 class. TRUE and FALSE values on whether to show/hide the edits for each var
+#' @param val_edit R6 class. TRUE and FALSE values on whether to show/hide the 
+#' edits for each var
 #' @param val_dat R6 class. Must contain variables raw_dat, dat.
 #'
 #' @noRd
-from_format_upload = function(
+from_format_upload <- function(
   df,
   retry_fn,
   data_name,
@@ -163,12 +165,7 @@ from_format_upload = function(
 ) {
   val_log$msg <- ""
   val_dat$raw_dat <- NULL
-
-  var_list <- c("resdat", "accdat", "frecomdat", "sitdat", "wqxdat", "censdat")
-
-  for (nm in var_list) {
-    val_edit[[nm]] <- FALSE
-  }
+  val_edit[[data_name]] <- FALSE
 
   result <- tryCatch(
     {
@@ -177,7 +174,7 @@ from_format_upload = function(
     error = function(e) {
       val_log$msg <- paste0("Error processing ", data_name, ": ", e$message)
       val_dat$raw_dat <- df
-      val_edit[[data_name]] <- data_name
+      val_edit[[data_name]] <- TRUE
       NULL
     }
   )
@@ -198,17 +195,36 @@ from_format_upload = function(
 #'
 #' @noRd
 fl_status <- function(tester, file_input, data_state) {
-  if (tester) {
-    msg <- "<span style='color:#00A4CF'>Using test data</span>"
+  msg <- if (tester) {
+    "<span style='color:#00A4CF'>Using test data</span>"
   } else if (is.null(file_input) && is.null(data_state)) {
-    msg <- "No file uploaded"
+    "No file uploaded"
   } else if (is.null(data_state)) {
-    msg <- "<span style='color:#f54242'>Error loading</span>"
+    "<span style='color:#f54242'>Error loading</span>"
   } else if (is.null(file_input)) {
-    msg <- "<span style='color:#64C147'>Loaded from format converter</span>"
+    "<span style='color:#64C147'>Loaded from format converter</span>"
   } else {
-    msg <- "<span style='color:#64C147'>Data loaded</span>"
+    "<span style='color:#64C147'>Data loaded</span>"
   }
 
   HTML(msg)
+}
+
+#' Format validation log
+#'
+#' @description `format_log()` formats a validation log as an HTML format.
+#'
+#' @param msg String. Input message.
+#'
+#' @return HTML message
+#'
+#' @noRd
+format_log <- function(msg) {
+  if (nchar(trimws(msg)) == 0) {
+    return(NULL)
+  }
+  msg <- gsub("\033\\[[0-9;]*[mGKHFABCDJK]", "", msg) # strip ANSI codes
+  lines <- strsplit(msg, "\n")[[1]]
+  lines <- lines[nchar(trimws(lines)) > 0]
+  div(HTML(paste(lines, collapse = "<br>")))
 }

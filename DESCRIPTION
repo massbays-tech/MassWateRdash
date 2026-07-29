@@ -51,6 +51,7 @@ Imports:
     config,
     dplyr,
     flextable,
+    gargoyle,
     ggplot2,
     golem,
     htmltools,
