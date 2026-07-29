@@ -44,18 +44,20 @@ Description: What the package does (one paragraph).
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
+RoxygenNote: 8.0.0
 Imports: 
     bsicons,
     bslib,
     config,
     dplyr,
     flextable,
+    gargoyle,
     ggplot2,
     golem,
     htmltools,
     lubridate,
     MassWateR,
+    R6,
     reactable,
     readxl,
     rhandsontable,

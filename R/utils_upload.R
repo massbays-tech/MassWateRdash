@@ -1,22 +1,3 @@
-# Function to capture and log messages
-capture_messages <- function(expr) {
-  # Create a text connection to capture output
-  temp <- textConnection("messages", "w", local = TRUE)
-  sink(temp, type = "message")
-  on.exit({
-    sink(type = "message")
-    close(temp)
-  })
-
-  # Get the captured messages
-  new_msgs <- if (exists("messages")) paste(messages, collapse = "\n") else ""
-
-  list(
-    result = expr,
-    msgs = new_msgs
-  )
-}
-
 detect_wrong_file <- function(raw_df, data_name) {
   if (is.null(raw_df)) {
     return(NULL)
@@ -88,9 +69,9 @@ retry_fns <- list(
         names(df) &&
         !lubridate::is.POSIXct(df$`Activity Start Date`)
     ) {
-      df$`Activity Start Date` <- as.POSIXct(as.character(
-        df$`Activity Start Date`
-      ))
+      df$`Activity Start Date` <- as.POSIXct(
+        as.character(df$`Activity Start Date`)
+      )
     }
     formMWRresults(checkMWRresults(df, warn = TRUE))
   },
@@ -101,81 +82,104 @@ retry_fns <- list(
   censdat = function(df) formMWRcens(checkMWRcens(df, warn = TRUE))
 )
 
-# file upload for observers
-fl_upload <- function(file, read_function, data_name) {
+#' File upload
+#'
+#' @description `fl_upload()` ...
+#'
+#' @param file Input file
+#' @param read_function Read function
+#' @param data_name String. Data name.
+#' @param val_log R6 class. Must contain function catch_msg and variables msg,
+#' edit_dat.
+#' @param val_edit R6 class. Contains `TRUE` and `FALSE` values on whether to 
+#' show/hide the edit modal.
+#' @param val_dat R6 class. Must contain variables raw_dat, dat.
+#'
+#' @noRd
+fl_upload <- function(
+  file,
+  read_function,
+  data_name,
+  val_log,
+  val_edit,
+  val_dat
+) {
   req(file)
 
-  val_log <- ""
-  raw_dat_state <- NULL
-  edit_visible <- FALSE
+  val_log$msg <- ""
+  val_dat$raw_dat <- NULL
+
+  var_list <- c("resdat", "accdat", "frecomdat", "sitdat", "wqxdat", "censdat")
+
+  for (nm in var_list) {
+    val_edit[[nm]] <- FALSE
+  }
+
+  dat_path <- if (is.character(file)) file else file$datapath # for testing
 
   result <- tryCatch(
     {
-      capture_messages(read_function(file$datapath))
+      val_log$catch_msg(read_function(dat_path))
     },
     error = function(e) {
       raw <- tryCatch(
-        raw_read_fns[[data_name]](file$datapath),
+        raw_read_fns[[data_name]](dat_path),
         error = function(e2) NULL
       )
       wrong_file_msg <- detect_wrong_file(raw, data_name)
       if (!is.null(wrong_file_msg)) {
-        val_log <- wrong_file_msg
+        val_log$msg <- wrong_file_msg
       } else {
-        val_log <- paste0("Error in ", data_name, ": ", e$message)
-        raw_dat_state <- raw
-        edit_visible <- !is.null(raw)
+        val_log$msg <- paste0("Error in ", data_name, ": ", e$message)
+        val_dat$raw_dat <- raw
+        val_edit[[data_name]] <- !is.null(raw)
       }
       NULL
     }
   )
 
-  if (!is.null(result)) {
-    val_log <- result$msgs
-    dat_state <- result$result
-  } else {
-    dat_state <- NULL
-  }
-
-  return(
-    val_log = val_log,
-    raw_dat_state = raw_dat_state,
-    dat_state = dat_state,
-    edit_visible = if (!edit_visible) "" else data_name
-  )
+  val_dat$dat <- result$result
 }
 
-# upload handler for data already converted in memory (e.g. from Format tab)
-from_format_upload <- function(df, retry_fn, data_name) {
-  val_log <- ""
-  raw_dat_state <- NULL
-  edit_visible <- FALSE
+#' From format upload
+#'
+#' @description `from_format_upload()` ...
+#'
+#' @param df Dataframe
+#' @param retry_fn Function
+#' @param data_name String. Data name.
+#' @param val_log R6 class. Must contain function catch_msg and variables msg,
+#' edit_dat.
+#' @param val_edit R6 class. TRUE and FALSE values on whether to show/hide the 
+#' edits for each var
+#' @param val_dat R6 class. Must contain variables raw_dat, dat.
+#'
+#' @noRd
+from_format_upload <- function(
+  df,
+  retry_fn,
+  data_name,
+  val_log,
+  val_edit,
+  val_dat
+) {
+  val_log$msg <- ""
+  val_dat$raw_dat <- NULL
+  val_edit[[data_name]] <- FALSE
 
   result <- tryCatch(
     {
-      capture_messages(retry_fn(df))
+      val_log$catch_msg(retry_fn(df))
     },
     error = function(e) {
-      val_log <- paste0("Error processing ", data_name, ": ", e$message)
-      raw_dat_state <- df
-      edit_visible <- TRUE
+      val_log$msg <- paste0("Error processing ", data_name, ": ", e$message)
+      val_dat$raw_dat <- df
+      val_edit[[data_name]] <- TRUE
       NULL
     }
   )
 
-  if (!is.null(result)) {
-    val_log <- result$msgs
-    dat_state <- result$result
-  } else {
-    dat_state <- NULL
-  }
-
-  return(
-    val_log = val_log,
-    raw_dat_state = raw_dat_state,
-    dat_state = dat_state,
-    edit_visible = if (!edit_visible) "" else data_name
-  )
+  val_dat$dat <- result$result
 }
 
 #' File status
@@ -191,17 +195,36 @@ from_format_upload <- function(df, retry_fn, data_name) {
 #'
 #' @noRd
 fl_status <- function(tester, file_input, data_state) {
-  if (tester) {
-    msg <- "<span style='color:#00A4CF'>Using test data</span>"
+  msg <- if (tester) {
+    "<span style='color:#00A4CF'>Using test data</span>"
   } else if (is.null(file_input) && is.null(data_state)) {
-    msg <- "No file uploaded"
+    "No file uploaded"
   } else if (is.null(data_state)) {
-    msg <- "<span style='color:#f54242'>Error loading</span>"
+    "<span style='color:#f54242'>Error loading</span>"
   } else if (is.null(file_input)) {
-    msg <- "<span style='color:#64C147'>Loaded from format converter</span>"
+    "<span style='color:#64C147'>Loaded from format converter</span>"
   } else {
-    msg <- "<span style='color:#64C147'>Data loaded</span>"
+    "<span style='color:#64C147'>Data loaded</span>"
   }
 
   HTML(msg)
+}
+
+#' Format validation log
+#'
+#' @description `format_log()` formats a validation log as an HTML format.
+#'
+#' @param msg String. Input message.
+#'
+#' @return HTML message
+#'
+#' @noRd
+format_log <- function(msg) {
+  if (nchar(trimws(msg)) == 0) {
+    return(NULL)
+  }
+  msg <- gsub("\033\\[[0-9;]*[mGKHFABCDJK]", "", msg) # strip ANSI codes
+  lines <- strsplit(msg, "\n")[[1]]
+  lines <- lines[nchar(trimws(lines)) > 0]
+  div(HTML(paste(lines, collapse = "<br>")))
 }

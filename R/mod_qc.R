@@ -17,11 +17,11 @@ mod_qc_ui <- function(id) {
         bslib::navset_pill(
           bslib::nav_panel(
             "Frequency & Completeness",
-            uiOutput("frecomdat_table")
+            uiOutput(ns("frecomdat_table"))
           ),
           bslib::nav_panel(
             "Accuracy",
-            uiOutput("accdat_table")
+            uiOutput(ns("accdat_table"))
           )
         )
       ),
@@ -30,11 +30,11 @@ mod_qc_ui <- function(id) {
         bslib::navset_pill(
           bslib::nav_panel(
             "Percent",
-            uiOutput("tabaccper")
+            uiOutput(ns("tabaccper"))
           ),
           bslib::nav_panel(
             "Summary",
-            uiOutput("tabaccsum")
+            uiOutput(ns("tabaccsum"))
           )
         )
       ),
@@ -43,46 +43,46 @@ mod_qc_ui <- function(id) {
         bslib::navset_pill(
           bslib::nav_panel(
             "Percent",
-            uiOutput("tabfreper")
+            uiOutput(ns("tabfreper"))
           ),
           bslib::nav_panel(
             "Summary",
-            uiOutput("tabfresum")
+            uiOutput(ns("tabfresum"))
           )
         )
       ),
       bslib::nav_panel(
         "Completeness",
-        uiOutput("tabcom")
+        uiOutput(ns("tabcom"))
       ),
       bslib::nav_panel(
         "Raw Data",
         bslib::navset_pill(
           bslib::nav_panel(
             "Field Duplicates",
-            uiOutput("indflddup")
+            uiOutput(ns("indflddup"))
           ),
           bslib::nav_panel(
             "Lab Duplicates",
-            uiOutput("indlabdup")
+            uiOutput(ns("indlabdup"))
           ),
           bslib::nav_panel(
             "Field Blanks",
-            uiOutput("indfldblk")
+            uiOutput(ns("indfldblk"))
           ),
           bslib::nav_panel(
             "Lab Blanks",
-            uiOutput("indlabblk")
+            uiOutput(ns("indlabblk"))
           ),
           bslib::nav_panel(
             "Lab Spikes / Instrument Checks",
-            uiOutput("indlabins")
+            uiOutput(ns("indlabins"))
           )
         )
       ),
       bslib::nav_panel(
         "Report",
-        uiOutput("dwnldqcbutt")
+        uiOutput(ns("dwnldqcbutt"))
       )
     )
   )

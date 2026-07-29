@@ -1,3 +1,19 @@
+test_that("capture_local_messages works", {
+  test_fun <- function() {
+    message("This is a message")
+
+    "This is the result"
+  }
+
+  expect_equal(
+    capture_local_messages(test_fun()),
+    list(
+      dat = "This is the result",
+      msg = "This is a message"
+    )
+  )
+})
+
 test_that("try_rename works", {
   df_in <- data.frame(
     Param = c("DO", "foo", "DO sat", "DO")
@@ -5,13 +21,16 @@ test_that("try_rename works", {
 
   df_out <- data.frame(
     Param = c(
-      "Dissolved oxygen (DO)", "foo", "Dissolved oxygen saturation",
+      "Dissolved oxygen (DO)",
+      "foo",
+      "Dissolved oxygen saturation",
       "Dissolved oxygen (DO)"
     )
   )
 
   var_names <- c(
-    `Dissolved oxygen (DO)` = "DO", `Dissolved oxygen saturation` = "DO sat"
+    `Dissolved oxygen (DO)` = "DO",
+    `Dissolved oxygen saturation` = "DO sat"
   )
 
   expect_equal(
@@ -34,14 +53,19 @@ test_that("format_custom_results works", {
   df_in <- data.frame(
     Site_ID = c("HBS-016", "HBS-016", NA, NA),
     Activity_Type = c(
-      "Field Msr/Obs", "Sample-Routine", "Lab Duplicate", "Calibration Check"
+      "Field Msr/Obs",
+      "Sample-Routine",
+      "Lab Duplicate",
+      "Calibration Check"
     ),
     Date = as.Date(c("2021-06-13", "2021-08-15", "2021-05-16", "2021-09-12")),
     Time = c("8:00", "7:40", NA, NA),
     Depth = c(1, 0.75, NA, NA),
     Depth_Unit = c("ft", "ft", NA, NA),
     Parameter = c(
-      "Dissolved oxygen saturation", "Total suspended solids", "Nitrate",
+      "Dissolved oxygen saturation",
+      "Total suspended solids",
+      "Nitrate",
       "Specific conductance"
     ),
     Result = c(46.8, 5, 0.45, 980),
@@ -58,7 +82,9 @@ test_that("format_custom_results works", {
   df_out <- data.frame(
     "Monitoring Location ID" = c("HBS-016", "HBS-016", NA, NA),
     "Activity Type" = c(
-      "Field Msr/Obs", "Sample-Routine", "Quality Control Sample-Lab Duplicate",
+      "Field Msr/Obs",
+      "Sample-Routine",
+      "Quality Control Sample-Lab Duplicate",
       "Quality Control-Calibration Check"
     ),
     "Activity Start Date" = as.Date(
@@ -69,7 +95,10 @@ test_that("format_custom_results works", {
     "Activity Depth/Height Unit" = c("ft", "ft", NA, NA),
     "Activity Relative Depth Name" = NA,
     "Characteristic Name" = c(
-      "DO saturation", "TSS", "Nitrate", "Sp Conductance"
+      "DO saturation",
+      "TSS",
+      "Nitrate",
+      "Sp Conductance"
     ),
     "Result Value" = c(46.8, 5, 0.45, 980),
     "Result Unit" = c("%", "mg/l", "mg/l", "uS/cm"),

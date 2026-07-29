@@ -110,8 +110,8 @@ mod_visualize_server <- function(id, fsetls) {
       req(fsetls$res(), param2)
 
       tosel <- fsetls$res() |>
-        dplyr::filter(`Characteristic Name` == param2) |>
-        dplyr::pull(`Activity Start Date`) |>
+        dplyr::filter(.data$`Characteristic Name` == param2) |>
+        dplyr::pull(.data$`Activity Start Date`) |>
         range() |>
         as.Date()
 
