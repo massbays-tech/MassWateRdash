@@ -85,10 +85,10 @@ ui <- bslib::page_navbar(
     "1 Upload & Validate",
     mod_upload_ui("upload")
   ),
-  # bslib::nav_panel(
-  #   "2 Outlier assessment",
-  #   mod_outlier_ui("outlier")
-  # ),
+  bslib::nav_panel(
+    "2 Outlier assessment",
+    mod_outlier_ui("outlier")
+  ),
   # bslib::nav_panel(
   #   "3 QC reporting",
   #   mod_qc_ui("qc")
@@ -117,7 +117,7 @@ ui <- bslib::page_navbar(
 server <- function(input, output, session) {
   # Modules ----
   fsetls <- mod_upload_server("upload")
-  # mod_outlier_server("outlier", fsetls)
+  mod_outlier_server("outlier", fsetls)
   # mod_qc_server("qc", fsetls)
   # mod_wqx_server("wqx", fsetls)
   # mod_visualize_server("visualize", fsetls)

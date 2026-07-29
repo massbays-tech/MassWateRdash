@@ -15,55 +15,44 @@ mod_outlier_ui <- function(id) {
       sidebar = bslib::sidebar(
         title = "Options",
         width = 500,
-        tabsetPanel(
-          id = ns("ts_sidebar"),
-          type = "hidden",
-          tabPanelBody(
-            "loading",
-            'Waiting for input data...'
-          ),
-          tabPanelBody(
-            "ready",
-            selectInput(
-              ns("param"),
-              "Parameter",
-              choices = NULL
-            ),
-            sliderInput(
-              ns("date_range"),
-              "Date range",
-              min = Sys.Date(),
-              max = Sys.Date(),
-              value = c(Sys.Date(), Sys.Date()),
-              width = '95%'
-            ),
-            selectInput(
-              ns("group"),
-              "Group by",
-              choices = c("month", "week", "site")
-            ),
-            selectInput(
-              ns("type"),
-              "Plot type",
-              choices = c("box", "jitterbox", "jitter")
-            )
-          )
+        selectInput(
+          ns("param"),
+          "Parameter",
+          choices = NULL
+        ),
+        sliderInput(
+          ns("date_range"),
+          "Date range",
+          min = Sys.Date(),
+          max = Sys.Date(),
+          value = c(Sys.Date(), Sys.Date()),
+          width = '95%'
+        ),
+        selectInput(
+          ns("group"),
+          "Group by",
+          choices = c("month", "week", "site")
+        ),
+        selectInput(
+          ns("type"),
+          "Plot type",
+          choices = c("box", "jitterbox", "jitter")
         )
       ),
       bslib::navset_card_underline(
         full_screen = TRUE,
         bslib::nav_panel(
           "Plot",
-          plotOutput("outlier_plot")
+          plotOutput(ns("outlier_plot"))
         ),
         bslib::nav_panel(
           "Table",
-          reactable::reactableOutput("outlier_table")
+          reactable::reactableOutput(ns("outlier_table"))
         ),
         bslib::nav_panel(
           "Report",
-          uiOutput("dwnldoutwrdbutt"),
-          uiOutput("dwnldoutzipbutt")
+          uiOutput(ns("dwnldoutwrdbutt")),
+          uiOutput(ns("dwnldoutzipbutt"))
         )
       )
     )
@@ -77,21 +66,21 @@ mod_outlier_server <- function(id, fsetls) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Toggle tabset ----
+    #Toggle tabset ----
     observe({
-      if (!isTruthy(fsetls$res())) {
+      if (!isTruthy(fsetls()$res)) {
         updateTabsetPanel(inputId = "ts_sidebar", selected = "loading")
       } else {
         updateTabsetPanel(inputId = "ts_sidebar", selected = "ready")
       }
     }) |>
-      bindEvent(fsetls$res())
+      bindEvent(fsetls()$res)
 
     # reactive UI -----
     observe({
-      req(fsetls$res())
+      req(fsetls()$res)
 
-      dat <- fsetls$res()
+      dat <- fsetls()$res
 
       tosel <- sort(unique(dat$`Characteristic Name`))
 
@@ -101,14 +90,14 @@ mod_outlier_server <- function(id, fsetls) {
         choices = tosel
       )
     }) |>
-      bindEvent(fsetls$res())
+      bindEvent(fsetls()$res)
 
     observe({
-      req(fsetls$res(), input$param)
+      req(fsetls()$res, input$param)
 
       param <- input$param
 
-      tosel <- fsetls$res() |>
+      tosel <- fsetls()$res |>
         dplyr::filter(.data$`Characteristic Name` == param) |>
         dplyr::pull(.data$`Activity Start Date`) |>
         range() |>
@@ -122,7 +111,7 @@ mod_outlier_server <- function(id, fsetls) {
         value = tosel
       )
     }) |>
-      bindEvent(fsetls$res(), input$param)
+      bindEvent(fsetls()$res, input$param)
 
     # Plots ----
     output$outlier_plot <- renderPlot({
@@ -132,12 +121,12 @@ mod_outlier_server <- function(id, fsetls) {
       group <- input$group
       type <- input$type
 
-      req(fsetls$res(), fsetls$acc(), param, date_range)
+      req(fsetls()$res, fsetls()$acc, param, date_range)
 
       anlzMWRoutlier(
-        res = fsetls$res(),
+        res = fsetls()$res,
         param = param,
-        acc = fsetls$acc(),
+        acc = fsetls()$acc,
         group = group,
         type = type,
         dtrng = date_range,
@@ -153,27 +142,25 @@ mod_outlier_server <- function(id, fsetls) {
       group <- input$group
       type <- input$type
 
-      req(fsetls$res(), fsetls$acc(), param, date_range)
+      req(fsetls()$res, fsetls()$acc, param, date_range)
 
       tab <- anlzMWRoutlier(
-        res = fsetls$res(),
+        res = fsetls()$res,
         param = param,
-        acc = fsetls$acc(),
+        acc = fsetls()$acc,
         group = group,
         dtrng = date_range,
-        outliers = T
+        outliers = TRUE
       )
 
-      out <- reactable::reactable(
+      reactable::reactable(
         tab,
         defaultColDef = reactable::colDef(
           footerStyle = list(fontWeight = "bold"),
           resizable = TRUE
         ),
-        filterable = T
+        filterable = TRUE
       )
-
-      return(out)
     })
 
     # download outlier report word
