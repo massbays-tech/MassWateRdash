@@ -97,26 +97,26 @@ mod_qc_server <- function(id, fsetls) {
 
     # dqo table frecomdat
     output$frecomdat_table <- renderUI({
-      req(fsetls$frecom())
+      req(fsetls()$frecom)
 
-      frecomdat_tab(fsetls$frecom(), dqofontsize, padding, wd)
+      frecomdat_tab(fsetls()$frecom, dqofontsize, padding, wd)
     })
 
     # dqo table accdat
     output$accdat_table <- renderUI({
-      req(fsetls$acc())
+      req(fsetls()$acc)
 
-      accdat_tab(fsetls$acc(), dqofontsize, padding, wd)
+      accdat_tab(fsetls()$acc, dqofontsize, padding, wd)
     })
 
     # frequency table percent
     output$tabfreper <- renderUI({
-      req(fsetls$res(), fsetls$acc(), fsetls$frecom())
+      req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
 
       tabMWRfre(
-        res = fsetls$res(),
-        acc = fsetls$acc(),
-        frecom = fsetls$frecom(),
+        res = fsetls()$res,
+        acc = fsetls()$acc,
+        frecom = fsetls()$frecom,
         type = "percent",
         warn = F
       ) |>
@@ -126,12 +126,12 @@ mod_qc_server <- function(id, fsetls) {
 
     # frequency summary table
     output$tabfresum <- renderUI({
-      req(fsetls$res(), fsetls$acc(), fsetls$frecom())
+      req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
 
       tabMWRfre(
-        res = fsetls$res(),
-        acc = fsetls$acc(),
-        frecom = fsetls$frecom(),
+        res = fsetls()$res,
+        acc = fsetls()$acc,
+        frecom = fsetls()$frecom,
         type = "summary",
         warn = F
       ) |>
@@ -141,12 +141,12 @@ mod_qc_server <- function(id, fsetls) {
 
     # accuracy table percent
     output$tabaccper <- renderUI({
-      req(fsetls$res(), fsetls$acc(), fsetls$frecom())
+      req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
 
       tabMWRacc(
-        res = fsetls$res(),
-        acc = fsetls$acc(),
-        frecom = fsetls$frecom(),
+        res = fsetls()$res,
+        acc = fsetls()$acc,
+        frecom = fsetls()$frecom,
         type = "percent",
         warn = F
       ) |>
@@ -156,12 +156,12 @@ mod_qc_server <- function(id, fsetls) {
 
     # accuracy table summary
     output$tabaccsum <- renderUI({
-      req(fsetls$res(), fsetls$acc(), fsetls$frecom())
+      req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
 
       tabMWRacc(
-        res = fsetls$res(),
-        acc = fsetls$acc(),
-        frecom = fsetls$frecom(),
+        res = fsetls()$res,
+        acc = fsetls()$acc,
+        frecom = fsetls()$frecom,
         type = "summary",
         warn = F
       ) |>
@@ -171,12 +171,12 @@ mod_qc_server <- function(id, fsetls) {
 
     # completeness table
     output$tabcom <- renderUI({
-      req(fsetls$res(), fsetls$frecom())
+      req(fsetls()$res, fsetls()$frecom)
 
       out <- tabMWRcom(
-        res = fsetls$res(),
-        frecom = fsetls$frecom(),
-        cens = fsetls$cens(),
+        res = fsetls()$res,
+        frecom = fsetls()$frecom,
+        cens = fsetls()$cens,
         warn = F,
         parameterwd = 1.15
       )
@@ -192,12 +192,12 @@ mod_qc_server <- function(id, fsetls) {
 
     # individual field duplicates
     output$indflddup <- renderUI({
-      req(fsetls$res(), fsetls$acc(), fsetls$frecom())
+      req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
 
       tabMWRacc(
-        res = fsetls$res(),
-        acc = fsetls$acc(),
-        frecom = fsetls$frecom(),
+        res = fsetls()$res,
+        acc = fsetls()$acc,
+        frecom = fsetls()$frecom,
         type = "individual",
         accchk = "Field Duplicates",
         warn = F,
@@ -209,12 +209,12 @@ mod_qc_server <- function(id, fsetls) {
 
     # individual lab duplicates
     output$indlabdup <- renderUI({
-      req(fsetls$res(), fsetls$acc(), fsetls$frecom())
+      req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
 
       tabMWRacc(
-        res = fsetls$res(),
-        acc = fsetls$acc(),
-        frecom = fsetls$frecom(),
+        res = fsetls()$res,
+        acc = fsetls()$acc,
+        frecom = fsetls()$frecom,
         type = "individual",
         accchk = "Lab Duplicates",
         warn = F,
@@ -226,12 +226,12 @@ mod_qc_server <- function(id, fsetls) {
 
     # individual field blanks
     output$indfldblk <- renderUI({
-      req(fsetls$res(), fsetls$acc(), fsetls$frecom())
+      req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
 
       tabMWRacc(
-        res = fsetls$res(),
-        acc = fsetls$acc(),
-        frecom = fsetls$frecom(),
+        res = fsetls()$res,
+        acc = fsetls()$acc,
+        frecom = fsetls()$frecom,
         type = "individual",
         accchk = "Field Blanks",
         warn = F,
@@ -243,12 +243,12 @@ mod_qc_server <- function(id, fsetls) {
 
     # individual lab blanks
     output$indlabblk <- renderUI({
-      req(fsetls$res(), fsetls$acc(), fsetls$frecom())
+      req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
 
       tabMWRacc(
-        res = fsetls$res(),
-        acc = fsetls$acc(),
-        frecom = fsetls$frecom(),
+        res = fsetls()$res,
+        acc = fsetls()$acc,
+        frecom = fsetls()$frecom,
         type = "individual",
         accchk = "Lab Blanks",
         warn = F,
@@ -260,12 +260,12 @@ mod_qc_server <- function(id, fsetls) {
 
     # individual lab spikes/instrument checks
     output$indlabins <- renderUI({
-      req(fsetls$res(), fsetls$acc(), fsetls$frecom())
+      req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
 
       tabMWRacc(
-        res = fsetls$res(),
-        acc = fsetls$acc(),
-        frecom = fsetls$frecom(),
+        res = fsetls()$res,
+        acc = fsetls()$acc,
+        frecom = fsetls()$frecom,
         type = "individual",
         accchk = "Lab Spikes / Instrument Checks",
         warn = F,

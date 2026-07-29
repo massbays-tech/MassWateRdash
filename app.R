@@ -89,18 +89,18 @@ ui <- bslib::page_navbar(
     "2 Outlier assessment",
     mod_outlier_ui("outlier")
   ),
-  # bslib::nav_panel(
-  #   "3 QC reporting",
-  #   mod_qc_ui("qc")
-  # ),
-  # bslib::nav_panel(
-  #   "4 WQX output",
-  #   mod_wqx_ui("wqx")
-  # ),
-  # bslib::nav_panel(
-  #   "5 Visualize",
-  #   mod_visualize_ui("visualize")
-  # ),
+  bslib::nav_panel(
+    "3 QC reporting",
+    mod_qc_ui("qc")
+  ),
+  bslib::nav_panel(
+    "4 WQX output",
+    mod_wqx_ui("wqx")
+  ),
+  bslib::nav_panel(
+    "5 Visualize",
+    mod_visualize_ui("visualize")
+  ),
 
   bslib::nav_spacer(),
 
@@ -118,9 +118,9 @@ server <- function(input, output, session) {
   # Modules ----
   fsetls <- mod_upload_server("upload")
   mod_outlier_server("outlier", fsetls)
-  # mod_qc_server("qc", fsetls)
-  # mod_wqx_server("wqx", fsetls)
-  # mod_visualize_server("visualize", fsetls)
+  mod_qc_server("qc", fsetls)
+  mod_wqx_server("wqx", fsetls)
+  mod_visualize_server("visualize", fsetls)
 }
 
 shinyApp(ui = ui, server = server)

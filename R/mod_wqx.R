@@ -40,7 +40,7 @@ mod_wqx_server <- function(id, fsetls) {
     ns <- session$ns
     # list output
     tabwqx <- reactive({
-      req(fsetls$res(), fsetls$acc(), fsetls$sit(), fsetls$wqx())
+      req(fsetls()$res, fsetls()$acc, fsetls()$sit, fsetls()$wqx)
 
       tabMWRwqx(fset = fsetls(), listout = TRUE, warn = FALSE)
     })

@@ -208,5 +208,11 @@ mod_outlier_server <- function(id, fsetls) {
         )
       }
     )
+
+    output$dwnldoutwrdbutt <- renderUI({
+      req(fsetls()$res, fsetls()$acc)
+
+      dl_btn('dwnldoutwrd', 'Download outlier report: Word')
+    })
   })
 }

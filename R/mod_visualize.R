@@ -107,9 +107,9 @@ mod_visualize_server <- function(id, fsetls) {
       # inputs
       param2 <- input$param2
 
-      req(fsetls$res(), param2)
+      req(fsetls()$res, param2)
 
-      tosel <- fsetls$res() |>
+      tosel <- fsetls()$res |>
         dplyr::filter(.data$`Characteristic Name` == param2) |>
         dplyr::pull(.data$`Activity Start Date`) |>
         range() |>
@@ -131,8 +131,8 @@ mod_visualize_server <- function(id, fsetls) {
     valid_sites2 <- reactive({
       param2 <- input$param2
       dtrng2 <- input$dtrng2
-      req(fsetls$res(), param2, dtrng2)
-      fsetls$res() |>
+      req(fsetls()$res, param2, dtrng2)
+      fsetls()$res |>
         dplyr::filter(
           .data$`Characteristic Name` == param2,
           .data$`Activity Start Date` >= dtrng2[1],
@@ -216,32 +216,26 @@ mod_visualize_server <- function(id, fsetls) {
       }
     })
 
-    output$dwnldoutwrdbutt <- renderUI({
-      req(fsetls$res(), fsetls$acc())
-
-      dl_btn(ns('dwnldoutwrd'), 'Download outlier report: Word')
-    })
-
     output$dwnldoutzipbutt <- renderUI({
-      req(fsetls$res(), fsetls$acc())
+      req(fsetls()$res, fsetls()$acc)
 
       dl_btn(ns('dwnldoutzip'), 'Download outlier report: Zipped images')
     })
 
     output$dwnldqcbutt <- renderUI({
-      req(fsetls$res(), fsetls$acc(), fsetls$frecom())
+      req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
 
       dl_btn(ns('dwnldqc'), 'Download quality control report')
     })
 
     output$dwnldwqxbutt <- renderUI({
-      req(req(fsetls$res(), fsetls$acc(), fsetls$sit(), fsetls$wqx()))
+      req(fsetls()$res, fsetls()$acc, fsetls()$sit, fsetls()$wqx)
 
       dl_btn(ns('dwnldwqx'), 'Download WQX workbook')
     })
 
     output$download_plot_btn <- renderUI({
-      req(fsetls$res(), input$param2)
+      req(fsetls()$res, input$param2)
       actionButton(
         ns("open_plot_download"),
         "Download plot",
@@ -388,14 +382,14 @@ mod_visualize_server <- function(id, fsetls) {
       type2 <- input$type2
       confint2 <- isTRUE(as.logical(input$confint2))
 
-      req(fsetls$res(), fsetls$acc(), param2, dtrng2, sites2)
+      req(fsetls()$res, fsetls()$acc, param2, dtrng2, sites2)
       req(all(sites2 %in% valid_sites2()))
 
       anlzMWRseason(
-        res = fsetls$res(),
+        res = fsetls()$res,
         param = param2,
-        acc = fsetls$acc(),
-        sit = fsetls$sit(),
+        acc = fsetls()$acc,
+        sit = fsetls()$sit,
         thresh = thresh,
         type = type2,
         dtrng = dtrng2,
@@ -416,14 +410,14 @@ mod_visualize_server <- function(id, fsetls) {
       group2 <- input$group2
       confint2 <- isTRUE(as.logical(input$confint2))
 
-      req(fsetls$res(), fsetls$acc(), param2, dtrng2, sites2)
+      req(fsetls()$res, fsetls()$acc, param2, dtrng2, sites2)
       req(all(sites2 %in% valid_sites2()))
 
       anlzMWRdate(
-        res = fsetls$res(),
+        res = fsetls()$res,
         param = param2,
-        acc = fsetls$acc(),
-        sit = fsetls$sit(),
+        acc = fsetls()$acc,
+        sit = fsetls()$sit,
         thresh = thresh,
         group = group2,
         dtrng = dtrng2,
@@ -444,14 +438,14 @@ mod_visualize_server <- function(id, fsetls) {
       type2 <- input$type2
       confint2 <- isTRUE(as.logical(input$confint2))
 
-      req(fsetls$res(), fsetls$acc(), param2, dtrng2, sites2)
+      req(fsetls()$res, fsetls()$acc, param2, dtrng2, sites2)
       req(all(sites2 %in% valid_sites2()))
 
       anlzMWRsite(
-        res = fsetls$res(),
+        res = fsetls()$res,
         param = param2,
-        acc = fsetls$acc(),
-        sit = fsetls$sit(),
+        acc = fsetls()$acc,
+        sit = fsetls()$sit,
         thresh = thresh,
         type = type2,
         dtrng = dtrng2,
@@ -471,7 +465,7 @@ mod_visualize_server <- function(id, fsetls) {
       watsel <- input$watsel
       mapsel <- input$mapsel
 
-      req(fsetls$res(), fsetls$acc(), fsetls$sit(), param2, dtrng2, sites2)
+      req(fsetls()$res, fsetls()$acc, fsetls()$sit, param2, dtrng2, sites2)
       req(all(sites2 %in% valid_sites2()))
 
       if (watsel == "NULL") {
@@ -482,10 +476,10 @@ mod_visualize_server <- function(id, fsetls) {
       }
 
       anlzMWRmap(
-        res = fsetls$res(),
+        res = fsetls()$res,
         param = param2,
-        acc = fsetls$acc(),
-        sit = fsetls$sit(),
+        acc = fsetls()$acc,
+        sit = fsetls()$sit,
         dtrng = dtrng2,
         site = sites2,
         addwater = watsel,
