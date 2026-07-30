@@ -57,7 +57,13 @@ mod_visualize_ui <- function(id) {
           condition = paste0('output["', ns("show_conf"), '"] == "TRUE"'),
           selectInput(ns("confint"), "Show confidence", choices = c(F, T))
         ),
-        uiOutput(ns("download_plot_btn"))
+        actionButton(
+          ns("open_plot_download"),
+          "Download plot",
+          icon = icon("download"),
+          width = "100%",
+          style = "background-color: #64C147; border-color: #64C147; color: white;"
+        )
       ),
       # Navset card ----
       bslib::navset_card_underline(
@@ -233,35 +239,6 @@ mod_visualize_server <- function(id, fsetls) {
     outputOptions(output, "show_conf", suspendWhenHidden = FALSE)
 
     # Download ----
-    output$dwnldoutzipbutt <- renderUI({
-      req(fsetls()$res, fsetls()$acc)
-
-      dl_btn(ns('dwnldoutzip'), 'Download outlier report: Zipped images')
-    })
-
-    output$dwnldqcbutt <- renderUI({
-      req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
-
-      dl_btn(ns('dwnldqc'), 'Download quality control report')
-    })
-
-    output$dwnldwqxbutt <- renderUI({
-      req(fsetls()$res, fsetls()$acc, fsetls()$sit, fsetls()$wqx)
-
-      dl_btn(ns('dwnldwqx'), 'Download WQX workbook')
-    })
-
-    output$download_plot_btn <- renderUI({
-      req(fsetls()$res, input$param)
-      actionButton(
-        ns("open_plot_download"),
-        "Download plot",
-        icon = icon("download"),
-        width = "100%",
-        style = "background-color: #64C147; border-color: #64C147; color: white;"
-      )
-    })
-
     observe({
       showModal(modalDialog(
         title = "Download plot",

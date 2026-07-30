@@ -51,8 +51,8 @@ mod_outlier_ui <- function(id) {
         ),
         bslib::nav_panel(
           "Report",
-          uiOutput(ns("dwnldoutwrdbutt")),
-          uiOutput(ns("dwnldoutzipbutt"))
+          dl_btn(ns('dl_word'), 'Download outlier report: Word'),
+          dl_btn(ns('dl_zip'), 'Download outlier report: Zipped images')
         )
       )
     )
@@ -66,7 +66,7 @@ mod_outlier_server <- function(id, fsetls) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # reactive UI -----
+    # Update UI -----
     observe({
       req(fsetls()$res)
 
@@ -103,7 +103,7 @@ mod_outlier_server <- function(id, fsetls) {
     }) |>
       bindEvent(fsetls()$res, input$param)
 
-    # Plots ----
+    # Plot, table ----
     output$outlier_plot <- renderPlot({
       # inputs
       param <- input$param
@@ -153,8 +153,8 @@ mod_outlier_server <- function(id, fsetls) {
       )
     })
 
-    # download outlier report word
-    output$dwnldoutwrd <- downloadHandler(
+    # Download ----
+    output$dl_word <- downloadHandler(
       filename = function() {
         "outlierreport.docx"
       },
@@ -176,8 +176,7 @@ mod_outlier_server <- function(id, fsetls) {
       }
     )
 
-    # download outlier report zip
-    output$dwnldoutzip <- downloadHandler(
+    output$dl_zip <- downloadHandler(
       filename = function() {
         "outlierreport.zip"
       },
@@ -198,11 +197,5 @@ mod_outlier_server <- function(id, fsetls) {
         )
       }
     )
-
-    output$dwnldoutwrdbutt <- renderUI({
-      req(fsetls()$res, fsetls()$acc)
-
-      dl_btn('dwnldoutwrd', 'Download outlier report: Word')
-    })
   })
 }

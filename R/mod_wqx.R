@@ -26,7 +26,7 @@ mod_wqx_ui <- function(id) {
       ),
       bslib::nav_panel(
         "Workbook",
-        uiOutput(ns("dwnldwqxbutt"))
+        dl_btn(ns('dl_wqx'), 'Download WQX workbook')
       )
     )
   )
@@ -85,7 +85,7 @@ mod_wqx_server <- function(id, fsetls) {
     })
 
     # download wqx workbook
-    output$dwnldwqx <- downloadHandler(
+    output$dl_wqx <- downloadHandler(
       filename = function() {
         "wqxtab.xlsx"
       },

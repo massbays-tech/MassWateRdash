@@ -7,6 +7,7 @@ addResourcePath(
 
 # ui -----
 ui <- bslib::page_navbar(
+  id = "navbar",
   header = tags$head(
     tags$script(HTML(
       "$(document).on('shown.bs.modal', function(e) {
@@ -83,22 +84,27 @@ ui <- bslib::page_navbar(
   # Tabs ----
   bslib::nav_panel(
     "1 Upload & Validate",
+    value = "upload",
     mod_upload_ui("upload")
   ),
   bslib::nav_panel(
     "2 Outlier assessment",
+    value = "outlier",
     mod_outlier_ui("outlier")
   ),
   bslib::nav_panel(
     "3 QC reporting",
+    value = "qc",
     mod_qc_ui("qc")
   ),
   bslib::nav_panel(
     "4 WQX output",
+    value = "wqx",
     mod_wqx_ui("wqx")
   ),
   bslib::nav_panel(
     "5 Visualize",
+    value = "visualize",
     mod_visualize_ui("visualize")
   ),
 
@@ -121,6 +127,24 @@ server <- function(input, output, session) {
   mod_qc_server("qc", fsetls)
   mod_wqx_server("wqx", fsetls)
   mod_visualize_server("visualize", fsetls)
+
+  # Show/hide nav items ---
+  observe({
+    chk <- is.null(unlist(fsetls()))
+
+    if (any(chk)) {
+      bslib::nav_hide("navbar", "outlier")
+      bslib::nav_hide("navbar", "qc")
+      bslib::nav_hide("navbar", "wqx")
+      bslib::nav_hide("navbar", "visualize")
+    } else {
+      bslib::nav_show("navbar", "outlier")
+      bslib::nav_show("navbar", "qc")
+      bslib::nav_show("navbar", "wqx")
+      bslib::nav_show("navbar", "visualize")
+    }
+  }) |>
+    bindEvent(fsetls())
 }
 
 shinyApp(ui = ui, server = server)

@@ -82,7 +82,7 @@ mod_qc_ui <- function(id) {
       ),
       bslib::nav_panel(
         "Report",
-        uiOutput(ns("dwnldqcbutt"))
+        dl_btn(ns('dl_qc'), 'Download quality control report')
       )
     )
   )
@@ -275,8 +275,8 @@ mod_qc_server <- function(id, fsetls) {
         flextable::htmltools_value()
     })
 
-    # download qc report word
-    output$dwnldqc <- downloadHandler(
+    # Download ----
+    output$dl_qc <- downloadHandler(
       filename = function() {
         "qcreport.docx"
       },
