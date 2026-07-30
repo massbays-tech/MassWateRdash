@@ -177,11 +177,11 @@ mod_upload_server <- function(id) {
 
       from_format_upload(
         wqf$dat_results(),
-        retry_fns$resdat,
-        "resdat",
-        val_log,
-        val_edit,
-        val_resdat
+        retry_fn = retry_fns$resdat,
+        data_name = "resdat",
+        val_log = val_log,
+        val_edit = val_edit,
+        val_dat = val_resdat
       )
       gargoyle::trigger("update_val")
       showNotification(
@@ -194,13 +194,14 @@ mod_upload_server <- function(id) {
 
     observe({
       req(wqf$dat_sites())
+
       from_format_upload(
         wqf$dat_sites(),
-        retry_fns$sitdat,
-        "sitdat",
-        val_log,
-        val_edit,
-        val_sitdat
+        retry_fn = retry_fns$sitdat,
+        data_name = "sitdat",
+        val_log = val_log,
+        val_edit = val_edit,
+        val_dat = val_sitdat
       )
       gargoyle::trigger("update_val")
       showNotification(

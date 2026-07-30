@@ -108,12 +108,7 @@ fl_upload <- function(
 
   val_log$msg <- ""
   val_dat$raw_dat <- NULL
-
-  var_list <- c("resdat", "accdat", "frecomdat", "sitdat", "wqxdat", "censdat")
-
-  for (nm in var_list) {
-    val_edit[[nm]] <- FALSE
-  }
+  val_edit[[data_name]] <- FALSE
 
   dat_path <- if (is.character(file)) file else file$datapath # for testing
 
@@ -138,7 +133,7 @@ fl_upload <- function(
     }
   )
 
-  val_dat$dat <- result$result
+  val_dat$dat <- result
   val_dat$msg <- val_log$msg
 }
 
@@ -180,7 +175,7 @@ from_format_upload <- function(
     }
   )
 
-  val_dat$dat <- result$result
+  val_dat$dat <- result
   val_dat$msg <- val_log$msg
 }
 
