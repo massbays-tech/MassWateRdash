@@ -11,20 +11,58 @@ mod_visualize_ui <- function(id) {
   ns <- NS(id)
   tagList(
     bslib::page_sidebar(
+      # Sidebar ----
       sidebar = bslib::sidebar(
         title = "Plot options",
         width = 500,
-        uiOutput(ns("prm2")),
-        uiOutput(ns("dtrng2")),
-        uiOutput(ns("sites2")),
-        uiOutput(ns("notmap")),
-        uiOutput(ns("vizui")),
-        uiOutput(ns("confint_ui")),
+        selectInput(
+          ns("param"),
+          "Parameter",
+          choices = NULL
+        ),
+        sliderInput(
+          ns("date_range"),
+          "Date range",
+          min = Sys.Date(),
+          max = Sys.Date(),
+          value = c(Sys.Date(), Sys.Date()),
+          width = '95%'
+        ),
+        dropdown(ns("sites"), "Select sites", choices = NULL),
+        conditionalPanel(
+          condition = paste0('output["', ns("tab_name"), '"] != "Map"'),
+          selectInput(ns("thresh"), "Threshold type", choices = "none")
+        ),
+        conditionalPanel(
+          condition = paste0(
+            '["Season", "Site"].includes(output["',
+            ns("tab_name"),
+            '"])'
+          ),
+          selectInput(
+            ns("type"),
+            "Plot type",
+            choices = c("box", "jitterbox", "bar", "jitterbar", "jitter")
+          )
+        ),
+        conditionalPanel(
+          condition = paste0('output["', ns("tab_name"), '"] == "Date"'),
+          selectInput(
+            ns("group"),
+            "Plot grouping",
+            choices = c("site", "locgroup", "all")
+          )
+        ),
+        conditionalPanel(
+          condition = paste0('output["', ns("show_conf"), '"] == "TRUE"'),
+          selectInput(ns("confint"), "Show confidence", choices = c(F, T))
+        ),
         uiOutput(ns("download_plot_btn"))
       ),
+      # Navset card ----
       bslib::navset_card_underline(
         full_screen = T,
-        id = "viz_selected",
+        id = ns("viz_selected"),
         bslib::nav_panel(
           "Season",
           plotOutput(ns("season_plot"))
@@ -74,7 +112,7 @@ mod_visualize_ui <- function(id) {
               "CartoDB.VoyagerOnlyLabels"
             )
           ),
-          plotOutput("map_plot")
+          plotOutput(ns("map_plot"))
         )
       )
     )
@@ -88,86 +126,82 @@ mod_visualize_server <- function(id, fsetls) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # reactive UI -----
+    # Update sidebar UI-----
+    observe({
+      req(fsetls()$res)
 
-    output$prm2 <- renderUI({
-      # inputs
-      fset <- fsetls()
+      tosel <- sort(unique(fsetls()$res$`Characteristic Name`))
 
-      validate(
-        need(!is.null(fset$res), 'Waiting for input data...')
+      updateSelectInput(
+        session = session,
+        inputId = "param",
+        choices = tosel
       )
+    }) |>
+      bindEvent(fsetls()$res)
 
-      tosel <- sort(unique(fset$res$`Characteristic Name`))
+    observe({
+      req(fsetls()$res, input$param)
 
-      selectInput(ns("param2"), "Parameter", choices = tosel)
-    })
-
-    output$dtrng2 <- renderUI({
-      # inputs
-      param2 <- input$param2
-
-      req(fsetls()$res, param2)
+      param <- input$param
 
       tosel <- fsetls()$res |>
-        dplyr::filter(.data$`Characteristic Name` == param2) |>
+        dplyr::filter(.data$`Characteristic Name` == param) |>
         dplyr::pull(.data$`Activity Start Date`) |>
         range() |>
         as.Date()
 
-      sliderInput(
-        ns("dtrng2"),
-        "Date range",
+      updateSliderInput(
+        session = session,
+        inputId = "date_range",
         min = tosel[1],
         max = tosel[2],
-        value = tosel,
-        width = '95%'
+        value = tosel
       )
-    })
+    }) |>
+      bindEvent(fsetls()$res, input$param)
 
-    # Reactive: valid sites for the current param2 + date range.
-    # Shared by output$sites2 (to populate choices) and the plot guards
-    # (to block rendering when input$sites2 is still stale after a param change).
-    valid_sites2 <- reactive({
-      param2 <- input$param2
-      dtrng2 <- input$dtrng2
-      req(fsetls()$res, param2, dtrng2)
-      fsetls()$res |>
+    observe({
+      param <- input$param
+      date_range <- input$date_range
+      req(fsetls()$res, param, date_range)
+
+      valid_sites <- fsetls()$res |>
         dplyr::filter(
-          .data$`Characteristic Name` == param2,
-          .data$`Activity Start Date` >= dtrng2[1],
-          .data$`Activity Start Date` <= dtrng2[2]
+          .data$`Characteristic Name` == param,
+          .data$`Activity Start Date` >= date_range[1],
+          .data$`Activity Start Date` <= date_range[2]
         ) |>
         dplyr::pull(.data$`Monitoring Location ID`) |>
-        unique()
+        unique() |>
+        sort()
+
+      shinyWidgets::updatePickerInput(
+        inputId = "sites",
+        choices = valid_sites,
+        selected = valid_sites
+      )
+    }) |>
+      bindEvent(fsetls()$res, input$param, input$date_range)
+
+    output$tab_name <- renderText({
+      input$viz_selected
     })
+    outputOptions(output, "tab_name", suspendWhenHidden = FALSE)
 
-    output$sites2 <- renderUI({
-      dropdown("sites2", "Select sites", choices = valid_sites2())
-    })
-
-    output$notmap <- renderUI({
-      if (input$viz_selected == 'Map') {
-        return(NULL)
-      }
-
-      param2 <- input$param2
-      req(param2)
+    observe({
+      param <- input$param
+      req(param)
 
       # Characteristic Name in the results file == Simple Parameter in thresholdMWR,
       # so filter directly without going through paramsMWR
       thresh_rows <- MassWateR::thresholdMWR |>
-        dplyr::filter(.data$`Simple Parameter` == param2)
+        dplyr::filter(.data$`Simple Parameter` == param)
 
       has_fresh <- nrow(thresh_rows) > 0 &&
         any(!is.na(thresh_rows$Fresh_1) | !is.na(thresh_rows$Fresh_2))
       has_marine <- nrow(thresh_rows) > 0 &&
         any(!is.na(thresh_rows$Marine_1) | !is.na(thresh_rows$Marine_2))
-
-      # Hide entirely when no thresholds exist for this parameter
-      if (!has_fresh && !has_marine) {
-        return(NULL)
-      }
 
       choices <- c(
         if (has_fresh) 'fresh',
@@ -175,47 +209,30 @@ mod_visualize_server <- function(id, fsetls) {
         'none'
       )
 
-      selectInput("thresh", "Threshold type", choices = choices)
-    })
+      updateSelectInput(
+        session = session,
+        inputId = "thresh",
+        choices = choices
+      )
+    }) |>
+      bindEvent(input$param)
 
-    output$vizui <- renderUI({
-      out <- NULL
-
-      if (input$viz_selected %in% c('Season', 'Site')) {
-        out <- selectInput(
-          ns("type2"),
-          "Plot type",
-          choices = c("box", "jitterbox", "bar", "jitterbar", "jitter")
-        )
-      }
-
-      if (input$viz_selected == 'Date') {
-        out <- selectInput(
-          ns("group2"),
-          "Plot grouping",
-          choices = c("site", "locgroup", "all")
-        )
-      }
-
-      return(out)
-    })
-
-    output$confint_ui <- renderUI({
+    output$show_conf <- renderText({
       viz <- input$viz_selected
 
       show <- if (viz %in% c('Season', 'Site')) {
-        isTRUE(input$type2 %in% c('bar', 'jitterbar'))
+        isTRUE(input$type %in% c('bar', 'jitterbar'))
       } else if (viz == 'Date') {
-        isTRUE(input$group2 %in% c('locgroup', 'all'))
+        isTRUE(input$group %in% c('locgroup', 'all'))
       } else {
         FALSE
       }
 
-      if (show) {
-        selectInput(ns("confint2"), "Show confidence", choices = c(F, T))
-      }
+      paste(show)
     })
+    outputOptions(output, "show_conf", suspendWhenHidden = FALSE)
 
+    # Download ----
     output$dwnldoutzipbutt <- renderUI({
       req(fsetls()$res, fsetls()$acc)
 
@@ -235,7 +252,7 @@ mod_visualize_server <- function(id, fsetls) {
     })
 
     output$download_plot_btn <- renderUI({
-      req(fsetls()$res, input$param2)
+      req(fsetls()$res, input$param)
       actionButton(
         ns("open_plot_download"),
         "Download plot",
@@ -287,7 +304,7 @@ mod_visualize_server <- function(id, fsetls) {
     output$download_plot <- downloadHandler(
       filename = function() {
         paste0(
-          input$param2,
+          input$param,
           "_",
           tolower(input$viz_selected),
           ".",
@@ -297,51 +314,51 @@ mod_visualize_server <- function(id, fsetls) {
       content = function(file) {
         fset <- fsetls()
         viz <- input$viz_selected
-        param2 <- input$param2
-        dtrng2 <- as.character(input$dtrng2)
-        sites2 <- input$sites2
+        param <- input$param
+        date_range <- as.character(input$date_range)
+        sites <- input$sites
         thresh <- if (is.null(input$thresh)) "none" else input$thresh
-        confint2 <- isTRUE(as.logical(input$confint2))
+        confint <- isTRUE(as.logical(input$confint))
 
         p <- if (viz == "Season") {
           anlzMWRseason(
             res = fset$res,
-            param = param2,
+            param = param,
             acc = fset$acc,
             sit = fset$sit,
             thresh = thresh,
-            type = input$type2,
-            dtrng = dtrng2,
-            site = sites2,
-            confint = confint2,
+            type = input$type,
+            dtrng = date_range,
+            site = sites,
+            confint = confint,
             bssize = 18
           ) +
             ggplot2::labs(title = NULL)
         } else if (viz == "Date") {
           anlzMWRdate(
             res = fset$res,
-            param = param2,
+            param = param,
             acc = fset$acc,
             sit = fset$sit,
             thresh = thresh,
-            group = input$group2,
-            dtrng = dtrng2,
-            site = sites2,
-            confint = confint2,
+            group = input$group,
+            dtrng = date_range,
+            site = sites,
+            confint = confint,
             bssize = 18
           ) +
             ggplot2::labs(title = NULL)
         } else if (viz == "Site") {
           anlzMWRsite(
             res = fset$res,
-            param = param2,
+            param = param,
             acc = fset$acc,
             sit = fset$sit,
             thresh = thresh,
-            type = input$type2,
-            dtrng = dtrng2,
-            site = sites2,
-            confint = confint2,
+            type = input$type,
+            dtrng = date_range,
+            site = sites,
+            confint = confint,
             bssize = 18
           ) +
             ggplot2::labs(title = NULL)
@@ -350,11 +367,11 @@ mod_visualize_server <- function(id, fsetls) {
           mapsel <- if (isTRUE(input$mapsel == "NULL")) NULL else input$mapsel
           anlzMWRmap(
             res = fset$res,
-            param = param2,
+            param = param,
             acc = fset$acc,
             sit = fset$sit,
-            dtrng = dtrng2,
-            site = sites2,
+            dtrng = date_range,
+            site = sites,
             addwater = watsel,
             maptype = mapsel,
             bssize = 18
@@ -373,28 +390,28 @@ mod_visualize_server <- function(id, fsetls) {
       }
     )
 
+    # Plots ----
     output$season_plot <- renderPlot({
       # inputs
       thresh <- if (is.null(input$thresh)) "none" else input$thresh
-      param2 <- input$param2
-      dtrng2 <- as.character(input$dtrng2)
-      sites2 <- input$sites2
-      type2 <- input$type2
-      confint2 <- isTRUE(as.logical(input$confint2))
+      param <- input$param
+      date_range <- as.character(input$date_range)
+      sites <- input$sites
+      type <- input$type
+      confint <- isTRUE(as.logical(input$confint))
 
-      req(fsetls()$res, fsetls()$acc, param2, dtrng2, sites2)
-      req(all(sites2 %in% valid_sites2()))
+      req(fsetls()$res, fsetls()$acc, param, date_range, sites)
 
       anlzMWRseason(
         res = fsetls()$res,
-        param = param2,
+        param = param,
         acc = fsetls()$acc,
         sit = fsetls()$sit,
         thresh = thresh,
-        type = type2,
-        dtrng = dtrng2,
-        site = sites2,
-        confint = confint2,
+        type = type,
+        dtrng = date_range,
+        site = sites,
+        confint = confint,
         bssize = 18,
         warn = FALSE
       ) +
@@ -404,25 +421,24 @@ mod_visualize_server <- function(id, fsetls) {
     output$date_plot <- renderPlot({
       # inputs
       thresh <- if (is.null(input$thresh)) "none" else input$thresh
-      param2 <- input$param2
-      dtrng2 <- as.character(input$dtrng2)
-      sites2 <- input$sites2
-      group2 <- input$group2
-      confint2 <- isTRUE(as.logical(input$confint2))
+      param <- input$param
+      date_range <- as.character(input$date_range)
+      sites <- input$sites
+      group <- input$group
+      confint <- isTRUE(as.logical(input$confint))
 
-      req(fsetls()$res, fsetls()$acc, param2, dtrng2, sites2)
-      req(all(sites2 %in% valid_sites2()))
+      req(fsetls()$res, fsetls()$acc, param, date_range, sites)
 
       anlzMWRdate(
         res = fsetls()$res,
-        param = param2,
+        param = param,
         acc = fsetls()$acc,
         sit = fsetls()$sit,
         thresh = thresh,
-        group = group2,
-        dtrng = dtrng2,
-        site = sites2,
-        confint = confint2,
+        group = group,
+        dtrng = date_range,
+        site = sites,
+        confint = confint,
         bssize = 18,
         warn = FALSE
       ) +
@@ -432,25 +448,24 @@ mod_visualize_server <- function(id, fsetls) {
     output$site_plot <- renderPlot({
       # inputs
       thresh <- if (is.null(input$thresh)) "none" else input$thresh
-      param2 <- input$param2
-      dtrng2 <- as.character(input$dtrng2)
-      sites2 <- input$sites2
-      type2 <- input$type2
-      confint2 <- isTRUE(as.logical(input$confint2))
+      param <- input$param
+      date_range <- as.character(input$date_range)
+      sites <- input$sites
+      type <- input$type
+      confint <- isTRUE(as.logical(input$confint))
 
-      req(fsetls()$res, fsetls()$acc, param2, dtrng2, sites2)
-      req(all(sites2 %in% valid_sites2()))
+      req(fsetls()$res, fsetls()$acc, param, date_range, sites)
 
       anlzMWRsite(
         res = fsetls()$res,
-        param = param2,
+        param = param,
         acc = fsetls()$acc,
         sit = fsetls()$sit,
         thresh = thresh,
-        type = type2,
-        dtrng = dtrng2,
-        site = sites2,
-        confint = confint2,
+        type = type,
+        dtrng = date_range,
+        site = sites,
+        confint = confint,
         bssize = 18,
         warn = FALSE
       ) +
@@ -459,14 +474,13 @@ mod_visualize_server <- function(id, fsetls) {
 
     output$map_plot <- renderPlot({
       # inputs
-      param2 <- input$param2
-      dtrng2 <- as.character(input$dtrng2)
-      sites2 <- input$sites2
+      param <- input$param
+      date_range <- as.character(input$date_range)
+      sites <- input$sites
       watsel <- input$watsel
       mapsel <- input$mapsel
 
-      req(fsetls()$res, fsetls()$acc, fsetls()$sit, param2, dtrng2, sites2)
-      req(all(sites2 %in% valid_sites2()))
+      req(fsetls()$res, fsetls()$acc, fsetls()$sit, param, date_range, sites)
 
       if (watsel == "NULL") {
         watsel <- NULL
@@ -477,11 +491,11 @@ mod_visualize_server <- function(id, fsetls) {
 
       anlzMWRmap(
         res = fsetls()$res,
-        param = param2,
+        param = param,
         acc = fsetls()$acc,
         sit = fsetls()$sit,
-        dtrng = dtrng2,
-        site = sites2,
+        dtrng = date_range,
+        site = sites,
         addwater = watsel,
         maptype = mapsel,
         bssize = 18,

@@ -173,6 +173,7 @@ handle_retry <- function(
   )
 
   val_dat$dat <- result
+  val_dat$msg <- val_log$msg
 
   if (!is.null(result)) {
     val_edit[[data_name]] <- FALSE

@@ -91,7 +91,7 @@ retry_fns <- list(
 #' @param data_name String. Data name.
 #' @param val_log R6 class. Must contain function catch_msg and variables msg,
 #' edit_dat.
-#' @param val_edit R6 class. Contains `TRUE` and `FALSE` values on whether to 
+#' @param val_edit R6 class. Contains `TRUE` and `FALSE` values on whether to
 #' show/hide the edit modal.
 #' @param val_dat R6 class. Must contain variables raw_dat, dat.
 #'
@@ -139,6 +139,7 @@ fl_upload <- function(
   )
 
   val_dat$dat <- result$result
+  val_dat$msg <- val_log$msg
 }
 
 #' From format upload
@@ -150,7 +151,7 @@ fl_upload <- function(
 #' @param data_name String. Data name.
 #' @param val_log R6 class. Must contain function catch_msg and variables msg,
 #' edit_dat.
-#' @param val_edit R6 class. TRUE and FALSE values on whether to show/hide the 
+#' @param val_edit R6 class. TRUE and FALSE values on whether to show/hide the
 #' edits for each var
 #' @param val_dat R6 class. Must contain variables raw_dat, dat.
 #'
@@ -180,6 +181,7 @@ from_format_upload <- function(
   )
 
   val_dat$dat <- result$result
+  val_dat$msg <- val_log$msg
 }
 
 #' File status

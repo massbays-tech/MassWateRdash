@@ -66,16 +66,6 @@ mod_outlier_server <- function(id, fsetls) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    #Toggle tabset ----
-    observe({
-      if (!isTruthy(fsetls()$res)) {
-        updateTabsetPanel(inputId = "ts_sidebar", selected = "loading")
-      } else {
-        updateTabsetPanel(inputId = "ts_sidebar", selected = "ready")
-      }
-    }) |>
-      bindEvent(fsetls()$res)
-
     # reactive UI -----
     observe({
       req(fsetls()$res)

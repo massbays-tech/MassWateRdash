@@ -70,7 +70,7 @@ mod_upload_repair_server <- function(
           uiOutput(ns("modal_msgs")),
           br(),
           p("Fix the issue below, then click 'Try upload again'."),
-          if (is_column_error(val_log$msg)) {
+          if (is_column_error(val_dat$msg)) {
             bslib::card(
               bslib::card_header("Column Names"),
               rhandsontable::rHandsontableOutput(ns("hot_headers"))
@@ -103,7 +103,7 @@ mod_upload_repair_server <- function(
     # Validation message shown inside the modal
     output$modal_msgs <- renderUI({
       gargoyle::watch("update_val")
-      format_log(val_log$msg)
+      format_log(val_dat$msg)
     })
     outputOptions(output, "modal_msgs", suspendWhenHidden = FALSE)
 
@@ -113,7 +113,7 @@ mod_upload_repair_server <- function(
       req(val_dat$raw_dat)
 
       col_names <- names(val_dat$raw_dat)
-      locs <- parse_error_locations(val_log$msg)
+      locs <- parse_error_locations(val_dat$msg)
       header_df <- setNames(
         as.data.frame(as.list(col_names), stringsAsFactors = FALSE),
         as.character(seq_along(col_names))
@@ -147,7 +147,7 @@ mod_upload_repair_server <- function(
     # Row filter toggle - shown in the Data card header when problem rows exist
     output$row_filter_ui <- renderUI({
       gargoyle::watch("update_val")
-      problem_rows <- parse_problem_rows(val_log$msg)
+      problem_rows <- parse_problem_rows(val_dat$msg)
       if (length(problem_rows) == 0) {
         return(NULL)
       }
@@ -173,8 +173,8 @@ mod_upload_repair_server <- function(
       gargoyle::watch("update_val")
       req(val_dat$raw_dat)
       dat <- val_dat$raw_dat
-      problem_rows <- parse_problem_rows(val_log$msg)
-      locs <- parse_error_locations(val_log$msg, names(dat))
+      problem_rows <- parse_problem_rows(val_dat$msg)
+      locs <- parse_error_locations(val_dat$msg, names(dat))
       show_all <- isTRUE(input$show_all_rows)
       if (length(problem_rows) > 0 && !show_all) {
         valid_rows <- problem_rows[
@@ -230,7 +230,7 @@ mod_upload_repair_server <- function(
     # Retry ----
     observe({
       gargoyle::watch("update_val")
-      col_err <- is_column_error(val_log$msg)
+      col_err <- is_column_error(val_dat$msg)
       handle_retry(
         dat_name,
         val_log = val_log,
@@ -239,7 +239,7 @@ mod_upload_repair_server <- function(
         hot_input = if (!col_err) input$hot else NULL,
         hot_headers_input = if (col_err) input$hot_headers else NULL,
         show_all = isTRUE(input$show_all_rows),
-        problem_rows = parse_problem_rows(val_log$msg)
+        problem_rows = parse_problem_rows(val_dat$msg)
       )
       gargoyle::trigger("update_val")
       if (!val_edit[[dat_name]]) removeModal()

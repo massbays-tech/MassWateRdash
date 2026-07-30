@@ -32,6 +32,7 @@ test_that("fl_upload works", {
       "\n\nAll checks passed!"
     )
   )
+  expect_equal(val_log$msg, val_dat$msg)
   expect_false(val_edit$resdat)
   expect_false(val_edit$accdat)
   expect_false(val_edit$frecomdat)
@@ -72,6 +73,7 @@ test_that("from_format_upload works", {
       "\n\nAll checks passed!"
     )
   )
+  expect_equal(val_log$msg, val_dat$msg)
   expect_false(val_edit$sitdat)
   expect_equal(val_dat$dat, tst$sitdat)
   expect_equal(val_dat$raw_dat, NULL)
