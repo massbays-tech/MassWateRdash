@@ -1,15 +1,12 @@
-resdatClass <- R6::R6Class(
-  "resdatClass",
+resClass <- R6::R6Class(
+  "resClass",
   public = list(
     raw_dat = NULL,
     dat = NULL,
     del_dat = NULL,
     msg = "",
     initialize = function(
-      raw_dat = NULL,
-      dat = NULL,
-      del_dat = NULL,
-      msg = ""
+      raw_dat = NULL, dat = NULL, del_dat = NULL, msg = ""
     ) {
       self$raw_dat <- raw_dat
       self$dat <- dat
@@ -19,18 +16,15 @@ resdatClass <- R6::R6Class(
   )
 )
 
-accdatClass <- R6::R6Class(
-  "accdatClass",
+accClass <- R6::R6Class(
+  "accClass",
   public = list(
     raw_dat = NULL,
     dat = NULL,
     del_dat = NULL,
     msg = "",
     initialize = function(
-      raw_dat = NULL,
-      dat = NULL,
-      del_dat = NULL,
-      msg = ""
+      raw_dat = NULL, dat = NULL, del_dat = NULL, msg = ""
     ) {
       self$raw_dat <- raw_dat
       self$dat <- dat
@@ -40,18 +34,15 @@ accdatClass <- R6::R6Class(
   )
 )
 
-frecomdatClass <- R6::R6Class(
-  "frecomdatClass",
+frecomClass <- R6::R6Class(
+  "frecomClass",
   public = list(
     raw_dat = NULL,
     dat = NULL,
     del_dat = NULL,
     msg = "",
     initialize = function(
-      raw_dat = NULL,
-      dat = NULL,
-      del_dat = NULL,
-      msg = ""
+      raw_dat = NULL, dat = NULL, del_dat = NULL, msg = ""
     ) {
       self$raw_dat <- raw_dat
       self$dat <- dat
@@ -61,18 +52,15 @@ frecomdatClass <- R6::R6Class(
   )
 )
 
-sitdatClass <- R6::R6Class(
-  "sitdatClass",
+sitClass <- R6::R6Class(
+  "sitClass",
   public = list(
     raw_dat = NULL,
     dat = NULL,
     del_dat = NULL,
     msg = "",
     initialize = function(
-      raw_dat = NULL,
-      dat = NULL,
-      del_dat = NULL,
-      msg = ""
+      raw_dat = NULL, dat = NULL, del_dat = NULL, msg = ""
     ) {
       self$raw_dat <- raw_dat
       self$dat <- dat
@@ -82,18 +70,15 @@ sitdatClass <- R6::R6Class(
   )
 )
 
-wqxdatClass <- R6::R6Class(
-  "wqxdatClass",
+wqxClass <- R6::R6Class(
+  "wqxClass",
   public = list(
     raw_dat = NULL,
     dat = NULL,
     del_dat = NULL,
     msg = "",
     initialize = function(
-      raw_dat = NULL,
-      dat = NULL,
-      del_dat = NULL,
-      msg = ""
+      raw_dat = NULL, dat = NULL, del_dat = NULL, msg = ""
     ) {
       self$raw_dat <- raw_dat
       self$dat <- dat
@@ -103,18 +88,15 @@ wqxdatClass <- R6::R6Class(
   )
 )
 
-censdatClass <- R6::R6Class(
-  "censdatClass",
+censClass <- R6::R6Class(
+  "censClass",
   public = list(
     raw_dat = NULL,
     dat = NULL,
     del_dat = NULL,
     msg = "",
     initialize = function(
-      raw_dat = NULL,
-      dat = NULL,
-      del_dat = NULL,
-      msg = ""
+      raw_dat = NULL, dat = NULL, del_dat = NULL, msg = ""
     ) {
       self$raw_dat <- raw_dat
       self$dat <- dat

@@ -26,7 +26,7 @@ mod_visualize_ui <- function(id) {
           min = Sys.Date(),
           max = Sys.Date(),
           value = c(Sys.Date(), Sys.Date()),
-          width = '95%'
+          width = "95%"
         ),
         dropdown(ns("sites"), "Select sites", choices = NULL),
         conditionalPanel(
@@ -92,30 +92,16 @@ mod_visualize_ui <- function(id) {
             ns("mapsel"),
             "Basemap selection",
             choices = c(
-              "none" = "NULL",
-              "OpenStreetMap",
-              "OpenStreetMap.DE",
-              "OpenStreetMap.France",
-              "OpenStreetMap.HOT",
-              "OpenTopoMap",
-              "Esri.WorldStreetMap",
-              "Esri.DeLorme",
-              "Esri.WorldTopoMap",
-              "Esri.WorldImagery",
-              "Esri.WorldTerrain",
-              "Esri.WorldShadedRelief",
-              "Esri.OceanBasemap",
-              "Esri.NatGeoWorldMap",
-              "Esri.WorldGrayCanvas",
-              "CartoDB.Positron",
-              "CartoDB.PositronNoLabels",
-              "CartoDB.PositronOnlyLabels",
-              "CartoDB.DarkMatter",
-              "CartoDB.DarkMatterNoLabels",
-              "CartoDB.DarkMatterOnlyLabels",
-              "CartoDB.Voyager",
-              "CartoDB.VoyagerNoLabels",
-              "CartoDB.VoyagerOnlyLabels"
+              "none" = "NULL", "OpenStreetMap", "OpenStreetMap.DE",
+              "OpenStreetMap.France", "OpenStreetMap.HOT", "OpenTopoMap",
+              "Esri.WorldStreetMap", "Esri.DeLorme", "Esri.WorldTopoMap",
+              "Esri.WorldImagery", "Esri.WorldTerrain",
+              "Esri.WorldShadedRelief", "Esri.OceanBasemap",
+              "Esri.NatGeoWorldMap", "Esri.WorldGrayCanvas", "CartoDB.Positron",
+              "CartoDB.PositronNoLabels", "CartoDB.PositronOnlyLabels",
+              "CartoDB.DarkMatter", "CartoDB.DarkMatterNoLabels",
+              "CartoDB.DarkMatterOnlyLabels", "CartoDB.Voyager",
+              "CartoDB.VoyagerNoLabels", "CartoDB.VoyagerOnlyLabels"
             )
           ),
           plotOutput(ns("map_plot"))
@@ -210,9 +196,9 @@ mod_visualize_server <- function(id, fsetls) {
         any(!is.na(thresh_rows$Marine_1) | !is.na(thresh_rows$Marine_2))
 
       choices <- c(
-        if (has_fresh) 'fresh',
-        if (has_marine) 'marine',
-        'none'
+        if (has_fresh) "fresh",
+        if (has_marine) "marine",
+        "none"
       )
 
       updateSelectInput(
@@ -226,10 +212,10 @@ mod_visualize_server <- function(id, fsetls) {
     output$show_conf <- renderText({
       viz <- input$viz_selected
 
-      show <- if (viz %in% c('Season', 'Site')) {
-        isTRUE(input$type %in% c('bar', 'jitterbar'))
-      } else if (viz == 'Date') {
-        isTRUE(input$group %in% c('locgroup', 'all'))
+      show <- if (viz %in% c("Season", "Site")) {
+        isTRUE(input$type %in% c("bar", "jitterbar"))
+      } else if (viz == "Date") {
+        isTRUE(input$group %in% c("locgroup", "all"))
       } else {
         FALSE
       }

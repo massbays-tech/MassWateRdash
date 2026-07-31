@@ -4,7 +4,7 @@ testServer(
   args = list(
     dat_name = "resdat",
     val_log = validationLog$new(),
-    val_dat = resdatClass$new()
+    val_dat = resClass$new()
   ),
   {
     ns <- session$ns

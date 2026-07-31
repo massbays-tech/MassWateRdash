@@ -14,7 +14,7 @@ mod_upload_repair_ui <- function(id, dat_name) {
 
   tagList(
     conditionalPanel(
-      condition = paste0('output["', ns('show_btn'), '"] == "TRUE"'),
+      condition = paste0('output["', ns("show_btn"), '"] == "TRUE"'),
       actionButton(
         ns("open_editor"),
         paste("Edit", unname(file_labels[dat_name])),
@@ -38,13 +38,7 @@ mod_upload_repair_ui <- function(id, dat_name) {
 #' @param val_dat R6 class. Dataframes.
 #'
 #' @noRd
-mod_upload_repair_server <- function(
-  id,
-  dat_name,
-  val_log,
-  val_edit,
-  val_dat
-) {
+mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -61,9 +55,7 @@ mod_upload_repair_server <- function(
       showModal(
         modalDialog(
           title = paste(
-            "Edit",
-            unname(file_labels[dat_name]),
-            "- Fix Validation Errors"
+            "Edit", unname(file_labels[dat_name]), "- Fix Validation Errors"
           ),
           size = "xl",
           easyClose = FALSE,
@@ -102,14 +94,13 @@ mod_upload_repair_server <- function(
 
     # Validation message shown inside the modal
     output$modal_msgs <- renderUI({
-      gargoyle::watch("update_val")
       format_log(val_dat$msg)
-    })
+    }) |>
+      bindEvent(gargoyle::watch("update_val"))
     outputOptions(output, "modal_msgs", suspendWhenHidden = FALSE)
 
     # Column names editor (renders even when modal is closed so it's ready on open)
     output$hot_headers <- rhandsontable::renderRHandsontable({
-      gargoyle::watch("update_val")
       req(val_dat$raw_dat)
 
       col_names <- names(val_dat$raw_dat)
@@ -121,9 +112,7 @@ mod_upload_repair_server <- function(
 
       hot <- rhandsontable::rhandsontable(
         header_df,
-        width = "100%",
-        height = 75,
-        rowHeaders = FALSE
+        width = "100%", height = 75, rowHeaders = FALSE
       ) |>
         rhandsontable::hot_table(wordWrap = FALSE)
 
@@ -141,12 +130,12 @@ mod_upload_repair_server <- function(
         }
       }
       hot
-    })
+    }) |>
+      bindEvent(gargoyle::watch("update_val"))
     outputOptions(output, "hot_headers", suspendWhenHidden = FALSE)
 
     # Row filter toggle - shown in the Data card header when problem rows exist
     output$row_filter_ui <- renderUI({
-      gargoyle::watch("update_val")
       problem_rows <- parse_problem_rows(val_dat$msg)
       if (length(problem_rows) == 0) {
         return(NULL)
@@ -165,12 +154,12 @@ mod_upload_repair_server <- function(
           value = FALSE
         )
       )
-    })
+    }) |>
+      bindEvent(gargoyle::watch("update_val"))
     outputOptions(output, "row_filter_ui", suspendWhenHidden = FALSE)
 
     # Data editor - shows only problem rows by default when they exist
     output$hot <- rhandsontable::renderRHandsontable({
-      gargoyle::watch("update_val")
       req(val_dat$raw_dat)
       dat <- val_dat$raw_dat
       problem_rows <- parse_problem_rows(val_dat$msg)
@@ -224,7 +213,8 @@ mod_upload_repair_server <- function(
         }
       }
       hot
-    })
+    }) |>
+      bindEvent(gargoyle::watch("update_val"))
     outputOptions(output, "hot", suspendWhenHidden = FALSE)
 
     # Retry ----

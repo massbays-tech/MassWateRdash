@@ -25,7 +25,9 @@ frecomdat_tab <- function(frecomdat, dqofontsize, padding, wd) {
     flextable::flextable() |>
     thmdqo(dqofontsize = dqofontsize, padding = padding) |>
     flextable::width(width = wd / ncol(frecomdat)) |>
-    flextable::add_header_row(value = c("", "Frequency %", ""), colwidths = c(1, 5, 1)) |>
+    flextable::add_header_row(
+      value = c("", "Frequency %", ""), colwidths = c(1, 5, 1)
+    ) |>
     flextable::set_caption("Frequency and Completeness") |>
     flextable::htmltools_value()
 }
@@ -40,10 +42,11 @@ accdat_tab <- function(accdat, dqofontsize, padding, wd) {
     thmdqo(dqofontsize = dqofontsize, padding = padding) |>
     flextable::width(width = 1, j = 1)
 
-  out <- out |>
-    flextable::width(width = (wd - 1) / (flextable::ncol_keys(out) - 1), j = 2:flextable::ncol_keys(out)) |>
+  out |>
+    flextable::width(
+      width = (wd - 1) / (flextable::ncol_keys(out) - 1),
+      j = 2:flextable::ncol_keys(out)
+    ) |>
     flextable::set_caption("Accuracy") |>
     flextable::htmltools_value()
-
-  return(out)
 }

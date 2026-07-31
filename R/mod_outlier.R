@@ -26,7 +26,7 @@ mod_outlier_ui <- function(id) {
           min = Sys.Date(),
           max = Sys.Date(),
           value = c(Sys.Date(), Sys.Date()),
-          width = '95%'
+          width = "95%"
         ),
         selectInput(
           ns("group"),
@@ -51,8 +51,8 @@ mod_outlier_ui <- function(id) {
         ),
         bslib::nav_panel(
           "Report",
-          dl_btn(ns('dl_word'), 'Download outlier report: Word'),
-          dl_btn(ns('dl_zip'), 'Download outlier report: Zipped images')
+          dl_btn(ns("dl_word"), "Download outlier report: Word"),
+          dl_btn(ns("dl_zip"), "Download outlier report: Zipped images")
         )
       )
     )

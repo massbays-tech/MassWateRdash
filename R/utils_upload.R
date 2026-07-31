@@ -16,8 +16,7 @@ detect_wrong_file <- function(raw_df, data_name) {
   best <- names(which.max(matches))
   paste0(
     "Error: Did you upload the wrong file? This looks like it may be ",
-    file_labels[[best]],
-    "."
+    file_labels[[best]], "."
   )
 }
 
@@ -33,29 +32,23 @@ raw_read_fns <- list(
     dat <- readxl::read_excel(path, na = c("NA", ""), col_types = "text")
     if ("Value Range" %in% names(dat)) {
       dat <- dplyr::mutate(
-        dat,
-        dplyr::across(-c(`Value Range`), ~ dplyr::na_if(.x, "na"))
+        dat, dplyr::across(-c(`Value Range`), ~ dplyr::na_if(.x, "na"))
       )
     }
     dat
   },
   frecomdat = function(path) {
     suppressMessages(
-      readxl::read_excel(
-        path,
-        skip = 1,
-        na = c("NA", "na", ""),
-        col_types = "text"
+      readxl::read_excel(path,
+        skip = 1, na = c("NA", "na", ""), col_types = "text"
       )
     ) |>
       dplyr::rename(`% Completeness` = `...7`)
   },
   sitdat = function(path) readxl::read_excel(path, na = c("NA", "na", "")),
   wqxdat = function(path) {
-    suppressWarnings(readxl::read_excel(
-      path,
-      na = c("NA", "na", ""),
-      col_types = "text"
+    suppressWarnings(readxl::read_excel(path,
+      na = c("NA", "na", ""), col_types = "text"
     ))
   },
   censdat = function(path) readxl::read_excel(path, na = c("NA", "na", ""))
@@ -65,8 +58,7 @@ raw_read_fns <- list(
 retry_fns <- list(
   resdat = function(df) {
     if (
-      "Activity Start Date" %in%
-        names(df) &&
+      "Activity Start Date" %in% names(df) &&
         !lubridate::is.POSIXct(df$`Activity Start Date`)
     ) {
       df$`Activity Start Date` <- as.POSIXct(
@@ -97,12 +89,7 @@ retry_fns <- list(
 #'
 #' @noRd
 fl_upload <- function(
-  file,
-  read_function,
-  data_name,
-  val_log,
-  val_edit,
-  val_dat
+  file, read_function, data_name, val_log, val_edit, val_dat
 ) {
   req(file)
 
@@ -152,12 +139,7 @@ fl_upload <- function(
 #'
 #' @noRd
 from_format_upload <- function(
-  df,
-  retry_fn,
-  data_name,
-  val_log,
-  val_edit,
-  val_dat
+  df, retry_fn, data_name, val_log, val_edit, val_dat
 ) {
   val_log$msg <- ""
   val_dat$raw_dat <- NULL

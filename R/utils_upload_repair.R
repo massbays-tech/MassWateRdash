@@ -32,8 +32,7 @@ parse_problem_rows <- function(msg) {
   }
   msg <- gsub("\033\\[[0-9;]*[mGKHFABCDJK]", "", msg)
   hits <- regmatches(
-    msg,
-    gregexpr("row\\(s\\)\\s+([0-9, ]+)", msg, perl = TRUE)
+    msg, gregexpr("row\\(s\\)\\s+([0-9, ]+)", msg, perl = TRUE)
   )[[1]]
   if (length(hits) == 0) {
     return(integer(0))
@@ -56,8 +55,7 @@ parse_error_locations <- function(msg, col_names = NULL) {
   msg <- gsub("\033\\[[0-9;]*[mGKHFABCDJK]", "", msg)
 
   col_idx_hits <- regmatches(
-    msg,
-    gregexpr("\\(column (\\d+)\\)", msg, perl = TRUE)
+    msg, gregexpr("\\(column (\\d+)\\)", msg, perl = TRUE)
   )[[1]]
   col_indices <- suppressWarnings(
     as.integer(gsub("[^0-9]", "", col_idx_hits))
@@ -94,8 +92,7 @@ parse_error_locations <- function(msg, col_names = NULL) {
 
     if (!is.null(col_names)) {
       rows_str <- regmatches(
-        ln,
-        gregexpr("row\\(s\\)\\s+[\\d, ]+", ln, perl = TRUE)
+        ln, gregexpr("row\\(s\\)\\s+[\\d, ]+", ln, perl = TRUE)
       )[[1]]
       rows <- sort(unique(suppressWarnings(as.integer(
         unlist(strsplit(gsub("row\\(s\\)\\s+", "", rows_str), "[, ]+"))
@@ -118,14 +115,8 @@ parse_error_locations <- function(msg, col_names = NULL) {
 # show_all: TRUE when the user toggled to full-table view (no row merge needed)
 # problem_rows: indices that were displayed in filtered view
 handle_retry <- function(
-  data_name,
-  val_log,
-  val_edit,
-  val_dat,
-  hot_input,
-  hot_headers_input = NULL,
-  show_all = TRUE,
-  problem_rows = integer(0)
+  data_name, val_log, val_edit, val_dat, hot_input, hot_headers_input = NULL,
+  show_all = TRUE, problem_rows = integer(0)
 ) {
   val_log$msg <- ""
 

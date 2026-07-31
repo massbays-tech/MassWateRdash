@@ -26,7 +26,7 @@ mod_wqx_ui <- function(id) {
       ),
       bslib::nav_panel(
         "Workbook",
-        dl_btn(ns('dl_wqx'), 'Download WQX workbook')
+        dl_btn(ns("dl_wqx"), "Download WQX workbook")
       )
     )
   )

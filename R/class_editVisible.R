@@ -8,12 +8,8 @@ editVisible <- R6::R6Class(
     wqxdat = FALSE,
     censdat = FALSE,
     initialize = function(
-      resdat = FALSE,
-      accdat = FALSE,
-      frecomdat = FALSE,
-      sitdat = FALSE,
-      wqxdat = FALSE,
-      censdat = FALSE
+      resdat = FALSE, accdat = FALSE, frecomdat = FALSE, sitdat = FALSE,
+      wqxdat = FALSE, censdat = FALSE
     ) {
       self$resdat <- resdat
       self$accdat <- accdat

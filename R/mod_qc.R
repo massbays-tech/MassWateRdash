@@ -82,7 +82,7 @@ mod_qc_ui <- function(id) {
       ),
       bslib::nav_panel(
         "Report",
-        dl_btn(ns('dl_qc'), 'Download quality control report')
+        dl_btn(ns("dl_qc"), "Download quality control report")
       )
     )
   )

@@ -66,8 +66,7 @@ Imports:
     shinyWidgets,
     stats,
     utils,
-    wqformat,
-    writexl
+    wqformat
 Suggests: 
     spelling,
     testthat (>= 3.0.0)
