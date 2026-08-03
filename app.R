@@ -130,9 +130,9 @@ server <- function(input, output, session) {
 
   # Show/hide nav items ---
   observe({
-    chk <- is.null(unlist(fsetls()))
+    chk <- length(unlist(fsetls()))
 
-    if (any(chk)) {
+    if (chk < 6) {
       bslib::nav_hide("navbar", "outlier")
       bslib::nav_hide("navbar", "qc")
       bslib::nav_hide("navbar", "wqx")
