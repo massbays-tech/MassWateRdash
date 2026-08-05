@@ -5,7 +5,7 @@
 #' @param id String. Namespace ID for module.
 #'
 #' @noRd
-mod_format_ui <- function(id, in_modal = FALSE) {
+mod_upload_format_ui <- function(id, in_modal = FALSE) {
   ns <- NS(id)
 
   fmt_sidebar <- bslib::sidebar(
@@ -127,7 +127,7 @@ mod_format_ui <- function(id, in_modal = FALSE) {
 #' @param id String. Namespace ID for module.
 #'
 #' @noRd
-mod_format_server <- function(id) {
+mod_upload_format_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     # Set variables ----
     val <- reactiveValues(

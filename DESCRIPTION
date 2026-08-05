@@ -41,23 +41,39 @@ Authors@R:
     )
   )
 Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
+RoxygenNote: 8.0.0
 Imports: 
+    bsicons,
     bslib,
+    config,
     dplyr,
+    flextable,
+    gargoyle,
+    ggplot2,
+    golem,
+    htmltools,
     lubridate,
     MassWateR,
+    R6,
+    reactable,
     readxl,
+    rhandsontable,
+    rlang,
     shiny,
     shinyWidgets,
-    wqformat,
-    writexl
+    stats,
+    utils,
+    wqformat
 Suggests: 
+    spelling,
     testthat (>= 3.0.0)
 Remotes: 
     massbays-tech/wqformat
 Config/testthat/edition: 3
+Language: en-US
+Config/roxygen2/version: 8.0.0
+Depends: 
+    R (>= 3.5)

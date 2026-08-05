@@ -84,3 +84,18 @@ test_that("dropdown works", {
     picker3
   )
 })
+
+test_that("dl_btn works", {
+  expect_snapshot(
+    dl_btn("foo", "Download")
+  )
+  expect_snapshot(
+    dl_btn("foo", "Download", block = FALSE, size = "sm")
+  )
+
+  # Check error handling
+  expect_equal(
+    dl_btn("foo", "Download"),
+    dl_btn("foo", "Download", size = "foofy")
+  )
+})
