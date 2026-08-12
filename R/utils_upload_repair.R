@@ -111,6 +111,40 @@ parse_error_locations <- function(msg, col_names = NULL) {
   list(col_indices = col_indices, cell_map = cell_map)
 }
 
+# Parse repeat errors
+parse_repeat_errors <- function(dat, target_col = NULL, problem_rows = NULL) {
+  # target_col <- names(locs$cell_map)[1]
+
+  col_list <- c(
+    "Parameter",
+    "Characteristic Name",
+    "uom",
+    "Activity Depth/Height Unit",
+    "Result Unit",
+    "Activity Type"
+  )
+
+  if (length(problem_rows) < 10 || !target_col %in% col_list) {
+    return(NULL)
+  }
+
+  dat <- dat[problem_rows, , drop = FALSE]
+
+  ndat <- dplyr::count(dat, .data[[target_col]])
+
+  if (max(ndat$n) < 5) {
+    return(NULL)
+  }
+
+  new_col <- paste("Invalid", target_col)
+
+  ndat |>
+    dplyr::rename(!!new_col := !!target_col, "Row Count" = "n") |>
+    dplyr::mutate("Delete" = FALSE, .before = !!new_col) |>
+    dplyr::mutate("Replace With" = NA, .before = "Row Count")
+}
+
+
 # Handle retry after user edits in handsontable
 # show_all: TRUE when the user toggled to full-table view (no row merge needed)
 # problem_rows: indices that were displayed in filtered view
@@ -148,6 +182,9 @@ handle_retry <- function(
     full_df[valid_rows, ] <- edited_df[seq_along(valid_rows), ]
     edited_df <- full_df
   }
+
+  # Drop blank rows
+  edited_df <- edited_df[!apply(is.na(edited_df) | edited_df == "", 1, all), ]
 
   # Persist edits into raw_data_states so they survive a failed retry and the
   # re-rendered table reflects the user's work on the next round of checks

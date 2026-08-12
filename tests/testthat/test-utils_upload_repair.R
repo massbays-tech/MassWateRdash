@@ -34,3 +34,35 @@ test_that("parse_problem_rows works", {
 #
 # test_that("handle_retry works", {
 # })
+
+test_that("parse_repeat_errors works", {
+  # No errors
+  expect_equal(
+    parse_repeat_errors(tst$resdat),
+    NULL
+  )
+  
+  # Some errors
+  df_res <- rbind(tst$resdat, tst$resdat, tst$resdat)
+  df_res[["Activity Type"]] <- c("foo", "bar", "foofy")
+  
+  expect_equal(
+    parse_repeat_errors(df_res, "Activity Type", c(1,2,3,4,5,6,7,8,9,10,11,12)),
+    NULL
+  )
+  
+  # Many errors
+  df_res <- rbind(tst$resdat, tst$resdat, tst$resdat)
+  df_res[["Activity Type"]] <- c("foo", "foo", "bar")
+
+  expect_equal(
+    parse_repeat_errors(df_res, "Activity Type", c(1,2,3,4,5,6,7,8,9,10,11,12)),
+    data.frame(
+      "Delete" = FALSE,
+      "Invalid Activity Type" = c("bar", "foo"),
+      "Replace With" = NA,
+      "Row Count" = c(4, 8),
+      check.names = FALSE
+    )
+  )
+})
