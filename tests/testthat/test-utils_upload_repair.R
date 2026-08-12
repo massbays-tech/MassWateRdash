@@ -37,31 +37,52 @@ test_that("parse_problem_rows works", {
 
 test_that("parse_repeat_errors works", {
   # No errors
+  locs <- list(
+    col_indices = NULL,
+    cell_map = NULL
+  )
+
   expect_equal(
-    parse_repeat_errors(tst$resdat),
+    parse_repeat_errors(tst$resdat, locs),
     NULL
   )
-  
+
   # Some errors
   df_res <- rbind(tst$resdat, tst$resdat, tst$resdat)
   df_res[["Activity Type"]] <- c("foo", "bar", "foofy")
-  
-  expect_equal(
-    parse_repeat_errors(df_res, "Activity Type", c(1,2,3,4,5,6,7,8,9,10,11,12)),
-    NULL
+
+  locs <- list(
+    col_indices = NULL,
+    cell_map = list(
+      "Activity Type" = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+    )
   )
-  
-  # Many errors
-  df_res <- rbind(tst$resdat, tst$resdat, tst$resdat)
-  df_res[["Activity Type"]] <- c("foo", "foo", "bar")
 
   expect_equal(
-    parse_repeat_errors(df_res, "Activity Type", c(1,2,3,4,5,6,7,8,9,10,11,12)),
+    parse_repeat_errors(df_res, locs),
+    NULL
+  )
+
+  # Many errors
+  df_res[["Activity Type"]] <- c(
+    "foo", "foo", "foo", "foo", "foo", "bar", "bar", "foofy", "bar", "bar", 
+    "Sample-Routine", "Sample-Routine"
+  )
+  
+  locs <- list(
+    col_indices = NULL,
+    cell_map = list(
+      "Activity Type" = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+    )
+  )
+
+  expect_equal(
+    parse_repeat_errors(df_res, locs),
     data.frame(
       "Delete" = FALSE,
       "Invalid Activity Type" = c("bar", "foo"),
       "Replace With" = NA,
-      "Row Count" = c(4, 8),
+      "Row Count" = c(4, 5),
       check.names = FALSE
     )
   )

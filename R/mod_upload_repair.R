@@ -49,6 +49,9 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
       bindEvent(gargoyle::watch("update_val"))
     outputOptions(output, "show_btn", suspendWhenHidden = FALSE)
 
+    # Modules ----
+    repair_row <- mod_upload_repair_row_server("repair_row", val_dat)
+
     # Create modal ----
     observe({
       gargoyle::watch("update_val")
@@ -68,16 +71,7 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
               rhandsontable::rHandsontableOutput(ns("hot_headers"))
             )
           } else {
-            bslib::card(
-              bslib::card_header(
-                div(
-                  class = "d-flex justify-content-between align-items-center w-100",
-                  "Data",
-                  uiOutput(ns("row_filter_ui"))
-                )
-              ),
-              rhandsontable::rHandsontableOutput(ns("hot"))
-            )
+            mod_upload_repair_row_ui(ns("repair_row"))
           },
           footer = tagList(
             actionButton(
@@ -133,89 +127,6 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
     }) |>
       bindEvent(gargoyle::watch("update_val"))
     outputOptions(output, "hot_headers", suspendWhenHidden = FALSE)
-
-    # Row filter toggle - shown in the Data card header when problem rows exist
-    output$row_filter_ui <- renderUI({
-      problem_rows <- parse_problem_rows(val_dat$msg)
-      if (length(problem_rows) == 0) {
-        return(NULL)
-      }
-      n_total <- if (!is.null(val_dat$raw_dat)) nrow(val_dat$raw_dat) else 0
-
-      div(
-        class = "d-flex align-items-center gap-2",
-        span(
-          class = "badge bg-warning text-dark",
-          paste(length(problem_rows), "row(s) with issues")
-        ),
-        checkboxInput(
-          ns("show_all_rows"),
-          paste0("show all ", n_total, " rows"),
-          value = FALSE
-        )
-      )
-    }) |>
-      bindEvent(gargoyle::watch("update_val"))
-    outputOptions(output, "row_filter_ui", suspendWhenHidden = FALSE)
-
-    # Data editor - shows only problem rows by default when they exist
-    output$hot <- rhandsontable::renderRHandsontable({
-      req(val_dat$raw_dat)
-      dat <- val_dat$raw_dat
-      problem_rows <- parse_problem_rows(val_dat$msg)
-      locs <- parse_error_locations(val_dat$msg, names(dat))
-      show_all <- isTRUE(input$show_all_rows)
-      if (length(problem_rows) > 0 && !show_all) {
-        valid_rows <- problem_rows[
-          problem_rows >= 1 & problem_rows <= nrow(dat)
-        ]
-        dat <- dat[valid_rows, , drop = FALSE]
-      }
-
-      hot <- rhandsontable::rhandsontable(dat, width = "100%", height = 450) |>
-        rhandsontable::hot_table(wordWrap = FALSE)
-
-      col_names <- names(dat)
-      if (length(problem_rows) > 0 || length(locs$cell_map) > 0) {
-        for (i in seq_along(col_names)) {
-          cn <- col_names[i]
-          col_bad <- locs$cell_map[[cn]]
-          cell_0 <- if (!is.null(col_bad)) {
-            if (!show_all && length(problem_rows) > 0) {
-              which(problem_rows %in% col_bad) - 1L
-            } else {
-              col_bad - 1L
-            }
-          } else {
-            integer(0)
-          }
-          row_0 <- if (show_all && length(problem_rows) > 0) {
-            problem_rows - 1L
-          } else {
-            integer(0)
-          }
-          if (length(row_0) == 0 && length(cell_0) == 0) {
-            next
-          }
-          hot <- hot |>
-            rhandsontable::hot_col(
-              i,
-              renderer = sprintf(
-                "function(instance, td, row, col, prop, value, cellProperties) {
-                    Handsontable.renderers.TextRenderer.apply(this, arguments);
-                    if ([%s].indexOf(row) > -1) { td.style.background = '#fff3cd'; }
-                    if ([%s].indexOf(row) > -1) { td.style.background = '#ffc107'; }
-                    }",
-                paste(row_0, collapse = ","),
-                paste(cell_0, collapse = ",")
-              )
-            )
-        }
-      }
-      hot
-    }) |>
-      bindEvent(gargoyle::watch("update_val"))
-    outputOptions(output, "hot", suspendWhenHidden = FALSE)
 
     # Retry ----
     observe({

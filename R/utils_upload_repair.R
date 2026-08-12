@@ -112,8 +112,9 @@ parse_error_locations <- function(msg, col_names = NULL) {
 }
 
 # Parse repeat errors
-parse_repeat_errors <- function(dat, target_col = NULL, problem_rows = NULL) {
-  # target_col <- names(locs$cell_map)[1]
+parse_repeat_errors <- function(dat, locs) {
+  target_col <- names(locs$cell_map)[1]
+  problem_rows <- locs$cell_map[[target_col]]
 
   col_list <- c(
     "Parameter",
@@ -139,6 +140,7 @@ parse_repeat_errors <- function(dat, target_col = NULL, problem_rows = NULL) {
   new_col <- paste("Invalid", target_col)
 
   ndat |>
+    dplyr::filter(.data$n > 1) |>
     dplyr::rename(!!new_col := !!target_col, "Row Count" = "n") |>
     dplyr::mutate("Delete" = FALSE, .before = !!new_col) |>
     dplyr::mutate("Replace With" = NA, .before = "Row Count")

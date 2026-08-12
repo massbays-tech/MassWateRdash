@@ -21,7 +21,7 @@ mod_upload_repair_row_ui <- function(id) {
             class = "d-flex align-items-center gap-2",
             span(
               class = "badge bg-warning text-dark",
-              renderText(ns("problem_count"))
+              textOutput(ns("problem_count"))
             ),
             checkboxInput(
               ns("show_all_rows"),
@@ -31,7 +31,8 @@ mod_upload_repair_row_ui <- function(id) {
           )
         )
       ),
-      rhandsontable::rHandsontableOutput(ns("hot"))
+      rhandsontable::rHandsontableOutput(ns("group_edit")),
+      rhandsontable::rHandsontableOutput(ns("row_edit"))
     )
   )
 }
@@ -53,27 +54,18 @@ mod_upload_repair_row_server <- function(id, val_dat) {
     # Set variables ----
     val <- reactiveValues(
       problem_rows = NULL,
-      problem_dat = NULL,
       locs = NULL
     )
 
+    # Update reactive variables ----
     observe({
-      dat <- val_dat$raw_dat
-      bad_rows <- parse_problem_rows(val_dat$msg)
-
-      valid_rows <- bad_rows[
-        bad_rows >= 1 & bad_rows <= nrow(dat)
-      ]
-      bad_dat <- dat[valid_rows, , drop = FALSE]
-
-      val$problem_rows <- bad_rows
-      val$problem_dat <- bad_dat
+      val$problem_rows <- parse_problem_rows(val_dat$msg)
       val$locs <- parse_error_locations(val_dat$msg, names(val_dat$raw_dat))
     }) |>
       bindEvent(gargoyle::watch("update_val"))
 
     # Update UI ----
-    problem_count <- textOutput({
+    output$problem_count <- renderText({
       paste(length(val$problem_rows), "row(s) with issues")
     })
 
@@ -88,8 +80,21 @@ mod_upload_repair_row_server <- function(id, val_dat) {
     }) |>
       bindEvent(gargoyle::watch("update_val"))
 
-    # Data editor - shows only problem rows by default when they exist
-    output$hot <- rhandsontable::renderRHandsontable({
+    # Data editor - mass edit
+    output$group_edit <- rhandsontable::renderRHandsontable({
+      dat <- parse_repeat_errors(val_dat$raw_dat, val$locs)
+
+      if (is.null(dat)) {
+        return(NULL)
+      }
+
+      rhandsontable::rhandsontable(dat, width = "100%", height = 450) |>
+        rhandsontable::hot_table(wordWrap = FALSE)
+    }) |>
+      bindEvent(gargoyle::watch("update_val"), val$locs)
+
+    # Data editor - row by row
+    output$row_edit <- rhandsontable::renderRHandsontable({
       req(val_dat$raw_dat)
 
       dat <- val_dat$raw_dat
@@ -98,7 +103,10 @@ mod_upload_repair_row_server <- function(id, val_dat) {
       show_all <- input$show_all_rows
 
       if (length(problem_rows) > 0 && !show_all) {
-        dat <- val$bad_dat
+        valid_rows <- problem_rows[
+          problem_rows >= 1 & problem_rows <= nrow(dat)
+        ]
+        dat <- dat[valid_rows, , drop = FALSE]
       }
 
       hot <- rhandsontable::rhandsontable(dat, width = "100%", height = 450) |>
@@ -143,8 +151,17 @@ mod_upload_repair_row_server <- function(id, val_dat) {
       }
       hot
     })
-  })
 
-  # Return data ----
-  # MUST RETURN input$hot, input$show_all_rows
+    # Return data ----
+    return(
+      list(
+        row_edit = reactive({
+          input$row_edit
+        }),
+        show_all_rows = reactive({
+          input$show_all_rows
+        })
+      )
+    )
+  })
 }
