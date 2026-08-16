@@ -53,7 +53,9 @@ mod_upload_repair_row_server <- function(id, val_dat) {
 
     # Set variables ----
     val <- reactiveValues(
+      column_error = FALSE,
       problem_rows = NULL,
+      repeat_errors = NULL,
       locs = NULL
     )
 
@@ -61,6 +63,7 @@ mod_upload_repair_row_server <- function(id, val_dat) {
     observe({
       val$problem_rows <- parse_problem_rows(val_dat$msg)
       val$locs <- parse_error_locations(val_dat$msg, names(val_dat$raw_dat))
+      val$repeat_errors <- parse_repeat_errors(val_dat$raw_dat, val$locs)
     }) |>
       bindEvent(gargoyle::watch("update_val"))
 
@@ -82,16 +85,9 @@ mod_upload_repair_row_server <- function(id, val_dat) {
 
     # Data editor - mass edit
     output$group_edit <- rhandsontable::renderRHandsontable({
-      dat <- parse_repeat_errors(val_dat$raw_dat, val$locs)
-
-      if (is.null(dat)) {
-        return(NULL)
-      }
-
-      rhandsontable::rhandsontable(dat, width = "100%", height = 450) |>
-        rhandsontable::hot_table(wordWrap = FALSE)
+      val$repeat_errors
     }) |>
-      bindEvent(gargoyle::watch("update_val"), val$locs)
+      bindEvent(val$repeat_errors)
 
     # Data editor - row by row
     output$row_edit <- rhandsontable::renderRHandsontable({

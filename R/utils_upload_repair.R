@@ -114,38 +114,88 @@ parse_error_locations <- function(msg, col_names = NULL) {
 # Parse repeat errors
 parse_repeat_errors <- function(dat, locs) {
   target_col <- names(locs$cell_map)[1]
-  problem_rows <- locs$cell_map[[target_col]]
 
   col_list <- c(
-    "Parameter",
-    "Characteristic Name",
-    "uom",
-    "Activity Depth/Height Unit",
-    "Result Unit",
-    "Activity Type"
+    "Parameter", "Characteristic Name", "uom", "Activity Depth/Height Unit",
+    "Result Unit", "Activity Type"
   )
 
-  if (length(problem_rows) < 10 || !target_col %in% col_list) {
+  if (is.null(target_col) || !target_col %in% col_list) {
     return(NULL)
   }
 
-  dat <- dat[problem_rows, , drop = FALSE]
+  problem_rows <- locs$cell_map[[target_col]]
 
+  if (length(problem_rows) < 10) {
+    return(NULL)
+  }
+
+
+  dat <- dat[problem_rows, , drop = FALSE]
   ndat <- dplyr::count(dat, .data[[target_col]])
 
   if (max(ndat$n) < 5) {
     return(NULL)
   }
 
+  var_list <- if (target_col == "Activity Type") {
+    c(
+      "Field Msr/Obs", "Sample-Routine", "Quality Control Sample-Field Blank",
+      "Quality Control Sample-Lab Duplicate",
+      "Quality Control Sample-Lab Blank", "Quality Control Sample-Lab Spike",
+      "Quality Control-Meter Lab Duplicate", "Quality Control-Meter Lab Blank",
+      "Quality Control-Calibration Check"
+    )
+  } else if (target_col == "Activity Depth/Height Unit") {
+    c("ft", "m")
+  } else if (target_col %in% c("Parameter", "Characteristic Name")) {
+    c(
+      "Air Temp", "Algae, blue-green (phylum cyanophyta) density", "Ammonia",
+      "Ammonium", "Chl a", "Chl a (probe)", "Chloride", "Chlorophyll a",
+      "Chlorophyll a (probe)",
+      "Chlorophyll a (probe) concentration, Cyanobacteria (bluegreen)",
+      "Conductivity", "Cyanobacteria", "Cyanobacteria (probe)", "Depth",
+      "Depth, Secchi disk depth", "Dissolved oxygen (DO)",
+      "Dissolved oxygen saturation", "DO", "DO saturation", "E.coli",
+      "Enterococcus", "Escherichia coli", "Fecal Coliform", "Flow", "Gage",
+      "Height, gage", "Metals", "Microcystins", "Nitrate", "Nitrate + Nitrite",
+      "Nitrite", "Ortho P", "Orthophosphate", "Particulate organic carbon",
+      "pH", "Pheophytin", "Pheophytin a", "Phosphorus, Particulate Organic",
+      "Phycocyanin", "Phycocyanin (probe)", "Phycoerythrin", "POC", "PON",
+      "POP", "Salinity", "Secchi Depth", "Silicate", "Sp Conductance",
+      "Specific conductance", "Sulfate", "Surfactants", "TDN", "TDP", "TDS",
+      "Temperature, air", "Temperature, water", "TKN", "TN",
+      "Total dissolved solids", "Total Kjeldahl nitrogen",
+      "Total Nitrogen, mixed forms", "Total Phosphorus, mixed forms",
+      "Total suspended solids", "TP", "TSS", "Turbidity", "Water Temp"
+    )
+  } else {
+    c(
+      "#/100ml", "%", "% recovery", "AU", "BU", "cfm", "cfs", "cfu/100ml", "cm",
+      "deg C", "deg F", "FAU", "FBU", "FNMU", "FNRU", "FNU", "ft", "FTU",
+      "g/kg", "JTU", "l/min", "l/sec", "m", "mg/l", "mgd", "MPN/100ml", "mS/cm",
+      "None", "NTMU", "NTRU", "NTU", "ppm", "ppt", "ppth", "PSS", "PSU", "RFU",
+      "s.u.", "S/m", "ug/l", "umol/l", "uS/cm"
+    )
+  }
+  var_list <- c(" ", var_list)
+
   new_col <- paste("Invalid", target_col)
 
-  ndat |>
+  ndat <- ndat |>
     dplyr::filter(.data$n > 1) |>
     dplyr::rename(!!new_col := !!target_col, "Row Count" = "n") |>
-    dplyr::mutate("Delete" = FALSE, .before = !!new_col) |>
-    dplyr::mutate("Replace With" = NA, .before = "Row Count")
-}
+    dplyr::mutate("Delete Rows" = FALSE, .before = !!new_col) |>
+    dplyr::mutate(
+      "Replace With" = factor(NA, levels = !!var_list),
+      .before = "Row Count"
+    )
 
+  rhandsontable::rhandsontable(ndat, width = "100%", height = 450) |>
+    rhandsontable::hot_table(wordWrap = FALSE) |>
+    rhandsontable::hot_col(new_col, readOnly = TRUE) |>
+    rhandsontable::hot_col("Row Count", readOnly = TRUE)
+}
 
 # Handle retry after user edits in handsontable
 # show_all: TRUE when the user toggled to full-table view (no row merge needed)

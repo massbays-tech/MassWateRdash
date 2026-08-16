@@ -65,10 +65,10 @@ test_that("parse_repeat_errors works", {
 
   # Many errors
   df_res[["Activity Type"]] <- c(
-    "foo", "foo", "foo", "foo", "foo", "bar", "bar", "foofy", "bar", "bar", 
+    "foo", "foo", "foo", "foo", "foo", "bar", "bar", "foofy", "bar", "bar",
     "Sample-Routine", "Sample-Routine"
   )
-  
+
   locs <- list(
     col_indices = NULL,
     cell_map = list(
@@ -76,14 +76,5 @@ test_that("parse_repeat_errors works", {
     )
   )
 
-  expect_equal(
-    parse_repeat_errors(df_res, locs),
-    data.frame(
-      "Delete" = FALSE,
-      "Invalid Activity Type" = c("bar", "foo"),
-      "Replace With" = NA,
-      "Row Count" = c(4, 5),
-      check.names = FALSE
-    )
-  )
+  expect_snapshot(parse_repeat_errors(df_res, locs))
 })
