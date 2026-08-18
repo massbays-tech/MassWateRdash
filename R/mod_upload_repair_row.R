@@ -8,31 +8,43 @@
 #' id.
 #'
 #' @noRd
-mod_upload_repair_row_ui <- function(id) {
+mod_upload_repair_row_ui <- function(id, dat_label) {
   ns <- NS(id)
 
   tagList(
-    bslib::card(
-      bslib::card_header(
-        div(
-          class = "d-flex justify-content-between align-items-center w-100",
-          "Data",
-          div(
-            class = "d-flex align-items-center gap-2",
-            span(
-              class = "badge bg-warning text-dark",
-              textOutput(ns("problem_count"))
-            ),
-            checkboxInput(
-              ns("show_all_rows"),
-              "show all rows",
-              value = FALSE
-            )
-          )
+    bslib::navset_hidden(
+      id = ns("tabset"),
+      bslib::nav_panel_hidden(
+        "edit_var",
+        bslib::card(
+          bslib::card_header("Invalid Variables"),
+          rhandsontable::rHandsontableOutput(ns("group_edit"))
         )
       ),
-      rhandsontable::rHandsontableOutput(ns("group_edit")),
-      rhandsontable::rHandsontableOutput(ns("row_edit"))
+      bslib::nav_panel_hidden(
+        "edit_row",
+        bslib::card(
+          bslib::card_header(
+            div(
+              class = "d-flex justify-content-between align-items-center w-100",
+              "Data",
+              div(
+                class = "d-flex align-items-center gap-2",
+                span(
+                  class = "badge bg-warning text-dark",
+                  textOutput(ns("problem_count"))
+                ),
+                checkboxInput(
+                  ns("show_all_rows"),
+                  "show all rows",
+                  value = FALSE
+                )
+              )
+            )
+          ),
+          rhandsontable::rHandsontableOutput(ns("row_edit"))
+        )
+      )
     )
   )
 }
@@ -47,23 +59,28 @@ mod_upload_repair_row_ui <- function(id) {
 #' @param val_dat R6 class. Dataframes.
 #'
 #' @noRd
-mod_upload_repair_row_server <- function(id, val_dat) {
+mod_upload_repair_row_server <- function(id, val_dat, retry) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     # Set variables ----
     val <- reactiveValues(
-      column_error = FALSE,
       problem_rows = NULL,
       repeat_errors = NULL,
       locs = NULL
     )
 
-    # Update reactive variables ----
+    # Update tabs, reactive variables ----
     observe({
       val$problem_rows <- parse_problem_rows(val_dat$msg)
       val$locs <- parse_error_locations(val_dat$msg, names(val_dat$raw_dat))
       val$repeat_errors <- parse_repeat_errors(val_dat$raw_dat, val$locs)
+
+      if (is.null(val$repeat_errors)) {
+        bslib::nav_select("tabset", selected = "edit_row")
+      } else {
+        bslib::nav_select("tabset", selected = "edit_var")
+      }
     }) |>
       bindEvent(gargoyle::watch("update_val"))
 
@@ -83,13 +100,12 @@ mod_upload_repair_row_server <- function(id, val_dat) {
     }) |>
       bindEvent(gargoyle::watch("update_val"))
 
-    # Data editor - mass edit
+    # Edit Variables ----
     output$group_edit <- rhandsontable::renderRHandsontable({
       val$repeat_errors
-    }) |>
-      bindEvent(val$repeat_errors)
+    })
 
-    # Data editor - row by row
+    # Edit Rows ----
     output$row_edit <- rhandsontable::renderRHandsontable({
       req(val_dat$raw_dat)
 
@@ -148,16 +164,16 @@ mod_upload_repair_row_server <- function(id, val_dat) {
       hot
     })
 
-    # Return data ----
-    return(
-      list(
-        row_edit = reactive({
-          input$row_edit
-        }),
-        show_all_rows = reactive({
-          input$show_all_rows
-        })
-      )
-    )
+    # Retry ----
+    observe({
+      # If active tab is edit_var
+      # chk - all var set to blank or edit manually? if TRUE, update tab
+      # else - update variables, send data back to lower module...
+
+      # ELSE
+      # replace regular dat with the hot table, send data back to lower module...
+    }) |>
+      bindEvent(retry())
+
   })
 }

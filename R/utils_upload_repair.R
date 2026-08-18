@@ -130,7 +130,6 @@ parse_repeat_errors <- function(dat, locs) {
     return(NULL)
   }
 
-
   dat <- dat[problem_rows, , drop = FALSE]
   ndat <- dplyr::count(dat, .data[[target_col]])
 
@@ -197,34 +196,67 @@ parse_repeat_errors <- function(dat, locs) {
     rhandsontable::hot_col("Row Count", readOnly = TRUE)
 }
 
-# Handle retry after user edits in handsontable
+# Splitting handle retry in to multiple functions
+# Function 1: update column names
+update_hot_col <- function(val_dat, hot_table) {
+  edited_df <- val_dat$raw_dat
+
+  new_names <- unlist(
+    rhandsontable::hot_to_r(hot_table)[1, ],
+    use.names = FALSE
+  )
+  if (length(new_names) == ncol(edited_df)) {
+    names(edited_df) <- new_names
+  }
+
+  edited_df
+}
+
+# Function 2: update variables (for mass edits)
+update_hot_var <- function(val_dat, hot_table) {
+  dat_var <- rhandsontable::hot_to_r(hot_table) |>
+    dplyr::filter(
+      .data[["Delete Rows"]] == TRUE || .data[["Replace With"]] != " "
+    )
+
+  if (nrow(dat_var) == 0) {
+    return(NULL)
+  }
+
+  edited_dat <- val_dat$raw_dat
+
+  var_col <- colnames(dat_var)[2]
+  target_col <- gsub("Invalid ", "", var_col)
+
+  del_list <- dat_var |>
+    dplyr::filter(.data[["Delete Rows"]] == TRUE) |>
+    dplyr::pull(.data[[var_col]])
+
+  if (length(del_list) > 0) {
+    edited_dat <- edited_dat |>
+      dplyr::filter(!.data[[target_col]] %in% del_list)
+  }
+
+  dat_sub <- dat_var |>
+    dplyr::filter(.data[["Delete Rows"]] == FALSE)
+
+  if (nrow(dat_sub) == 0) {
+    return(edited_dat)
+  }
+
+  old_var <- dat_sub[, 2]
+  new_var <- dat_sub[, 3]
+
+  wqformat::update_var(edited_dat, target_col, old_var, new_var)
+}
+
+# Fucntion 3: update individual rows
 # show_all: TRUE when the user toggled to full-table view (no row merge needed)
 # problem_rows: indices that were displayed in filtered view
-handle_retry <- function(
-  data_name, val_log, val_edit, val_dat, hot_input, hot_headers_input = NULL,
-  show_all = TRUE, problem_rows = integer(0)
-) {
-  val_log$msg <- ""
+update_hot_row <- function(val_dat, hot_table, show_all = TRUE, problem_rows = integer(0)) {
+  edited_df <- rhandsontable::hot_to_r(hot_table)
 
-  if (!is.null(hot_input)) {
-    edited_df <- rhandsontable::hot_to_r(hot_input)
-  } else {
-    req(val_dat$raw_dat)
-    edited_df <- val_dat$raw_dat
-  }
-
-  # Apply any edited column names from the header editor
-  if (!is.null(hot_headers_input)) {
-    new_names <- unlist(
-      rhandsontable::hot_to_r(hot_headers_input)[1, ],
-      use.names = FALSE
-    )
-    if (length(new_names) == ncol(edited_df)) {
-      names(edited_df) <- new_names
-    }
-  }
-
-  # When filtered view was active, merge the edited subset back into the full data
+  # If filtered view was active, merge the edited subset back into the full data
   if (!show_all && length(problem_rows) > 0 && !is.null(val_dat$raw_dat)) {
     full_df <- val_dat$raw_dat
     names(full_df) <- names(edited_df)
@@ -236,7 +268,15 @@ handle_retry <- function(
   }
 
   # Drop blank rows
-  edited_df <- edited_df[!apply(is.na(edited_df) | edited_df == "", 1, all), ]
+  edited_df[!apply(is.na(edited_df) | edited_df == "", 1, all), ]
+}
+
+
+# Handle retry after user edits in handsontable
+# .data -- edited_df from previous function, but pipeable
+handle_retry <- function(.data, data_name, val_log, val_edit, val_dat) {
+  val_log$msg <- ""
+  edited_df <- .data
 
   # Persist edits into raw_data_states so they survive a failed retry and the
   # re-rendered table reflects the user's work on the next round of checks

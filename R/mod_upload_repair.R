@@ -50,7 +50,13 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
     outputOptions(output, "show_btn", suspendWhenHidden = FALSE)
 
     # Modules ----
-    repair_row <- mod_upload_repair_row_server("repair_row", val_dat)
+    repair_row <- mod_upload_repair_row_server(
+      "repair_row",
+      val_dat,
+      reactive({
+        input$retry
+      })
+    )
 
     # Create modal ----
     observe({
@@ -86,14 +92,15 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
     }) |>
       bindEvent(input$open_editor)
 
-    # Validation message shown inside the modal
+    # Validation message ----
     output$modal_msgs <- renderUI({
       format_log(val_dat$msg)
     }) |>
       bindEvent(gargoyle::watch("update_val"))
     outputOptions(output, "modal_msgs", suspendWhenHidden = FALSE)
 
-    # Column names editor (renders even when modal is closed so it's ready on open)
+    # Column names editor ----
+    # (renders even when modal is closed so it's ready on open)
     output$hot_headers <- rhandsontable::renderRHandsontable({
       req(val_dat$raw_dat)
 
@@ -131,17 +138,12 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
     # Retry ----
     observe({
       gargoyle::watch("update_val")
-      col_err <- is_column_error(val_dat$msg)
-      handle_retry(
-        dat_name,
-        val_log = val_log,
-        val_edit = val_edit,
-        val_dat = val_dat,
-        hot_input = if (!col_err) input$hot else NULL,
-        hot_headers_input = if (col_err) input$hot_headers else NULL,
-        show_all = isTRUE(input$show_all_rows),
-        problem_rows = parse_problem_rows(val_dat$msg)
-      )
+
+      if (is_column_error(val_dat$msg)) {
+        update_hot_col(val_dat, input$hot_headers) |>
+          handle_retry(dat_name, val_log, val_edit, val_dat)
+      }
+
       gargoyle::trigger("update_val")
       if (!val_edit[[dat_name]]) removeModal()
     }) |>
