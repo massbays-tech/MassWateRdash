@@ -34,3 +34,112 @@ test_that("parse_problem_rows works", {
 #
 # test_that("handle_retry works", {
 # })
+
+test_that("parse_repeat_errors works", {
+  # No errors
+  locs <- list(
+    col_indices = NULL,
+    cell_map = NULL
+  )
+
+  expect_equal(
+    parse_repeat_errors(tst$resdat, locs),
+    NULL
+  )
+
+  # Some errors
+  df_res <- rbind(tst$resdat, tst$resdat, tst$resdat)
+  df_res[["Activity Type"]] <- c("foo", "bar", "foofy")
+
+  locs <- list(
+    col_indices = NULL,
+    cell_map = list(
+      "Activity Type" = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+    )
+  )
+
+  expect_equal(
+    parse_repeat_errors(df_res, locs),
+    NULL
+  )
+
+  # Many errors
+  df_res[["Activity Type"]] <- c(
+    "foo", "foo", "foo", "foo", "foo", "bar", "bar", "foofy", "bar", "bar",
+    "Sample-Routine", "Sample-Routine"
+  )
+
+  locs <- list(
+    col_indices = NULL,
+    cell_map = list(
+      "Activity Type" = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+    )
+  )
+
+  expect_snapshot(parse_repeat_errors(df_res, locs))
+})
+
+test_that("update_hot_col works", {
+  # Set variables
+  df_bad <- tst$sitdat
+  colnames(df_bad) <- c(
+    "Site_ID", "Site_Name", "Latitude", "Longitude", "Group"
+  )
+
+  col_names <- names(tst$sitdat)
+  df_hot <- setNames(
+    as.data.frame(as.list(col_names), stringsAsFactors = FALSE),
+    as.character(seq_along(col_names))
+  )
+
+  # Test
+  expect_equal(
+    update_hot_col(df_hot, df_bad),
+    tst$sitdat
+  )
+})
+
+test_that("update_hot_var works", {
+  # Set variables
+  df_bad <- tst$resdat
+  df_bad[["Activity Type"]] <- c("Field Msr/Obs", "foo", "bar", "foofy")
+
+  df_hot <- data.frame(
+    "Delete Rows" = c(FALSE, FALSE, TRUE),
+    "Invalid Activity Type" = c("bar", "foo", "foofy"),
+    "Replace With" = c(
+      "Quality Control Sample-Lab Duplicate", "Sample-Routine",
+      "Quality Control-Calibration Check"
+    ),
+    "Row Count" = 1,
+    check.names = FALSE
+  )
+
+  # Test
+  expect_equal(
+    update_hot_var(df_hot, df_bad),
+    tst$resdat[1:3, ]
+  )
+})
+
+test_that("update_hot_rows works", {
+  # Set variables
+  df_bad <- tst$resdat
+  df_bad[["Activity Type"]] <- c("Field Msr/Obs", "foo", "bar", "foofy")
+
+  df_hot <- tst$resdat
+
+  # Test
+  expect_equal(
+    update_hot_rows(df_hot, df_bad),
+    tst$resdat
+  )
+
+  # Test - only show problem rows, one row blank
+  df_hot[4, ] <- NA
+
+  expect_equal(
+    update_hot_rows(df_hot[2:4, ], df_bad, FALSE, c(2,3,4)),
+    tst$resdat[1:3, ]
+  )
+})

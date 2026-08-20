@@ -25,5 +25,37 @@ tst <- list(
       "Tributaries"
     ),
     check.names = FALSE
+  ),
+  # MassWateR result data
+  resdat = data.frame(
+    "Monitoring Location ID" = c("HBS-016", "HBS-016", NA, NA),
+    "Activity Type" = c(
+      "Field Msr/Obs", "Sample-Routine", "Quality Control Sample-Lab Duplicate",
+      "Quality Control-Calibration Check"
+    ),
+    "Activity Start Date" = as.Date(c(
+      "2021-06-13", "2021-08-15", "2021-05-16", "2021-09-12"
+    )),
+    "Activity Start Time" = c("8:00", "7:40", NA, NA),
+    "Activity Depth/Height Measure" = c(1, 0.75, NA, NA),
+    "Activity Depth/Height Unit" = c("ft", "ft", NA, NA),
+    "Activity Relative Depth Name" = NA,
+    "Characteristic Name" = c(
+      "DO saturation",
+      "TSS",
+      "Nitrate",
+      "Sp Conductance"
+    ),
+    "Result Value" = c(46.8, 5, 0.45, 980),
+    "Result Unit" = c("%", "mg/l", "mg/l", "uS/cm"),
+    "Quantitation Limit" = NA,
+    "QC Reference Value" = c(7, NA, 0.46, 1000),
+    "Result Measure Qualifier" = c(NA, "Q", NA, NA),
+    "Result Attribute" = c(NA, NA, "K16452-MB3", NA),
+    "Sample Collection Method ID" = c(NA, "Grab-MassWateR", NA, NA),
+    "Project ID" = "Water Quality",
+    "Local Record ID" = NA,
+    "Result Comment" = c(NA, "River was very full", NA, NA),
+    check.names = FALSE
   )
 )

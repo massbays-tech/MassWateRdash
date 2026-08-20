@@ -62,23 +62,48 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
           uiOutput(ns("modal_msgs")),
           br(),
           p("Fix the issue below, then click 'Try upload again'."),
-          if (is_column_error(val_dat$msg)) {
-            bslib::card(
-              bslib::card_header("Column Names"),
-              rhandsontable::rHandsontableOutput(ns("hot_headers"))
+          tabsetPanel(
+            id = ns("tabset"),
+            type = "hidden",
+            tabPanelBody(
+              "edit_col",
+              bslib::card(
+                bslib::card_header("Column Names"),
+                rhandsontable::rHandsontableOutput(ns("hot_headers"))
+              )
+            ),
+            tabPanelBody(
+              "edit_var",
+              bslib::card(
+                bslib::card_header("Invalid Variables"),
+                rhandsontable::rHandsontableOutput(ns("hot_var"))
+              )
+            ),
+            tabPanelBody(
+              "edit_row",
+              bslib::card(
+                bslib::card_header(
+                  div(
+                    class = "d-flex justify-content-between align-items-center w-100",
+                    "Data",
+                    div(
+                      class = "d-flex align-items-center gap-2",
+                      span(
+                        class = "badge bg-warning text-dark",
+                        textOutput(ns("problem_count"))
+                      ),
+                      checkboxInput(
+                        ns("show_all_rows"),
+                        "show all rows",
+                        value = FALSE
+                      )
+                    )
+                  )
+                ),
+                rhandsontable::rHandsontableOutput(ns("hot_rows"))
+              )
             )
-          } else {
-            bslib::card(
-              bslib::card_header(
-                div(
-                  class = "d-flex justify-content-between align-items-center w-100",
-                  "Data",
-                  uiOutput(ns("row_filter_ui"))
-                )
-              ),
-              rhandsontable::rHandsontableOutput(ns("hot"))
-            )
-          },
+          ),
           footer = tagList(
             actionButton(
               ns("retry"),
@@ -92,19 +117,61 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
     }) |>
       bindEvent(input$open_editor)
 
-    # Validation message shown inside the modal
+    # Set variables ----
+    val <- reactiveValues(
+      problem_rows = NULL,
+      repeat_errors = NULL,
+      locs = NULL
+    )
+
+    # Update tabs, reactive variables ----
+    observe({
+      col_error <- is_column_error(val_dat$msg)
+      val$locs <- parse_error_locations(val_dat$msg, names(val_dat$raw_dat))
+
+      if (col_error) {
+        updateTabsetPanel(inputId = "tabset", selected = "edit_col")
+      } else {
+        val$problem_rows <- parse_problem_rows(val_dat$msg)
+        val$repeat_errors <- parse_repeat_errors(val_dat$raw_dat, val$locs)
+
+        if (is.null(val$repeat_errors)) {
+          updateTabsetPanel(inputId = "tabset", selected = "edit_row")
+        } else {
+          updateTabsetPanel(inputId = "tabset", selected = "edit_var")
+        }
+      }
+    }) |>
+      bindEvent(gargoyle::watch("update_val"), input$open_editor)
+
+    # Update UI ----
+    output$problem_count <- renderText({
+      paste(length(val$problem_rows), "row(s) with issues")
+    })
+
+    observe({
+      n_total <- if (!is.null(val_dat$raw_dat)) nrow(val_dat$raw_dat) else 0
+
+      updateCheckboxInput(
+        session = session,
+        inputId = "show_all_rows",
+        label = paste("show all", n_total, "rows")
+      )
+    }) |>
+      bindEvent(gargoyle::watch("update_val"))
+
+    # Validation message ----
     output$modal_msgs <- renderUI({
       format_log(val_dat$msg)
     }) |>
       bindEvent(gargoyle::watch("update_val"))
-    outputOptions(output, "modal_msgs", suspendWhenHidden = FALSE)
 
-    # Column names editor (renders even when modal is closed so it's ready on open)
+    # Edit columns ----
     output$hot_headers <- rhandsontable::renderRHandsontable({
       req(val_dat$raw_dat)
 
       col_names <- names(val_dat$raw_dat)
-      locs <- parse_error_locations(val_dat$msg)
+      locs <- val$locs
       header_df <- setNames(
         as.data.frame(as.list(col_names), stringsAsFactors = FALSE),
         as.character(seq_along(col_names))
@@ -132,39 +199,21 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
       hot
     }) |>
       bindEvent(gargoyle::watch("update_val"))
-    outputOptions(output, "hot_headers", suspendWhenHidden = FALSE)
 
-    # Row filter toggle - shown in the Data card header when problem rows exist
-    output$row_filter_ui <- renderUI({
-      problem_rows <- parse_problem_rows(val_dat$msg)
-      if (length(problem_rows) == 0) {
-        return(NULL)
-      }
-      n_total <- if (!is.null(val_dat$raw_dat)) nrow(val_dat$raw_dat) else 0
+    # Edit Variables ----
+    output$hot_var <- rhandsontable::renderRHandsontable({
+      val$repeat_errors
+    })
 
-      div(
-        class = "d-flex align-items-center gap-2",
-        span(
-          class = "badge bg-warning text-dark",
-          paste(length(problem_rows), "row(s) with issues")
-        ),
-        checkboxInput(
-          ns("show_all_rows"),
-          paste0("show all ", n_total, " rows"),
-          value = FALSE
-        )
-      )
-    }) |>
-      bindEvent(gargoyle::watch("update_val"))
-    outputOptions(output, "row_filter_ui", suspendWhenHidden = FALSE)
-
-    # Data editor - shows only problem rows by default when they exist
-    output$hot <- rhandsontable::renderRHandsontable({
+    # Edit Rows ----
+    output$hot_rows <- rhandsontable::renderRHandsontable({
       req(val_dat$raw_dat)
+
       dat <- val_dat$raw_dat
-      problem_rows <- parse_problem_rows(val_dat$msg)
-      locs <- parse_error_locations(val_dat$msg, names(dat))
-      show_all <- isTRUE(input$show_all_rows)
+      problem_rows <- val$problem_rows
+      locs <- val$locs
+      show_all <- input$show_all_rows
+
       if (length(problem_rows) > 0 && !show_all) {
         valid_rows <- problem_rows[
           problem_rows >= 1 & problem_rows <= nrow(dat)
@@ -212,26 +261,38 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
             )
         }
       }
+
       hot
-    }) |>
-      bindEvent(gargoyle::watch("update_val"))
-    outputOptions(output, "hot", suspendWhenHidden = FALSE)
+    })
 
     # Retry ----
     observe({
       gargoyle::watch("update_val")
-      col_err <- is_column_error(val_dat$msg)
-      handle_retry(
-        dat_name,
-        val_log = val_log,
-        val_edit = val_edit,
-        val_dat = val_dat,
-        hot_input = if (!col_err) input$hot else NULL,
-        hot_headers_input = if (col_err) input$hot_headers else NULL,
-        show_all = isTRUE(input$show_all_rows),
-        problem_rows = parse_problem_rows(val_dat$msg)
-      )
-      gargoyle::trigger("update_val")
+
+      if (input$tabset == "edit_col") {
+        rhandsontable::hot_to_r(input$hot_headers) |>
+          update_hot_col(val_dat$raw_dat) |>
+          handle_retry(dat_name, val_log, val_edit, val_dat)
+        gargoyle::trigger("update_val")
+      } else if (input$tabset == "edit_var") {
+        edited_df <- rhandsontable::hot_to_r(input$hot_var) |>
+          update_hot_var(val_dat$raw_dat)
+
+        if (is.null(edited_df)) {
+          updateTabsetPanel(inputId = "tabset", selected = "edit_row")
+        } else {
+          handle_retry(edited_df, dat_name, val_log, val_edit, val_dat)
+          gargoyle::trigger("update_val")
+        }
+      } else {
+        rhandsontable::hot_to_r(input$hot_rows) |>
+          update_hot_rows(
+            val_dat$raw_dat, input$show_all_rows, val$problem_rows
+          ) |>
+          handle_retry(dat_name, val_log, val_edit, val_dat)
+        gargoyle::trigger("update_val")
+      }
+
       if (!val_edit[[dat_name]]) removeModal()
     }) |>
       bindEvent(input$retry)

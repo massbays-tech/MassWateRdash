@@ -1,4 +1,5 @@
 library("MassWateR")
+library("wqformat")
 
 tabfontsize <- 10
 padding <- 0

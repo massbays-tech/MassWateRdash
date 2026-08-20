@@ -111,43 +111,215 @@ parse_error_locations <- function(msg, col_names = NULL) {
   list(col_indices = col_indices, cell_map = cell_map)
 }
 
-# Handle retry after user edits in handsontable
-# show_all: TRUE when the user toggled to full-table view (no row merge needed)
-# problem_rows: indices that were displayed in filtered view
-handle_retry <- function(
-  data_name, val_log, val_edit, val_dat, hot_input, hot_headers_input = NULL,
-  show_all = TRUE, problem_rows = integer(0)
-) {
-  val_log$msg <- ""
+# Parse repeat errors
+parse_repeat_errors <- function(dat, locs) {
+  target_col <- names(locs$cell_map)[1]
 
-  if (!is.null(hot_input)) {
-    edited_df <- rhandsontable::hot_to_r(hot_input)
-  } else {
-    req(val_dat$raw_dat)
-    edited_df <- val_dat$raw_dat
+  col_list <- c(
+    "Parameter", "Characteristic Name", "uom", "Activity Depth/Height Unit",
+    "Result Unit", "Activity Type"
+  )
+
+  if (is.null(target_col) || !target_col %in% col_list) {
+    return(NULL)
   }
 
-  # Apply any edited column names from the header editor
-  if (!is.null(hot_headers_input)) {
-    new_names <- unlist(
-      rhandsontable::hot_to_r(hot_headers_input)[1, ],
-      use.names = FALSE
+  problem_rows <- locs$cell_map[[target_col]]
+
+  if (length(problem_rows) < 10) {
+    return(NULL)
+  }
+
+  dat <- dat[problem_rows, , drop = FALSE]
+  ndat <- dplyr::count(dat, .data[[target_col]])
+
+  if (max(ndat$n) < 5) {
+    return(NULL)
+  }
+
+  var_list <- if (target_col == "Activity Type") {
+    c(
+      "Field Msr/Obs", "Sample-Routine", "Quality Control Sample-Field Blank",
+      "Quality Control Sample-Lab Duplicate",
+      "Quality Control Sample-Lab Blank", "Quality Control Sample-Lab Spike",
+      "Quality Control-Meter Lab Duplicate", "Quality Control-Meter Lab Blank",
+      "Quality Control-Calibration Check"
     )
-    if (length(new_names) == ncol(edited_df)) {
-      names(edited_df) <- new_names
-    }
+  } else if (target_col == "Activity Depth/Height Unit") {
+    c("ft", "m")
+  } else if (target_col %in% c("Parameter", "Characteristic Name")) {
+    c(
+      "Air Temp", "Algae, blue-green (phylum cyanophyta) density", "Ammonia",
+      "Ammonium", "Chl a", "Chl a (probe)", "Chloride", "Chlorophyll a",
+      "Chlorophyll a (probe)",
+      "Chlorophyll a (probe) concentration, Cyanobacteria (bluegreen)",
+      "Conductivity", "Cyanobacteria", "Cyanobacteria (probe)", "Depth",
+      "Depth, Secchi disk depth", "Dissolved oxygen (DO)",
+      "Dissolved oxygen saturation", "DO", "DO saturation", "E.coli",
+      "Enterococcus", "Escherichia coli", "Fecal Coliform", "Flow", "Gage",
+      "Height, gage", "Metals", "Microcystins", "Nitrate", "Nitrate + Nitrite",
+      "Nitrite", "Ortho P", "Orthophosphate", "Particulate organic carbon",
+      "pH", "Pheophytin", "Pheophytin a", "Phosphorus, Particulate Organic",
+      "Phycocyanin", "Phycocyanin (probe)", "Phycoerythrin", "POC", "PON",
+      "POP", "Salinity", "Secchi Depth", "Silicate", "Sp Conductance",
+      "Specific conductance", "Sulfate", "Surfactants", "TDN", "TDP", "TDS",
+      "Temperature, air", "Temperature, water", "TKN", "TN",
+      "Total dissolved solids", "Total Kjeldahl nitrogen",
+      "Total Nitrogen, mixed forms", "Total Phosphorus, mixed forms",
+      "Total suspended solids", "TP", "TSS", "Turbidity", "Water Temp"
+    )
+  } else {
+    c(
+      "#/100ml", "%", "% recovery", "AU", "BU", "cfm", "cfs", "cfu/100ml", "cm",
+      "deg C", "deg F", "FAU", "FBU", "FNMU", "FNRU", "FNU", "ft", "FTU",
+      "g/kg", "JTU", "l/min", "l/sec", "m", "mg/l", "mgd", "MPN/100ml", "mS/cm",
+      "None", "NTMU", "NTRU", "NTU", "ppm", "ppt", "ppth", "PSS", "PSU", "RFU",
+      "s.u.", "S/m", "ug/l", "umol/l", "uS/cm"
+    )
+  }
+  var_list <- c(" ", var_list)
+
+  new_col <- paste("Invalid", target_col)
+
+  ndat <- ndat |>
+    dplyr::filter(.data$n > 1) |>
+    dplyr::rename(!!new_col := !!target_col, "Row Count" = "n") |>
+    dplyr::mutate("Delete Rows" = FALSE, .before = !!new_col) |>
+    dplyr::mutate(
+      "Replace With" = factor(NA, levels = !!var_list),
+      .before = "Row Count"
+    )
+
+  rhandsontable::rhandsontable(ndat, width = "100%", height = 450) |>
+    rhandsontable::hot_table(wordWrap = FALSE) |>
+    rhandsontable::hot_col(new_col, readOnly = TRUE) |>
+    rhandsontable::hot_col("Row Count", readOnly = TRUE)
+}
+
+#' Update column names
+#'
+#' @description `update_hot_col()` parses a rhandsontable containing column
+#' names and updates the column names for `raw_dat`.
+#'
+#' Temp note: `input$hot_headers` should be run through `hot_to_r` before
+#' running this function; had trouble testing it otherwise.
+#'
+#' @param .data Dataframe. Hot table containing updated column names.
+#' @param raw_dat Dataframe containing raw data. This is the table that will be
+#' updated.
+#'
+#' @return Updated data frame with new column names.
+#'
+#' @noRd
+update_hot_col <- function(.data, raw_dat) {
+  new_names <- unlist(.data[1, ], use.names = FALSE)
+
+  if (length(new_names) == ncol(raw_dat)) {
+    names(raw_dat) <- new_names
   }
 
-  # When filtered view was active, merge the edited subset back into the full data
-  if (!show_all && length(problem_rows) > 0 && !is.null(val_dat$raw_dat)) {
-    full_df <- val_dat$raw_dat
-    names(full_df) <- names(edited_df)
-    valid_rows <- problem_rows[
-      problem_rows >= 1 & problem_rows <= nrow(full_df)
-    ]
-    full_df[valid_rows, ] <- edited_df[seq_along(valid_rows), ]
-    edited_df <- full_df
+  raw_dat
+}
+
+#' Update Variables
+#'
+#' @description `update_hot_var()` parses a rhandsontable containing variable
+#' name substitutions and updates the variables in `raw_dat`.
+#'
+#' Temp note: `input$hot_var` should be run through `hot_to_r` before
+#' running this function; had trouble testing it otherwise.
+#'
+#' @param .data Dataframe. Hot table containing replacement variables. Must
+#' include the columns "Delete Rows", "Invalid [...]", and "Replace With".
+#' @param raw_dat Dataframe containing raw data. This is the table that will be
+#' updated.
+#'
+#' @return Updated dataframe. Updated variables are either updated or removed.
+#' If no changes can be made, returns `NULL`.
+#'
+#' @noRd
+update_hot_var <- function(.data, raw_dat) {
+  dat_var <- .data |>
+    dplyr::filter(
+      .data[["Delete Rows"]] == TRUE | .data[["Replace With"]] != " "
+    )
+
+  if (nrow(dat_var) == 0) {
+    return(NULL)
   }
+
+  var_col <- colnames(dat_var)[2]
+  target_col <- gsub("Invalid ", "", var_col)
+
+  del_list <- dat_var |>
+    dplyr::filter(.data[["Delete Rows"]] == TRUE) |>
+    dplyr::pull(.data[[var_col]])
+
+  if (length(del_list) > 0) {
+    raw_dat <- raw_dat |>
+      dplyr::filter(!.data[[target_col]] %in% del_list)
+  }
+
+  dat_sub <- dat_var |>
+    dplyr::filter(.data[["Delete Rows"]] == FALSE)
+
+  if (nrow(dat_sub) == 0) {
+    return(raw_dat)
+  }
+
+  old_var <- dat_sub[, 2]
+  new_var <- dat_sub[, 3]
+
+  wqformat::update_var(raw_dat, target_col, old_var, new_var)
+}
+
+#' Update Rows
+#'
+#' @description `update_hot_rows()` parses a rhandsontable containing substitute
+#' rows and update `raw_dat`.
+#'
+#' Temp note: `input$hot_rows` should be run through `hot_to_r` before
+#' running this function; had trouble testing it otherwise.
+#'
+#' @param .data Dataframe. Hot table containing replacement variables. Must
+#' include the columns "Delete Rows", "Invalid [...]", and "Replace With".
+#' @param raw_dat Dataframe containing raw data. This is the table that will be
+#' updated.
+#' @param show_all Boolean. Whether `.data` includes all rows or only a subset
+#' of rows. Default `TRUE`.
+#' @param problem_rows Numeric list. List of problem rows.
+#' Default value `integer(0)`.
+#'
+#' @return Updated dataframe.
+#'
+#' @noRd
+update_hot_rows <- function(
+  .data, raw_dat, show_all = TRUE, problem_rows = integer(0)
+) {
+  edited_df <- .data
+
+  # If filtered view was active, merge the edited subset back into the full data
+  if (!show_all && length(problem_rows) > 0 && !is.null(raw_dat)) {
+    names(raw_dat) <- names(edited_df)
+    valid_rows <- problem_rows[
+      problem_rows >= 1 & problem_rows <= nrow(raw_dat)
+    ]
+    raw_dat[valid_rows, ] <- edited_df[seq_along(valid_rows), ]
+    edited_df <- raw_dat
+  }
+
+  # Drop blank rows
+  edited_df[
+    !apply(is.na(edited_df) | edited_df == "" | edited_df == FALSE, 1, all),
+  ]
+}
+
+
+# Handle retry after user edits in handsontable
+# .data -- edited_df from previous function, but pipeable
+handle_retry <- function(.data, data_name, val_log, val_edit, val_dat) {
+  val_log$msg <- ""
+  edited_df <- .data
 
   # Persist edits into raw_data_states so they survive a failed retry and the
   # re-rendered table reflects the user's work on the next round of checks
