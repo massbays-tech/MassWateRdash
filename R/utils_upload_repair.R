@@ -196,34 +196,57 @@ parse_repeat_errors <- function(dat, locs) {
     rhandsontable::hot_col("Row Count", readOnly = TRUE)
 }
 
-# Splitting handle retry in to multiple functions
-# Function 1: update column names
-update_hot_col <- function(val_dat, hot_table) {
-  edited_df <- val_dat$raw_dat
+#' Update column names
+#'
+#' @description `update_hot_col()` parses a rhandsontable containing column
+#' names and updates the column names for `raw_dat`.
+#'
+#' Temp note: `input$hot_headers` should be run through `hot_to_r` before
+#' running this function; had trouble testing it otherwise.
+#'
+#' @param .data Dataframe. Hot table containing updated column names.
+#' @param raw_dat Dataframe containing raw data. This is the table that will be
+#' updated.
+#'
+#' @return Updated data frame with new column names.
+#'
+#' @noRd
+update_hot_col <- function(.data, raw_dat) {
+  new_names <- unlist(.data[1, ], use.names = FALSE)
 
-  new_names <- unlist(
-    rhandsontable::hot_to_r(hot_table)[1, ],
-    use.names = FALSE
-  )
-  if (length(new_names) == ncol(edited_df)) {
-    names(edited_df) <- new_names
+  if (length(new_names) == ncol(raw_dat)) {
+    names(raw_dat) <- new_names
   }
 
-  edited_df
+  raw_dat
 }
 
-# Function 2: update variables (for mass edits)
-update_hot_var <- function(val_dat, hot_table) {
-  dat_var <- rhandsontable::hot_to_r(hot_table) |>
+#' Update Variables
+#'
+#' @description `update_hot_var()` parses a rhandsontable containing variable
+#' name substitutions and updates the variables in `raw_dat`.
+#'
+#' Temp note: `input$hot_var` should be run through `hot_to_r` before
+#' running this function; had trouble testing it otherwise.
+#'
+#' @param .data Dataframe. Hot table containing replacement variables. Must
+#' include the columns "Delete Rows", "Invalid [...]", and "Replace With".
+#' @param raw_dat Dataframe containing raw data. This is the table that will be
+#' updated.
+#'
+#' @return Updated dataframe. Updated variables are either updated or removed.
+#' If no changes can be made, returns `NULL`.
+#'
+#' @noRd
+update_hot_var <- function(.data, raw_dat) {
+  dat_var <- .data |>
     dplyr::filter(
-      .data[["Delete Rows"]] == TRUE || .data[["Replace With"]] != " "
+      .data[["Delete Rows"]] == TRUE | .data[["Replace With"]] != " "
     )
 
   if (nrow(dat_var) == 0) {
     return(NULL)
   }
-
-  edited_dat <- val_dat$raw_dat
 
   var_col <- colnames(dat_var)[2]
   target_col <- gsub("Invalid ", "", var_col)
@@ -233,7 +256,7 @@ update_hot_var <- function(val_dat, hot_table) {
     dplyr::pull(.data[[var_col]])
 
   if (length(del_list) > 0) {
-    edited_dat <- edited_dat |>
+    raw_dat <- raw_dat |>
       dplyr::filter(!.data[[target_col]] %in% del_list)
   }
 
@@ -241,34 +264,54 @@ update_hot_var <- function(val_dat, hot_table) {
     dplyr::filter(.data[["Delete Rows"]] == FALSE)
 
   if (nrow(dat_sub) == 0) {
-    return(edited_dat)
+    return(raw_dat)
   }
 
   old_var <- dat_sub[, 2]
   new_var <- dat_sub[, 3]
 
-  wqformat::update_var(edited_dat, target_col, old_var, new_var)
+  wqformat::update_var(raw_dat, target_col, old_var, new_var)
 }
 
-# Fucntion 3: update individual rows
-# show_all: TRUE when the user toggled to full-table view (no row merge needed)
-# problem_rows: indices that were displayed in filtered view
-update_hot_row <- function(val_dat, hot_table, show_all = TRUE, problem_rows = integer(0)) {
-  edited_df <- rhandsontable::hot_to_r(hot_table)
+#' Update Rows
+#'
+#' @description `update_hot_rows()` parses a rhandsontable containing substitute
+#' rows and update `raw_dat`.
+#'
+#' Temp note: `input$hot_rows` should be run through `hot_to_r` before
+#' running this function; had trouble testing it otherwise.
+#'
+#' @param .data Dataframe. Hot table containing replacement variables. Must
+#' include the columns "Delete Rows", "Invalid [...]", and "Replace With".
+#' @param raw_dat Dataframe containing raw data. This is the table that will be
+#' updated.
+#' @param show_all Boolean. Whether `.data` includes all rows or only a subset
+#' of rows. Default `TRUE`.
+#' @param problem_rows Numeric list. List of problem rows.
+#' Default value `integer(0)`.
+#'
+#' @return Updated dataframe.
+#'
+#' @noRd
+update_hot_rows <- function(
+  .data, raw_dat, show_all = TRUE, problem_rows = integer(0)
+) {
+  edited_df <- .data
 
   # If filtered view was active, merge the edited subset back into the full data
-  if (!show_all && length(problem_rows) > 0 && !is.null(val_dat$raw_dat)) {
-    full_df <- val_dat$raw_dat
-    names(full_df) <- names(edited_df)
+  if (!show_all && length(problem_rows) > 0 && !is.null(raw_dat)) {
+    names(raw_dat) <- names(edited_df)
     valid_rows <- problem_rows[
-      problem_rows >= 1 & problem_rows <= nrow(full_df)
+      problem_rows >= 1 & problem_rows <= nrow(raw_dat)
     ]
-    full_df[valid_rows, ] <- edited_df[seq_along(valid_rows), ]
-    edited_df <- full_df
+    raw_dat[valid_rows, ] <- edited_df[seq_along(valid_rows), ]
+    edited_df <- raw_dat
   }
 
   # Drop blank rows
-  edited_df[!apply(is.na(edited_df) | edited_df == "", 1, all), ]
+  edited_df[
+    !apply(is.na(edited_df) | edited_df == "" | edited_df == FALSE, 1, all),
+  ]
 }
 
 

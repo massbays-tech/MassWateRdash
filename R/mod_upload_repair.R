@@ -126,19 +126,18 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
 
     # Update tabs, reactive variables ----
     observe({
-      if (is_column_error(val_dat$msg)) {
-        print("setting tab to edit_col")
+      col_error <- is_column_error(val_dat$msg)
+      val$locs <- parse_error_locations(val_dat$msg, names(val_dat$raw_dat))
+
+      if (col_error) {
         updateTabsetPanel(inputId = "tabset", selected = "edit_col")
       } else {
         val$problem_rows <- parse_problem_rows(val_dat$msg)
-        val$locs <- parse_error_locations(val_dat$msg, names(val_dat$raw_dat))
         val$repeat_errors <- parse_repeat_errors(val_dat$raw_dat, val$locs)
 
         if (is.null(val$repeat_errors)) {
-          print("setting tab to edit_row")
           updateTabsetPanel(inputId = "tabset", selected = "edit_row")
         } else {
-          print("setting tab to edit_var")
           updateTabsetPanel(inputId = "tabset", selected = "edit_var")
         }
       }
@@ -172,7 +171,7 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
       req(val_dat$raw_dat)
 
       col_names <- names(val_dat$raw_dat)
-      locs <- parse_error_locations(val_dat$msg)
+      locs <- val$locs
       header_df <- setNames(
         as.data.frame(as.list(col_names), stringsAsFactors = FALSE),
         as.character(seq_along(col_names))
@@ -262,6 +261,7 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
             )
         }
       }
+
       hot
     })
 
@@ -270,11 +270,13 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
       gargoyle::watch("update_val")
 
       if (input$tabset == "edit_col") {
-        update_hot_col(val_dat, input$hot_headers) |>
+        rhandsontable::hot_to_r(input$hot_headers) |>
+          update_hot_col(val_dat$raw_dat) |>
           handle_retry(dat_name, val_log, val_edit, val_dat)
         gargoyle::trigger("update_val")
       } else if (input$tabset == "edit_var") {
-        edited_df <- update_hot_var(val_dat, input$hot_var)
+        edited_df <- rhandsontable::hot_to_r(input$hot_var) |>
+          update_hot_var(val_dat$raw_dat)
 
         if (is.null(edited_df)) {
           updateTabsetPanel(inputId = "tabset", selected = "edit_row")
@@ -283,12 +285,10 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
           gargoyle::trigger("update_val")
         }
       } else {
-        update_hot_row(
-          val_dat = val_dat,
-          hot_table = input$hot_rows,
-          show_all = input$show_all_rows,
-          problem_rows = val$problem_rows
-        ) |>
+        rhandsontable::hot_to_r(input$hot_rows) |>
+          update_hot_rows(
+            val_dat$raw_dat, input$show_all_rows, val$problem_rows
+          ) |>
           handle_retry(dat_name, val_log, val_edit, val_dat)
         gargoyle::trigger("update_val")
       }
