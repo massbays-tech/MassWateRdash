@@ -62,9 +62,18 @@ mod_outlier_ui <- function(id) {
 #' outlier Server Functions
 #'
 #' @noRd
-mod_outlier_server <- function(id, fsetls) {
+mod_outlier_server <- function(id, fsetls, active_tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    # Help modal ----
+    mod_tab_help_server(
+      "help",
+      tab_value = "outlier",
+      active_tab = active_tab,
+      title = "Outlier Assessment",
+      body_ui = tagList(p("Help text coming soon."))
+    )
 
     # Update UI -----
     observe({

@@ -114,9 +114,18 @@ mod_visualize_ui <- function(id) {
 #' visualize Server Functions
 #'
 #' @noRd
-mod_visualize_server <- function(id, fsetls) {
+mod_visualize_server <- function(id, fsetls, active_tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    # Help modal ----
+    mod_tab_help_server(
+      "help",
+      tab_value = "visualize",
+      active_tab = active_tab,
+      title = "Visualize",
+      body_ui = tagList(p("Help text coming soon."))
+    )
 
     # Update sidebar UI-----
     observe({

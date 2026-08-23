@@ -9,6 +9,7 @@ addResourcePath(
 ui <- bslib::page_navbar(
   id = "navbar",
   header = tags$head(
+    tab_help_deps(),
     tags$script(HTML(
       "$(document).on('shown.bs.modal', function(e) {
         $(e.target).find('.rhandsontable').each(function() {
@@ -121,12 +122,15 @@ ui <- bslib::page_navbar(
 
 # server -----
 server <- function(input, output, session) {
+  # Active tab ----
+  active_tab <- reactive(input$navbar)
+
   # Modules ----
-  fsetls <- mod_upload_server("upload")
-  mod_outlier_server("outlier", fsetls)
-  mod_qc_server("qc", fsetls)
-  mod_wqx_server("wqx", fsetls)
-  mod_visualize_server("visualize", fsetls)
+  fsetls <- mod_upload_server("upload", active_tab)
+  mod_outlier_server("outlier", fsetls, active_tab)
+  mod_qc_server("qc", fsetls, active_tab)
+  mod_wqx_server("wqx", fsetls, active_tab)
+  mod_visualize_server("visualize", fsetls, active_tab)
 
   # Show/hide nav items ---
   observe({

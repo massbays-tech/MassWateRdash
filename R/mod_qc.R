@@ -91,9 +91,18 @@ mod_qc_ui <- function(id) {
 #' qc Server Functions
 #'
 #' @noRd
-mod_qc_server <- function(id, fsetls) {
+mod_qc_server <- function(id, fsetls, active_tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    # Help modal ----
+    mod_tab_help_server(
+      "help",
+      tab_value = "qc",
+      active_tab = active_tab,
+      title = "QC Reporting",
+      body_ui = tagList(p("Help text coming soon."))
+    )
 
     # dqo table frecomdat
     output$frecomdat_table <- reactable::renderReactable({

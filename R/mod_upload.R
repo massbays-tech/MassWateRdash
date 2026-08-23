@@ -109,7 +109,7 @@ mod_upload_ui <- function(id) {
 #' upload Server Functions
 #'
 #' @noRd
-mod_upload_server <- function(id) {
+mod_upload_server <- function(id, active_tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -125,6 +125,15 @@ mod_upload_server <- function(id) {
 
     # Gargoyle watchers ----
     gargoyle::init("update_val")
+
+    # Help modal ----
+    mod_tab_help_server(
+      "help",
+      tab_value = "upload",
+      active_tab = active_tab,
+      title = "Upload & Validate",
+      body_ui = tagList(p("Help text coming soon."))
+    )
 
     # Modules ----
     wqf <- mod_upload_format_server("reformat")

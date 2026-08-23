@@ -35,9 +35,19 @@ mod_wqx_ui <- function(id) {
 #' wqx Server Functions
 #'
 #' @noRd
-mod_wqx_server <- function(id, fsetls) {
+mod_wqx_server <- function(id, fsetls, active_tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    # Help modal ----
+    mod_tab_help_server(
+      "help",
+      tab_value = "wqx",
+      active_tab = active_tab,
+      title = "WQX Output",
+      body_ui = tagList(p("Help text coming soon."))
+    )
+
     # list output
     tabwqx <- reactive({
       req(fsetls()$res, fsetls()$acc, fsetls()$sit, fsetls()$wqx)
