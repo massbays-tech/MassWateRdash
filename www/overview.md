@@ -12,15 +12,17 @@
 
 This dashboard provides a step-by-step interface to the MassWateR workflow:
 
-1. <a href='#' onclick='document.querySelector(".navbar-nav a[data-value=\"1 Upload &amp; Validate\"]").click(); return false;'>Upload & Validate</a> - Import and check your water quality data files for formatting and completeness
-2. <a href='#' onclick='document.querySelector(".navbar-nav a[data-value=\"2 Outlier assessment\"]").click(); return false;'>Outlier Assessment</a> - Identify and review potential outliers in surface water quality results
-3. <a href='#' onclick='document.querySelector(".navbar-nav a[data-value=\"3 QC reporting\"]").click(); return false;'>QC Reporting</a> - Assess data quality objectives including accuracy, completeness, and frequency; generate automated reports
-4. <a href='#' onclick='document.querySelector(".navbar-nav a[data-value=\"4 WQX output\"]").click(); return false;'>WQX Output</a> - Prepare data for submission to EPA's Water Quality Exchange
-5. <a href='#' onclick='document.querySelector(".navbar-nav a[data-value=\"5 Visualize\"]").click(); return false;'>Visualize</a> - Explore trends, summaries, and maps of your data
+1. **Upload & Validate** - Import and check your water quality data files for formatting and completeness
+2. **Outlier Assessment** - Identify and review potential outliers in surface water quality results
+3. **QC Reporting** - Assess data quality objectives including accuracy, completeness, and frequency; generate automated reports
+4. **WQX Output** - Prepare data for submission to EPA's Water Quality Exchange
+5. **Visualize** - Explore trends, summaries, and maps of your data
+
+Steps 2-5 become available in the navigation bar at the top once your data are uploaded and validated.
 
 ### Getting Started
 
-Upload your data files in the <a href='#' onclick='document.querySelector(".navbar-nav a[data-value=\"1 Upload &amp; Validate\"]").click(); return false;'>Upload & Validate</a> tab to begin. An overview of MassWateR's functionality, required datasets, and formatting instructions are described in the package's <a href='https://massbays-tech.github.io/MassWateR/articles/MassWateR.html' target='_blank'>Getting Started</a> vignette.
+Upload your data files in the **Upload & Validate** tab to begin. An overview of MassWateR's functionality, required datasets, and formatting instructions are described in the package's <a href='https://massbays-tech.github.io/MassWateR/articles/MassWateR.html' target='_blank'>Getting Started</a> vignette.
 
 ### Resources
 
