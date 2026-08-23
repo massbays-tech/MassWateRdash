@@ -18,7 +18,7 @@ This dashboard provides a step-by-step interface to the MassWateR workflow:
 4. **WQX Output** - Prepare data for submission to EPA's Water Quality Exchange
 5. **Visualize** - Explore trends, summaries, and maps of your data
 
-Steps 2-5 become available in the navigation bar at the top once your data are uploaded and validated.
+Steps 2-5 become available in the navigation bar at the top as data are uploaded and validated.
 
 ### Getting Started
 

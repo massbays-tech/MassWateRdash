@@ -24,7 +24,7 @@ validationLog <- R6::R6Class(
         self$msg <- paste0(current_log, new_msgs)
       }
 
-      invisible(self)
+      invisible(self$result)
     },
     initialize = function(msg = "") {
       self$msg <- msg

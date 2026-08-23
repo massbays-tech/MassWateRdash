@@ -39,7 +39,7 @@ test_that("fl_upload works", {
   expect_false(val_edit$sitdat)
   expect_false(val_edit$wqxdat)
   expect_false(val_edit$censdat)
-  expect_equal(data.frame(val_dat$dat$result, check.names = FALSE), tst$sitdat)
+  expect_equal(data.frame(val_dat$dat, check.names = FALSE), tst$sitdat)
   expect_equal(val_dat$raw_dat, NULL)
 })
 
@@ -75,7 +75,7 @@ test_that("from_format_upload works", {
   )
   expect_equal(val_log$msg, val_dat$msg)
   expect_false(val_edit$sitdat)
-  expect_equal(val_dat$dat$result, tst$sitdat)
+  expect_equal(val_dat$dat, tst$sitdat)
   expect_equal(val_dat$raw_dat, NULL)
 })
 
