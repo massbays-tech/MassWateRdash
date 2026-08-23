@@ -17,11 +17,11 @@ mod_qc_ui <- function(id) {
         bslib::navset_pill(
           bslib::nav_panel(
             "Frequency & Completeness",
-            uiOutput(ns("frecomdat_table"))
+            reactable::reactableOutput(ns("frecomdat_table"))
           ),
           bslib::nav_panel(
             "Accuracy",
-            uiOutput(ns("accdat_table"))
+            reactable::reactableOutput(ns("accdat_table"))
           )
         )
       ),
@@ -30,11 +30,11 @@ mod_qc_ui <- function(id) {
         bslib::navset_pill(
           bslib::nav_panel(
             "Percent",
-            uiOutput(ns("tabaccper"))
+            reactable::reactableOutput(ns("tabaccper"))
           ),
           bslib::nav_panel(
             "Summary",
-            uiOutput(ns("tabaccsum"))
+            reactable::reactableOutput(ns("tabaccsum"))
           )
         )
       ),
@@ -43,40 +43,40 @@ mod_qc_ui <- function(id) {
         bslib::navset_pill(
           bslib::nav_panel(
             "Percent",
-            uiOutput(ns("tabfreper"))
+            reactable::reactableOutput(ns("tabfreper"))
           ),
           bslib::nav_panel(
             "Summary",
-            uiOutput(ns("tabfresum"))
+            reactable::reactableOutput(ns("tabfresum"))
           )
         )
       ),
       bslib::nav_panel(
         "Completeness",
-        uiOutput(ns("tabcom"))
+        reactable::reactableOutput(ns("tabcom"))
       ),
       bslib::nav_panel(
         "Raw Data",
         bslib::navset_pill(
           bslib::nav_panel(
             "Field Duplicates",
-            uiOutput(ns("indflddup"))
+            reactable::reactableOutput(ns("indflddup"))
           ),
           bslib::nav_panel(
             "Lab Duplicates",
-            uiOutput(ns("indlabdup"))
+            reactable::reactableOutput(ns("indlabdup"))
           ),
           bslib::nav_panel(
             "Field Blanks",
-            uiOutput(ns("indfldblk"))
+            reactable::reactableOutput(ns("indfldblk"))
           ),
           bslib::nav_panel(
             "Lab Blanks",
-            uiOutput(ns("indlabblk"))
+            reactable::reactableOutput(ns("indlabblk"))
           ),
           bslib::nav_panel(
             "Lab Spikes / Instrument Checks",
-            uiOutput(ns("indlabins"))
+            reactable::reactableOutput(ns("indlabins"))
           )
         )
       ),
@@ -96,21 +96,21 @@ mod_qc_server <- function(id, fsetls) {
     ns <- session$ns
 
     # dqo table frecomdat
-    output$frecomdat_table <- renderUI({
+    output$frecomdat_table <- reactable::renderReactable({
       req(fsetls()$frecom)
 
-      frecomdat_tab(fsetls()$frecom, dqofontsize, padding, wd)
+      frecomdat_reactable(fsetls()$frecom)
     })
 
     # dqo table accdat
-    output$accdat_table <- renderUI({
+    output$accdat_table <- reactable::renderReactable({
       req(fsetls()$acc)
 
-      accdat_tab(fsetls()$acc, dqofontsize, padding, wd)
+      accdat_reactable(fsetls()$acc)
     })
 
     # frequency table percent
-    output$tabfreper <- renderUI({
+    output$tabfreper <- reactable::renderReactable({
       req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
 
       tabMWRfre(
@@ -120,12 +120,11 @@ mod_qc_server <- function(id, fsetls) {
         type = "percent",
         warn = F
       ) |>
-        thmsum(wd = wd) |>
-        flextable::htmltools_value()
+        flextable_to_reactable()
     })
 
     # frequency summary table
-    output$tabfresum <- renderUI({
+    output$tabfresum <- reactable::renderReactable({
       req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
 
       tabMWRfre(
@@ -135,12 +134,11 @@ mod_qc_server <- function(id, fsetls) {
         type = "summary",
         warn = F
       ) |>
-        thmsum(wd = wd) |>
-        flextable::htmltools_value()
+        flextable_to_reactable(group_by = "Type")
     })
 
     # accuracy table percent
-    output$tabaccper <- renderUI({
+    output$tabaccper <- reactable::renderReactable({
       req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
 
       tabMWRacc(
@@ -150,12 +148,11 @@ mod_qc_server <- function(id, fsetls) {
         type = "percent",
         warn = F
       ) |>
-        thmsum(wd = wd) |>
-        flextable::htmltools_value()
+        flextable_to_reactable()
     })
 
     # accuracy table summary
-    output$tabaccsum <- renderUI({
+    output$tabaccsum <- reactable::renderReactable({
       req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
 
       tabMWRacc(
@@ -165,33 +162,25 @@ mod_qc_server <- function(id, fsetls) {
         type = "summary",
         warn = F
       ) |>
-        thmsum(wd = wd) |>
-        flextable::htmltools_value()
+        flextable_to_reactable(group_by = "Type")
     })
 
     # completeness table
-    output$tabcom <- renderUI({
+    output$tabcom <- reactable::renderReactable({
       req(fsetls()$res, fsetls()$frecom)
 
-      out <- tabMWRcom(
+      tabMWRcom(
         res = fsetls()$res,
         frecom = fsetls()$frecom,
         cens = fsetls()$cens,
         warn = F,
         parameterwd = 1.15
-      )
-      out <- out |>
-        flextable::width(
-          width = (wd - 3.15) / (flextable::ncol_keys(out) - 2),
-          j = 2:(flextable::ncol_keys(out) - 1)
-        ) |>
-        flextable::htmltools_value()
-
-      return(out)
+      ) |>
+        flextable_to_reactable()
     })
 
     # individual field duplicates
-    output$indflddup <- renderUI({
+    output$indflddup <- reactable::renderReactable({
       req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
 
       tabMWRacc(
@@ -203,12 +192,11 @@ mod_qc_server <- function(id, fsetls) {
         warn = F,
         caption = F
       ) |>
-        thmsum(wd = wd) |>
-        flextable::htmltools_value()
+        flextable_to_reactable(group_by = "Parameter")
     })
 
     # individual lab duplicates
-    output$indlabdup <- renderUI({
+    output$indlabdup <- reactable::renderReactable({
       req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
 
       tabMWRacc(
@@ -220,12 +208,11 @@ mod_qc_server <- function(id, fsetls) {
         warn = F,
         caption = F
       ) |>
-        thmsum(wd = wd) |>
-        flextable::htmltools_value()
+        flextable_to_reactable(group_by = "Parameter")
     })
 
     # individual field blanks
-    output$indfldblk <- renderUI({
+    output$indfldblk <- reactable::renderReactable({
       req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
 
       tabMWRacc(
@@ -237,12 +224,11 @@ mod_qc_server <- function(id, fsetls) {
         warn = F,
         caption = F
       ) |>
-        thmsum(wd = wd) |>
-        flextable::htmltools_value()
+        flextable_to_reactable(group_by = "Parameter")
     })
 
     # individual lab blanks
-    output$indlabblk <- renderUI({
+    output$indlabblk <- reactable::renderReactable({
       req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
 
       tabMWRacc(
@@ -254,12 +240,11 @@ mod_qc_server <- function(id, fsetls) {
         warn = F,
         caption = F
       ) |>
-        thmsum(wd = wd) |>
-        flextable::htmltools_value()
+        flextable_to_reactable(group_by = "Parameter")
     })
 
     # individual lab spikes/instrument checks
-    output$indlabins <- renderUI({
+    output$indlabins <- reactable::renderReactable({
       req(fsetls()$res, fsetls()$acc, fsetls()$frecom)
 
       tabMWRacc(
@@ -271,8 +256,7 @@ mod_qc_server <- function(id, fsetls) {
         warn = F,
         caption = F
       ) |>
-        thmsum(wd = wd) |>
-        flextable::htmltools_value()
+        flextable_to_reactable(group_by = "Parameter")
     })
 
     # Download ----
