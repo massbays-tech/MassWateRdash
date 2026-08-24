@@ -13,7 +13,11 @@ mod_visualize_ui <- function(id) {
     bslib::page_sidebar(
       # Sidebar ----
       sidebar = bslib::sidebar(
-        title = "Plot options",
+        title = div(
+          style = "display: flex; justify-content: space-between; align-items: center;",
+          "Plot options",
+          help_btn(ns("show_help"))
+        ),
         width = 500,
         selectInput(
           ns("param"),
@@ -123,6 +127,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       "help",
       tab_value = "visualize",
       active_tab = active_tab,
+      force_show = reactive(input$show_help),
       title = "Visualize",
       body_ui = tagList(p("Help text coming soon."))
     )

@@ -13,7 +13,11 @@ mod_outlier_ui <- function(id) {
   tagList(
     bslib::page_sidebar(
       sidebar = bslib::sidebar(
-        title = "Options",
+        title = div(
+          style = "display: flex; justify-content: space-between; align-items: center;",
+          "Options",
+          help_btn(ns("show_help"))
+        ),
         width = 500,
         selectInput(
           ns("param"),
@@ -71,6 +75,7 @@ mod_outlier_server <- function(id, fsetls, active_tab) {
       "help",
       tab_value = "outlier",
       active_tab = active_tab,
+      force_show = reactive(input$show_help),
       title = "Outlier Assessment",
       body_ui = tagList(p("Help text coming soon."))
     )

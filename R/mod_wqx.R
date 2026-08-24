@@ -11,6 +11,7 @@ mod_wqx_ui <- function(id) {
   ns <- NS(id)
   tagList(
     bslib::navset_card_underline(
+      title = help_btn(ns("show_help")),
       full_screen = TRUE,
       bslib::nav_panel(
         "Projects",
@@ -44,6 +45,7 @@ mod_wqx_server <- function(id, fsetls, active_tab) {
       "help",
       tab_value = "wqx",
       active_tab = active_tab,
+      force_show = reactive(input$show_help),
       title = "WQX Output",
       body_ui = tagList(p("Help text coming soon."))
     )

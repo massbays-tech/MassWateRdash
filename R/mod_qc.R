@@ -11,6 +11,7 @@ mod_qc_ui <- function(id) {
   ns <- NS(id)
   tagList(
     bslib::navset_card_underline(
+      title = help_btn(ns("show_help")),
       full_screen = T,
       bslib::nav_panel(
         "DQO tables",
@@ -100,6 +101,7 @@ mod_qc_server <- function(id, fsetls, active_tab) {
       "help",
       tab_value = "qc",
       active_tab = active_tab,
+      force_show = reactive(input$show_help),
       title = "QC Reporting",
       body_ui = tagList(p("Help text coming soon."))
     )

@@ -13,7 +13,11 @@ mod_upload_ui <- function(id) {
   tagList(
     bslib::page_sidebar(
       sidebar = bslib::sidebar(
-        title = "Upload Data Files",
+        title = div(
+          style = "display: flex; justify-content: space-between; align-items: center;",
+          "Upload Data Files",
+          help_btn(ns("show_help"))
+        ),
         width = 500,
         div(
           style = "display: flex; align-items: center; gap: 12px;",
@@ -131,6 +135,7 @@ mod_upload_server <- function(id, active_tab) {
       "help",
       tab_value = "upload",
       active_tab = active_tab,
+      force_show = reactive(input$show_help),
       title = "Upload & Validate",
       body_ui = tagList(p("Help text coming soon."))
     )

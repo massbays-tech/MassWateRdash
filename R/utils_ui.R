@@ -85,3 +85,24 @@ dl_btn <- function(id, label, block = TRUE, size = "md") {
     style = "background-color: #64C147 !important; border-color: #64C147 !important; color: white !important;"
   )
 }
+
+#' Create tab help button
+#'
+#' @description `help_btn()` creates a small icon-only button that re-opens
+#' a tab's help modal (see `mod_tab_help_server()`). Meant to sit next to a
+#' sidebar title or a `navset_card_underline()` `title`.
+#'
+#' @param id String. Button id (should be namespaced with `ns()`).
+#'
+#' @return An action button.
+#'
+#' @noRd
+help_btn <- function(id) {
+  actionButton(
+    id,
+    label = NULL,
+    icon = icon("circle-question", class = "fa-lg"),
+    class = "btn btn-link p-0",
+    title = "Show help for this tab"
+  )
+}
