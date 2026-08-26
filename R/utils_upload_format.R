@@ -157,8 +157,7 @@ parse_format <- function(.data, sheet_name) {
 upload_custom_results <- function(dat, in_format, custom_format = NULL) {
   msg <- "Uploading result data..."
   dat <- readxl::read_excel(
-    dat$datapath,
-    na = c("NA", "na", "")
+    dat$datapath, na = c("NA", "na", ""), guess_max = Inf
   ) |>
     dplyr::mutate_if(function(x) !lubridate::is.POSIXct(x), as.character)
 
@@ -240,8 +239,7 @@ format_custom_results <- function(.data, var_list) {
 upload_custom_sites <- function(dat, in_format, custom_format = NULL) {
   msg <- "Uploading site metadata..."
   dat <- readxl::read_excel(
-    dat$datapath,
-    na = c("NA", "na", "")
+    dat$datapath, na = c("NA", "na", ""), guess_max = Inf
   ) |>
     dplyr::mutate_if(function(x) !lubridate::is.POSIXct(x), as.character)
 
