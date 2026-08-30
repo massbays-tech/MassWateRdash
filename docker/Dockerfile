@@ -21,7 +21,8 @@ RUN R -e "install.packages('tinytex')" && \
 RUN R -e "install.packages(c( \
     'bslib', 'bsicons', 'here', 'shinyWidgets', \
     'writexl', 'reactable', 'flextable', \
-    'markdown', 'rhandsontable', 'remotes' \
+    'markdown', 'rhandsontable', 'remotes', \
+    'config', 'gargoyle', 'golem', 'pkgload' \
   ), repos='https://packagemanager.posit.co/cran/latest')"
 
 # GitHub packages

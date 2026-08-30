@@ -1,4 +1,4 @@
-source('R/global.R')
+pkgload::load_all(".", quiet = TRUE)
 
 addResourcePath(
   prefix = "toimg",

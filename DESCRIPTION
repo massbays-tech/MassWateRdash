@@ -57,6 +57,7 @@ Imports:
     htmltools,
     lubridate,
     MassWateR,
+    pkgload,
     R6,
     reactable,
     readxl,
