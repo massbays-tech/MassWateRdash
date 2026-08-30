@@ -77,7 +77,7 @@ mod_outlier_server <- function(id, fsetls, active_tab) {
       active_tab = active_tab,
       force_show = reactive(input$show_help),
       title = "Outlier Assessment",
-      body_ui = shiny::includeMarkdown("www/help/outlier.md")
+      body_ui = shiny::includeMarkdown(app_sys("app/www/help/outlier.md"))
     )
 
     # Update UI -----

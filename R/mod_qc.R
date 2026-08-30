@@ -103,7 +103,7 @@ mod_qc_server <- function(id, fsetls, active_tab) {
       active_tab = active_tab,
       force_show = reactive(input$show_help),
       title = "QC Reporting",
-      body_ui = shiny::includeMarkdown("www/help/qc.md")
+      body_ui = shiny::includeMarkdown(app_sys("app/www/help/qc.md"))
     )
 
     # dqo table frecomdat

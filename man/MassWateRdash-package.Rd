@@ -13,7 +13,6 @@ What the package does (one paragraph).
 
 Authors:
 \itemize{
-  \item Marcus Beck \email{mbeck@tbep.org} (\href{https://orcid.org/0000-0002-4996-0059}{ORCID})
   \item Ben Wetherill \email{bwetherill@acasak.com} (\href{https://orcid.org/0000-0002-8791-4256}{ORCID})
   \item Mariel Sorlien \email{msorlien@nbep.org} (\href{https://orcid.org/0000-0001-7102-2918}{ORCID})
   \item Christopher Whitney \email{Chris.Whitney@unh.edu} (\href{https://orcid.org/0000-0003-2349-9134}{ORCID})

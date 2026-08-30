@@ -47,7 +47,7 @@ mod_wqx_server <- function(id, fsetls, active_tab) {
       active_tab = active_tab,
       force_show = reactive(input$show_help),
       title = "WQX Output",
-      body_ui = shiny::includeMarkdown("www/help/wqx.md")
+      body_ui = shiny::includeMarkdown(app_sys("app/www/help/wqx.md"))
     )
 
     # list output

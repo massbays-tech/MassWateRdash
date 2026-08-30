@@ -137,7 +137,7 @@ mod_upload_server <- function(id, active_tab) {
       active_tab = active_tab,
       force_show = reactive(input$show_help),
       title = "Upload & Validate",
-      body_ui = shiny::includeMarkdown("www/help/upload.md")
+      body_ui = shiny::includeMarkdown(app_sys("app/www/help/upload.md"))
     )
 
     # Modules ----
