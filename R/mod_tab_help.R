@@ -60,6 +60,7 @@ mod_tab_help_server <- function(
             actionButton(ns("dont_show_again"), "Don't show again"),
             modalButton("Close")
           ),
+          size = "xl",
           easyClose = TRUE
         )
       )

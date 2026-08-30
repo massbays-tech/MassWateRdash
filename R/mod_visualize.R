@@ -129,7 +129,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       active_tab = active_tab,
       force_show = reactive(input$show_help),
       title = "Visualize",
-      body_ui = tagList(p("Help text coming soon."))
+      body_ui = shiny::includeMarkdown("www/help/visualize.md")
     )
 
     # Update sidebar UI-----
