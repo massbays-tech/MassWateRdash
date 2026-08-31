@@ -34,6 +34,7 @@ run_app <- function(...) {
       tags$style(HTML(
         ".rhandsontable .htCore thead th { white-space: nowrap; }
          .modal-dialog.modal-xl { max-width: 90vw; }
+         .modal-title { flex-grow: 1; }
          .value-box-value { font-size: 1.5rem !important; }
          .fill-height { height: calc(100vh - 58px); overflow: hidden; }
          .card-scroll .card-body { overflow-y: auto; }

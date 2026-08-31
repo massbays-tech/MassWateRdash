@@ -54,7 +54,11 @@ mod_tab_help_server <- function(
     show_help_modal <- function() {
       showModal(
         modalDialog(
-          title = title,
+          title = div(
+            style = "display: flex; justify-content: flex-start; align-items: center; gap: 10px; width: 100%;",
+            img(src = "toimg/logo.png", height = "40px"),
+            title
+          ),
           body_ui,
           footer = tagList(
             actionButton(ns("dont_show_again"), "Don't show again"),
