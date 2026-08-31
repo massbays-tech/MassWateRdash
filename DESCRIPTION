@@ -60,6 +60,7 @@ Imports:
     pkgload,
     R6,
     reactable,
+    reactable.extras,
     readxl,
     rhandsontable,
     rlang,

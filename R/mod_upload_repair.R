@@ -13,6 +13,7 @@ mod_upload_repair_ui <- function(id, dat_name) {
   ns <- NS(id)
 
   tagList(
+    reactable.extras::reactable_extras_dependency(),
     conditionalPanel(
       condition = paste0('output["', ns("show_btn"), '"] == "TRUE"'),
       actionButton(
@@ -74,10 +75,7 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
             ),
             tabPanelBody(
               "edit_var",
-              bslib::card(
-                bslib::card_header("Invalid Variables"),
-                rhandsontable::rHandsontableOutput(ns("hot_var"))
-              )
+              mod_upload_repair_var_ui(ns("repair_var"))
             ),
             tabPanelBody(
               "edit_row",
@@ -117,37 +115,36 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
     }) |>
       bindEvent(input$open_editor)
 
-    # Set variables ----
-    val <- reactiveValues(
-      problem_rows = NULL,
-      repeat_errors = NULL,
-      locs = NULL
+    # R6, gargoyle, modules ----
+    val_repair <- dfRepair$new()
+    gargoyle::init(
+      "update_repair", "update_df_col", "update_df_var", "update_df_row"
     )
+    mod_upload_repair_var_server("repair_var", val_repair)
 
-    # Update tabs, reactive variables ----
+    # Update tabs, variables ----
     observe({
-      col_error <- is_column_error(val_dat$msg)
-      val$locs <- parse_error_locations(val_dat$msg, names(val_dat$raw_dat))
-
-      if (col_error) {
-        updateTabsetPanel(inputId = "tabset", selected = "edit_col")
-      } else {
-        val$problem_rows <- parse_problem_rows(val_dat$msg)
-        val$repeat_errors <- parse_repeat_errors(val_dat$raw_dat, val$locs)
-
-        if (is.null(val$repeat_errors)) {
-          updateTabsetPanel(inputId = "tabset", selected = "edit_row")
-        } else {
-          updateTabsetPanel(inputId = "tabset", selected = "edit_var")
-        }
-      }
+      val_repair$parse_msg(val_dat$msg, val_dat$raw_dat)
+      gargoyle::trigger("update_repair")
     }) |>
       bindEvent(gargoyle::watch("update_val"), input$open_editor)
 
+    observe({
+      if (val_repair$col_error) {
+        updateTabsetPanel(inputId = "tabset", selected = "edit_col")
+      } else if (is.null(val_repair$repeat_errors)) {
+        updateTabsetPanel(inputId = "tabset", selected = "edit_row")
+      } else {
+        updateTabsetPanel(inputId = "tabset", selected = "edit_var")
+      }
+    }) |>
+      bindEvent(gargoyle::watch("update_repair"), input$open_editor)
+
     # Update UI ----
     output$problem_count <- renderText({
-      paste(length(val$problem_rows), "row(s) with issues")
-    })
+      paste(length(val_repair$problem_rows), "row(s) with issues")
+    }) |>
+      bindEvent(gargoyle::watch("update_repair"))
 
     observe({
       n_total <- if (!is.null(val_dat$raw_dat)) nrow(val_dat$raw_dat) else 0
@@ -171,7 +168,7 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
       req(val_dat$raw_dat)
 
       col_names <- names(val_dat$raw_dat)
-      locs <- val$locs
+      locs <- val_repair$locs
       header_df <- setNames(
         as.data.frame(as.list(col_names), stringsAsFactors = FALSE),
         as.character(seq_along(col_names))
@@ -200,18 +197,13 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
     }) |>
       bindEvent(gargoyle::watch("update_val"))
 
-    # Edit Variables ----
-    output$hot_var <- rhandsontable::renderRHandsontable({
-      val$repeat_errors
-    })
-
     # Edit Rows ----
     output$hot_rows <- rhandsontable::renderRHandsontable({
       req(val_dat$raw_dat)
 
       dat <- val_dat$raw_dat
-      problem_rows <- val$problem_rows
-      locs <- val$locs
+      problem_rows <- val_repair$problem_rows
+      locs <- val_repair$locs
       show_all <- input$show_all_rows
 
       if (length(problem_rows) > 0 && !show_all) {
@@ -275,8 +267,8 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
           handle_retry(dat_name, val_log, val_edit, val_dat)
         gargoyle::trigger("update_val")
       } else if (input$tabset == "edit_var") {
-        edited_df <- rhandsontable::hot_to_r(input$hot_var) |>
-          update_hot_var(val_dat$raw_dat)
+        gargoyle::watch("update_df_var")
+        edited_df <- update_hot_var(val_repair$df_var, val_dat$raw_dat)
 
         if (is.null(edited_df)) {
           updateTabsetPanel(inputId = "tabset", selected = "edit_row")
@@ -287,7 +279,7 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
       } else {
         rhandsontable::hot_to_r(input$hot_rows) |>
           update_hot_rows(
-            val_dat$raw_dat, input$show_all_rows, val$problem_rows
+            val_dat$raw_dat, input$show_all_rows, val_repair$problem_rows
           ) |>
           handle_retry(dat_name, val_log, val_edit, val_dat)
         gargoyle::trigger("update_val")

@@ -75,8 +75,16 @@ test_that("parse_repeat_errors works", {
       "Activity Type" = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
     )
   )
+  
+  df_out <- data.frame(
+    "Delete Rows" = FALSE,
+    "Invalid Activity Type" = c("bar", "foo"),
+    "Replace With" = NA,
+    "Row Count" = c(4,5),
+    check.names = FALSE
+  )
 
-  expect_snapshot(parse_repeat_errors(df_res, locs))
+  expect_equal(parse_repeat_errors(df_res, locs), df_out)
 })
 
 test_that("update_hot_col works", {
