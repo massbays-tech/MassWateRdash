@@ -162,10 +162,30 @@ parse_repeat_errors <- function(dat, locs) {
 #'
 #' @noRd
 update_hot_col <- function(.data, raw_dat) {
-  new_names <- unlist(.data[1, ], use.names = FALSE)
+  if (nrow(.data) < 1) {
+    return(raw_dat)
+  }
 
-  if (length(new_names) == ncol(raw_dat)) {
-    names(raw_dat) <- new_names
+  df_del <- .data |>
+    dplyr::filter(.data[["Delete Column"]] == TRUE) |>
+    dplyr::pull(.data[["Invalid Column Name"]])
+
+  if (length(df_del) > 0) {
+    raw_dat <- dplyr::select(raw_dat, !dplyr::any_of(df_del))
+  }
+
+  df_rename <- .data |>
+    dplyr::filter(
+      .data[["Delete Column"]] == FALSE,
+      .data[["New Column Name"]] != " "
+    )
+
+  if (nrow(df_rename) > 0) {
+    raw_dat <- wqformat::rename_col(
+      raw_dat,
+      df_rename[["Invalid Column Name"]],
+      df_rename[["New Column Name"]]
+    )
   }
 
   raw_dat

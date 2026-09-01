@@ -17,6 +17,36 @@ file_labels <- c(
   censdat = "Censored data"
 )
 
+file_columns <- list(
+  resdat = c(
+    "Monitoring Location ID", "Activity Type", "Activity Start Date",
+    "Activity Start Time", "Activity Depth/Height Measure",
+    "Activity Depth/Height Unit", "Activity Relative Depth Name",
+    "Characteristic Name", "Result Value", "Result Unit", "Quantitation Limit",
+    "QC Reference Value	Result Measure Qualifier", "Result Attribute",
+    "Sample Collection Method ID", "Project ID", "Local Record ID",
+    "Result Comment"
+  ),
+  accdat = c(
+    "Parameter", "uom", "MDL", "UQL", "Value Range", "Field Duplicate",
+    "Lab Duplicate", "Field Blank", "Lab Blank", "Spike/Check Accuracy"
+  ),
+  frecomdat = c(
+    "Parameter", "Field Duplicate", "Lab Duplicate", "Field Blank", "Lab Blank",
+    "Spike/Check Accuracy", "% Completeness"
+  ),
+  sitdat = c(
+    "Monitoring Location ID", "Monitoring Location Name",
+    "Monitoring Location Latitude", "Monitoring Location Longitude",
+    "Location Group"
+  ),
+  wqxdat = c(
+    "Parameter", "Sampling Method Context", "Method Speciation",
+    "Result Sample Fraction", "Analytical Method", "Analytical Method Context"
+  ),
+  censdat = c("Parameter", "Missed and Censored Records")
+)
+
 # Accepted variables
 mwr_activity <- c(
   "Field Msr/Obs", "Sample-Routine", "Quality Control Sample-Field Blank",
@@ -57,6 +87,7 @@ mwr_unit <- c(
 usethis::use_data(
   file_signatures,
   file_labels,
+  file_columns,
   mwr_activity,
   mwr_param,
   mwr_unit,

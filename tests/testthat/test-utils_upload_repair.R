@@ -93,16 +93,23 @@ test_that("update_hot_col works", {
   colnames(df_bad) <- c(
     "Site_ID", "Site_Name", "Latitude", "Longitude", "Group"
   )
+  df_bad$Foo <- "bar"
 
-  col_names <- names(tst$sitdat)
-  df_hot <- setNames(
-    as.data.frame(as.list(col_names), stringsAsFactors = FALSE),
-    as.character(seq_along(col_names))
+  df_react <- data.frame(
+    "Delete Column" = c(FALSE, FALSE, FALSE, FALSE, FALSE, TRUE),
+    "Invalid Column Name" = c(
+      "Site_ID", "Site_Name", "Latitude", "Longitude", "Group", "Foo"
+    ),
+    "New Column Name" = c(
+      "Monitoring Location ID", "Monitoring Location Name", 
+      "Monitoring Location Latitude", "Monitoring Location Longitude", 
+      "Location Group", " "),
+    check.names = FALSE
   )
 
   # Test
   expect_equal(
-    update_hot_col(df_hot, df_bad),
+    update_hot_col(df_react, df_bad),
     tst$sitdat
   )
 })
