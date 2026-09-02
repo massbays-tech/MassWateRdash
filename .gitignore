@@ -2,4 +2,4 @@
 .Rhistory
 .RData
 .Ruserdata
-/inst/extdata/TEST_*
+/data-raw/TEST_*

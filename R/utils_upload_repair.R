@@ -142,7 +142,6 @@ parse_repeat_errors <- function(dat, locs) {
   ndat |>
     dplyr::filter(.data$n > 1) |>
     dplyr::rename(!!new_col := !!target_col, "Row Count" = "n") |>
-    dplyr::mutate("Delete Rows" = FALSE, .before = !!new_col) |>
     dplyr::mutate("Replace With" = NA, .before = "Row Count")
 }
 
@@ -150,9 +149,6 @@ parse_repeat_errors <- function(dat, locs) {
 #'
 #' @description `update_hot_col()` parses a rhandsontable containing column
 #' names and updates the column names for `raw_dat`.
-#'
-#' Temp note: `input$hot_headers` should be run through `hot_to_r` before
-#' running this function; had trouble testing it otherwise.
 #'
 #' @param .data Dataframe. Hot table containing updated column names.
 #' @param raw_dat Dataframe containing raw data. This is the table that will be
@@ -162,11 +158,16 @@ parse_repeat_errors <- function(dat, locs) {
 #'
 #' @noRd
 update_hot_col <- function(.data, raw_dat) {
-  if (nrow(.data) < 1) {
+  df_col <- .data |>
+    dplyr::filter(
+      .data[["Delete Column"]] == TRUE | .data[["New Column Name"]] != " "
+    )
+
+  if (nrow(df_col) == 0) {
     return(raw_dat)
   }
 
-  df_del <- .data |>
+  df_del <- df_col |>
     dplyr::filter(.data[["Delete Column"]] == TRUE) |>
     dplyr::pull(.data[["Invalid Column Name"]])
 
@@ -174,21 +175,17 @@ update_hot_col <- function(.data, raw_dat) {
     raw_dat <- dplyr::select(raw_dat, !dplyr::any_of(df_del))
   }
 
-  df_rename <- .data |>
-    dplyr::filter(
-      .data[["Delete Column"]] == FALSE,
-      .data[["New Column Name"]] != " "
-    )
+  df_rename <- dplyr::filter(df_col, .data[["Delete Column"]] == FALSE)
 
-  if (nrow(df_rename) > 0) {
-    raw_dat <- wqformat::rename_col(
-      raw_dat,
-      df_rename[["Invalid Column Name"]],
-      df_rename[["New Column Name"]]
-    )
+  if (nrow(df_rename) == 0) {
+    return(raw_dat)
   }
 
-  raw_dat
+  wqformat::rename_col(
+    raw_dat,
+    df_rename[["Invalid Column Name"]],
+    df_rename[["New Column Name"]]
+  )
 }
 
 #' Update Variables
@@ -210,32 +207,13 @@ update_hot_col <- function(.data, raw_dat) {
 #' @noRd
 update_hot_var <- function(.data, raw_dat) {
   dat_var <- .data |>
-    dplyr::filter(
-      .data[["Delete Rows"]] == TRUE | .data[["Replace With"]] != " "
-    )
+    dplyr::filter(.data[["Replace With"]] != " ")
 
   if (nrow(dat_var) == 0) {
     return(NULL)
   }
 
-  var_col <- colnames(dat_var)[2]
-  target_col <- gsub("Invalid ", "", var_col)
-
-  del_list <- dat_var |>
-    dplyr::filter(.data[["Delete Rows"]] == TRUE) |>
-    dplyr::pull(.data[[var_col]])
-
-  if (length(del_list) > 0) {
-    raw_dat <- raw_dat |>
-      dplyr::filter(!.data[[target_col]] %in% del_list)
-  }
-
-  dat_sub <- dat_var |>
-    dplyr::filter(.data[["Delete Rows"]] == FALSE)
-
-  if (nrow(dat_sub) == 0) {
-    return(raw_dat)
-  }
+  target_col <- gsub("Invalid ", "", colnames(dat_var)[1])
 
   old_var <- dat_sub[, 2]
   new_var <- dat_sub[, 3]

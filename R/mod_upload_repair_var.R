@@ -59,12 +59,6 @@ mod_upload_repair_var_server <- function(id, val_repair) {
       reactable::reactable(
         val_repair$repeat_errors,
         columns = list(
-          "Delete Rows" = reactable::colDef(
-            cell = reactable.extras::checkbox_extra(
-              ns("check"), class = "checkbox-extra"
-            ),
-            align = "left"
-          ),
           "Replace With" = reactable::colDef(
             cell = reactable.extras::dropdown_extra(
               ns("dropdown"), var_list, class = "dropdown-extra"
@@ -77,20 +71,11 @@ mod_upload_repair_var_server <- function(id, val_repair) {
 
     observe({
       gargoyle::watch("update_repair")
-      gargoyle::watch("update_df_var")
+      gargoyle::watch("update_table")
 
       val_repair$df_var[input$dropdown$row, "Replace With"] <- input$dropdown$value
-      gargoyle::trigger("update_df_var")
+      gargoyle::trigger("update_table")
     }) |>
       bindEvent(input$dropdown)
-
-    observe({
-      gargoyle::watch("update_repair")
-      gargoyle::watch("update_df_var")
-
-      val_repair$df_var[input$check$row, "Delete Rows"] <- input$check$value
-      gargoyle::trigger("update_df_var")
-    }) |>
-      bindEvent(input$check)
   })
 }
