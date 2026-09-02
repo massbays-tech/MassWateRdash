@@ -215,8 +215,8 @@ update_hot_var <- function(.data, raw_dat) {
 
   target_col <- gsub("Invalid ", "", colnames(dat_var)[1])
 
-  old_var <- dat_sub[, 2]
-  new_var <- dat_sub[, 3]
+  old_var <- dat_var[, 1]
+  new_var <- dat_var[, 2]
 
   wqformat::update_var(raw_dat, target_col, old_var, new_var)
 }

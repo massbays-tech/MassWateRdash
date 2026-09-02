@@ -77,7 +77,6 @@ test_that("parse_repeat_errors works", {
   )
   
   df_out <- data.frame(
-    "Delete Rows" = FALSE,
     "Invalid Activity Type" = c("bar", "foo"),
     "Replace With" = NA,
     "Row Count" = c(4,5),
@@ -120,7 +119,6 @@ test_that("update_hot_var works", {
   df_bad[["Activity Type"]] <- c("Field Msr/Obs", "foo", "bar", "foofy")
 
   df_hot <- data.frame(
-    "Delete Rows" = c(FALSE, FALSE, TRUE),
     "Invalid Activity Type" = c("bar", "foo", "foofy"),
     "Replace With" = c(
       "Quality Control Sample-Lab Duplicate", "Sample-Routine",
@@ -133,7 +131,7 @@ test_that("update_hot_var works", {
   # Test
   expect_equal(
     update_hot_var(df_hot, df_bad),
-    tst$resdat[1:3, ]
+    tst$resdat
   )
 })
 
