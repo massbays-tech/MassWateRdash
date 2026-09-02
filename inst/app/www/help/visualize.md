@@ -8,3 +8,5 @@ Four types of plots can be viewed with the right sub-tabs:
 2. **Date**: View results continuously over time for a single parameter as line plots, with the lines separated by site.
 3. **Site**: View results for a single parameter using boxplots or barplots separately for each site on the x-axis.
 4. **Map**: View a map of summarized results for a selected parameter at each monitoring site. Results are summarized as the mean or geometric mean based on information in the data quality objective file for accuracy.  Additional options for the map can be used to change the complexity of the water features and type of basemap.
+
+To see this text again, click the <i class="far fa-circle-question fa-lg" style="color: #007BC2;"></i> icon at the top left of the tab.

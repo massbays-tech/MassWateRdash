@@ -8,3 +8,5 @@ The tab includes six sub-tabs:
 4. **Completeness**: The quality control checks for completeness are used to assess the number of regular samples relative to qualified samples that apply to each parameter. A single table shows the outcome of these checks.
 5. **Raw Data**: Individual quality control checks for every parameter and observation can be viewed on this sub-tab.  Results can be viewed for **field duplicates**, **lab duplicates**, **field blanks**, **lab blanks**, and **lab spikes / instrument checks**.
 6. **Report**: Download a complete quality control report as a Word document. This report includes all tables in this tab.
+
+To see this text again, click the <i class="far fa-circle-question fa-lg" style="color: #007BC2;"></i> icon at the top left of the tab.

@@ -13,3 +13,5 @@ Choosing the option to **convert from another format** opens up a box to convert
 Uploading data files will run the standard suite of checks used by MassWateR that ensure the data are the correct format.  Please see the <a href="https://massbays-tech.github.io/MassWateR/articles/inputs.html" target="_blank">inputs vignette</a> for more information on these formats and the checks that are applied. Templates are available on the package's <a href="https://massbays-tech.github.io/MassWateR/RESOURCES.html" target="_blank">resources</a> page. An interactive popup will appear if the data require correction.  Follow the on-screen prompts to correct the data, then click "Try upload again" to load the corrected data from within the app.
 
 Input data can be downloaded in a zipped folder once uploaded by clicking the **Download data** button.  The button is only visible after data are uploaded.
+
+To see this text again, click the <i class="far fa-circle-question fa-lg" style="color: #007BC2;"></i> icon at the top left of the tab.
