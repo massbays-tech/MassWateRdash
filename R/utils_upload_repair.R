@@ -229,39 +229,18 @@ update_hot_var <- function(.data, raw_dat) {
 #' Temp note: `input$hot_rows` should be run through `hot_to_r` before
 #' running this function; had trouble testing it otherwise.
 #'
-#' @param .data Dataframe. Hot table containing replacement variables. Must
-#' include the columns "Delete Rows", "Invalid [...]", and "Replace With".
-#' @param raw_dat Dataframe containing raw data. This is the table that will be
-#' updated.
-#' @param show_all Boolean. Whether `.data` includes all rows or only a subset
-#' of rows. Default `TRUE`.
-#' @param problem_rows Numeric list. List of problem rows.
-#' Default value `integer(0)`.
+#' @param .data Dataframe.
 #'
 #' @return Updated dataframe.
 #'
 #' @noRd
-update_hot_rows <- function(
-  .data, raw_dat, show_all = TRUE, problem_rows = integer(0)
-) {
-  edited_df <- .data
-
-  # If filtered view was active, merge the edited subset back into the full data
-  if (!show_all && length(problem_rows) > 0 && !is.null(raw_dat)) {
-    names(raw_dat) <- names(edited_df)
-    valid_rows <- problem_rows[
-      problem_rows >= 1 & problem_rows <= nrow(raw_dat)
-    ]
-    raw_dat[valid_rows, ] <- edited_df[seq_along(valid_rows), ]
-    edited_df <- raw_dat
-  }
+update_hot_rows <- function(.data) {
+  dat <- .data |>
+    dplyr::select(!dplyr::any_of("Bad_Row"))
 
   # Drop blank rows
-  edited_df[
-    !apply(is.na(edited_df) | edited_df == "" | edited_df == FALSE, 1, all),
-  ]
+  dat[!apply(is.na(dat) | dat == "" | dat == FALSE, 1, all), ]
 }
-
 
 # Handle retry after user edits in handsontable
 # .data -- edited_df from previous function, but pipeable

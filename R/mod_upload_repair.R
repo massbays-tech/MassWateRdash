@@ -97,7 +97,7 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
     gargoyle::init("update_repair", "update_table")
     mod_upload_repair_col_server("repair_col", val_repair)
     mod_upload_repair_var_server("repair_var", val_repair)
-    mod_upload_repair_row_server("repair_row", val_dat, val_repair, dat_name)
+    mod_upload_repair_row_server("repair_row", val_repair, dat_name)
 
     # Update tabs, variables ----
     observe({
@@ -144,10 +144,7 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
           gargoyle::trigger("update_val")
         }
       } else {
-        rhandsontable::hot_to_r(input$hot_rows) |>
-          update_hot_rows(
-            val_dat$raw_dat, input$show_all_rows, val_repair$problem_rows
-          ) |>
+        update_hot_rows(val_repair$df_row) |>
           handle_retry(dat_name, val_log, val_edit, val_dat)
         gargoyle::trigger("update_val")
       }
