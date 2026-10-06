@@ -116,13 +116,13 @@ test_that("update_hot_col works", {
 test_that("update_hot_var works", {
   # Set variables
   df_bad <- tst$resdat
-  df_bad[["Activity Type"]] <- c("Field Msr/Obs", "foo", "bar", "foofy")
+  df_bad[["Activity Type"]] <- c("Field Msr/Obs", NA, "foo", "bar")
 
   df_hot <- data.frame(
-    "Invalid Activity Type" = c("bar", "foo", "foofy"),
+    "Invalid Activity Type" = c("bar", NA, "foo"),
     "Replace With" = c(
-      "Quality Control Sample-Lab Duplicate", "Sample-Routine",
-      "Quality Control-Calibration Check"
+      "Quality Control-Calibration Check", "Sample-Routine",
+      "Quality Control Sample-Lab Duplicate"
     ),
     "Row Count" = 1,
     check.names = FALSE
@@ -137,22 +137,13 @@ test_that("update_hot_var works", {
 
 test_that("update_hot_rows works", {
   # Set variables
-  df_bad <- tst$resdat
-  df_bad[["Activity Type"]] <- c("Field Msr/Obs", "foo", "bar", "foofy")
-
-  df_hot <- tst$resdat
+  df_in <- tst$resdat
+  df_in[5, ] <- NA
+  df_in$Bad_Row <- c(FALSE, FALSE, FALSE, FALSE, TRUE)
 
   # Test
   expect_equal(
-    update_hot_rows(df_hot, df_bad),
+    update_hot_rows(df_in),
     tst$resdat
-  )
-
-  # Test - only show problem rows, one row blank
-  df_hot[4, ] <- NA
-
-  expect_equal(
-    update_hot_rows(df_hot[2:4, ], df_bad, FALSE, c(2,3,4)),
-    tst$resdat[1:3, ]
   )
 })

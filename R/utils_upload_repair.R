@@ -213,7 +213,24 @@ update_hot_var <- function(.data, raw_dat) {
     return(NULL)
   }
 
-  target_col <- gsub("Invalid ", "", colnames(dat_var)[1])
+  old_col <- colnames(dat_var)[1]
+  target_col <- gsub("Invalid ", "", old_col)
+
+  chk <- is.na(dat_var[[old_col]])
+  if (any(chk)) {
+    new_var <- dat_var[which(chk), 2]
+
+    raw_dat <- dplyr::mutate(
+      raw_dat,
+      !!target_col := tidyr::replace_na(.data[[target_col]], !!new_var)
+    )
+
+    dat_var <- dplyr::filter(dat_var, !is.na(.data[[old_col]]))
+
+    if (nrow(dat_var) == 0) {
+      return(raw_dat)
+    }
+  }
 
   old_var <- dat_var[, 1]
   new_var <- dat_var[, 2]

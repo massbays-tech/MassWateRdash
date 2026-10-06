@@ -23,14 +23,14 @@ mod_upload_repair_row_ui <- function(id) {
             span(
               class = "badge bg-warning text-dark",
               textOutput(ns("problem_count"))
-            ),
-            tags$label(
-              tags$input(
-                type = "checkbox",
-                onclick = "Reactable.setFilter('react-rows', 'Bad_Row', event.target.checked)"
-              ),
-              "Show All Rows"
-            )
+            ) # ,
+            # tags$label(
+            #   tags$input(
+            #     type = "checkbox",
+            #     onclick = "Reactable.setFilter('react-rows', 'Bad_Row', event.target.checked)"
+            #   ),
+            #   "Show All Rows"
+            # )
           )
         )
       ),
@@ -90,18 +90,18 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
 
       col_def <- list(
         "Bad_Row" = reactable::colDef(
-          show = FALSE,
-          filterMethod = reactable::JS(
-            "function(rows, columnId, filterValue) {
-                if (filterValue === false) {
-                  return rows.filter(function(row) {
-                    const badRow = row.values[columnId]
-                    return badRow
-                  })
-                }
-                return rows
-              }"
-          )
+          show = FALSE # ,
+          # filterMethod = reactable::JS(
+          #   "function(rows, columnId, filterValue) {
+          #       if (filterValue === false) {
+          #         return rows.filter(function(row) {
+          #           const badRow = row.values[columnId]
+          #           return badRow
+          #         })
+          #       }
+          #       return rows
+          #     }"
+          # )
         )
       )
 
