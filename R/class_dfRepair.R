@@ -44,8 +44,27 @@ dfRepair <- R6::R6Class(
 
         self$df_col <- NULL
         self$df_var <- df_var
-        self$df_row <- raw_dat
+        self$df_row <- if (is.null(raw_dat)) {
+          NULL
+        } else {
+          raw_dat |>
+            dplyr::mutate("ID" = dplyr::row_number()) |>
+            dplyr::mutate("bad_row" = FALSE)
+        }
       }
+    },
+    edit_row = function(val, show_all) {
+      row_num <- val$row
+
+      if (!show_all) {
+        # Find equivalent row number for filtered data
+        dat <- self$df_row |>
+          dplyr::filter(.data$bad_row == TRUE)
+        id_num <- dat[row_num, "ID"]
+        row_num <- which(self$df_row$ID == id_num)
+      }
+
+      self$df_row[row_num, val$column] <- val$value
     },
     initialize = function(
       problem_col = NULL, missing_col = NULL, problem_rows = NULL,

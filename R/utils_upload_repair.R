@@ -253,7 +253,7 @@ update_hot_var <- function(.data, raw_dat) {
 #' @noRd
 update_hot_rows <- function(.data) {
   dat <- .data |>
-    dplyr::select(!dplyr::any_of("Bad_Row"))
+    dplyr::select(!dplyr::any_of(c("ID", "bad_row")))
 
   # Drop blank rows
   dat[!apply(is.na(dat) | dat == "" | dat == FALSE, 1, all), ]

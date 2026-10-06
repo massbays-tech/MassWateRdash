@@ -139,7 +139,8 @@ test_that("update_hot_rows works", {
   # Set variables
   df_in <- tst$resdat
   df_in[5, ] <- NA
-  df_in$Bad_Row <- c(FALSE, FALSE, FALSE, FALSE, TRUE)
+  df_in$ID <- c(1,2,3,4,5)
+  df_in$bad_row <- c(FALSE, FALSE, FALSE, FALSE, TRUE)
 
   # Test
   expect_equal(

@@ -23,14 +23,8 @@ mod_upload_repair_row_ui <- function(id) {
             span(
               class = "badge bg-warning text-dark",
               textOutput(ns("problem_count"))
-            ) # ,
-            # tags$label(
-            #   tags$input(
-            #     type = "checkbox",
-            #     onclick = "Reactable.setFilter('react-rows', 'Bad_Row', event.target.checked)"
-            #   ),
-            #   "Show All Rows"
-            # )
+            ),
+            checkboxInput(ns("show_all"), label = "Show All Rows")
           )
         )
       ),
@@ -59,50 +53,41 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
     }) |>
       bindEvent(gargoyle::watch("update_repair"))
 
-    # Create table ----
-    output$react_rows <- reactable::renderReactable({
-      dat <- val_repair$df_row
+    # Init dataframe ----
+    observe({
+      req(val_repair$df_row)
+
+      dat <- val_repair$df_row |>
+        dplyr::mutate("bad_row" = FALSE)
+
       problem_rows <- val_repair$problem_rows
-      locs <- val_repair$locs
-
-      req(dat)
-
-      col_list <- colnames(dat)
-
-      dat <- dat |>
-        dplyr::mutate("Bad_Row" = FALSE)
-      dat[problem_rows, "Bad_Row"] <- TRUE
-
       if (length(problem_rows) > 0) {
-        valid_rows <- problem_rows[
-          problem_rows >= 1 & problem_rows <= nrow(dat)
-        ]
-        dat <- dat[valid_rows, , drop = FALSE]
-        dat[valid_rows, "Bad_Row"] <- TRUE
+        dat[problem_rows, "bad_row"] <- TRUE
       }
 
+      val_repair$df_row <- dat
+
+      gargoyle::trigger("init_table")
+      gargoyle::trigger("update_table")
+    }) |>
+      bindEvent(gargoyle::watch("update_repair"))
+
+    # Create table ----
+    output$react_rows <- reactable::renderReactable({
+      req(val_repair$df_row)
+
+      dat <- dplyr::filter(val_repair$df_row, .data$bad_row == TRUE)
+
       special_col <- c(
-        "Activity Type", "Activity Depth/Height Unit",
+        "ID", "bad_row", "Activity Type", "Activity Depth/Height Unit",
         "Activity Relative Depth Name", "Characteristic Name", "Result Unit",
         "Parameter", "uom"
       )
-      col_list <- setdiff(col_list, special_col)
+      col_list <- setdiff(colnames(dat), special_col)
 
       col_def <- list(
-        "Bad_Row" = reactable::colDef(
-          show = FALSE # ,
-          # filterMethod = reactable::JS(
-          #   "function(rows, columnId, filterValue) {
-          #       if (filterValue === false) {
-          #         return rows.filter(function(row) {
-          #           const badRow = row.values[columnId]
-          #           return badRow
-          #         })
-          #       }
-          #       return rows
-          #     }"
-          # )
-        )
+        "ID" = reactable::colDef(show = FALSE),
+        "bad_row" = reactable::colDef(show = FALSE)
       )
 
       for (i in col_list) {
@@ -179,90 +164,64 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
         dat,
         columns = col_def,
         rowStyle = function(index) {
-          if (dat[index, "Bad_Row"] == TRUE) {
+          if (dat[index, "bad_row"] == TRUE) {
             list(background = "#ffc107")
           }
-        },
-        elementId = "react-rows"
+        }
       )
     }) |>
-      bindEvent(gargoyle::watch("update_val"))
+      bindEvent(gargoyle::watch("init_table"))
 
-    # observe({
-    #   session$sendCustomMessage(
-    #     tableId = "react-rows",
-    #     columnName = "Bad_Row",
-    #     value = input$show_all_rows
-    #   )
-    # }) |>
-    #   bindEvent(input$show_all_rows)
-
-    # Update table ----
+    # Filter table ----
     observe({
-      gargoyle::watch("update_repair")
-      gargoyle::watch("update_table")
+      req(val_repair$df_row)
 
-      val <- input$var_text
+      filtered <- if (isTruthy(input$show_all)) {
+        val_repair$df_row
+      } else {
+        dplyr::filter(val_repair$df_row, .data$bad_row == TRUE)
+      }
 
-      val_repair$df_row[val$row, val$column] <- val$value
+      reactable::updateReactable("react_rows", data = filtered)
+    }) |>
+      bindEvent(input$show_all, gargoyle::watch("update_table"))
+
+    # Update dataframe ----
+    observe({
+      val_repair$edit_row(input$var_text, input$show_all)
       gargoyle::trigger("update_table")
     }) |>
       bindEvent(input$var_text)
 
     observe({
-      gargoyle::watch("update_repair")
-      gargoyle::watch("update_table")
+      val_repair$edit_row(input$var_activity, input$show_all)
+      gargoyle::trigger("update_table")
+    }) |>
+      bindEvent(input$var_activity)
 
-      val <- input$var_param
-
-      val_repair$df_row[val$row, val$column] <- val$value
+    observe({
+      val_repair$edit_row(input$var_param, input$show_all)
       gargoyle::trigger("update_table")
     }) |>
       bindEvent(input$var_param)
 
     observe({
-      gargoyle::watch("update_repair")
-      gargoyle::watch("update_table")
-
-      val <- input$var_unit
-
-      val_repair$df_row[val$row, val$column] <- val$value
+      val_repair$edit_row(input$var_unit, input$show_all)
       gargoyle::trigger("update_table")
     }) |>
       bindEvent(input$var_unit)
 
     observe({
-      gargoyle::watch("update_repair")
-      gargoyle::watch("update_table")
-
-      val <- input$var_depth
-
-      val_repair$df_row[val$row, val$column] <- val$value
+      val_repair$edit_row(input$var_depth, input$show_all)
       gargoyle::trigger("update_table")
     }) |>
       bindEvent(input$var_depth)
 
     observe({
-      gargoyle::watch("update_repair")
-      gargoyle::watch("update_table")
-
-      val <- input$var_depth_unit
-
-      val_repair$df_row[val$row, val$column] <- val$value
+      val_repair$edit_row(input$var_depth_unit, input$show_all)
       gargoyle::trigger("update_table")
     }) |>
       bindEvent(input$var_depth_unit)
-
-    observe({
-      gargoyle::watch("update_repair")
-      gargoyle::watch("update_table")
-
-      val <- input$var_activity
-
-      val_repair$df_row[val$row, val$column] <- val$value
-      gargoyle::trigger("update_table")
-    }) |>
-      bindEvent(input$var_activity)
 
   })
 }

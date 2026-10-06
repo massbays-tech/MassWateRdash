@@ -94,7 +94,7 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
 
     # R6, gargoyle, modules ----
     val_repair <- dfRepair$new()
-    gargoyle::init("update_repair", "update_table")
+    gargoyle::init("update_repair", "init_table", "update_table")
     mod_upload_repair_col_server("repair_col", val_repair)
     mod_upload_repair_var_server("repair_var", val_repair)
     mod_upload_repair_row_server("repair_row", val_repair, dat_name)
@@ -133,7 +133,6 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
         val_repair$df_col |>
           update_hot_col(val_dat$raw_dat) |>
           handle_retry(dat_name, val_log, val_edit, val_dat)
-        gargoyle::trigger("update_val")
       } else if (input$tabset == "edit_var") {
         edited_df <- update_hot_var(val_repair$df_var, val_dat$raw_dat)
 
@@ -141,14 +140,15 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
           updateTabsetPanel(inputId = "tabset", selected = "edit_row")
         } else {
           handle_retry(edited_df, dat_name, val_log, val_edit, val_dat)
-          gargoyle::trigger("update_val")
         }
       } else {
         update_hot_rows(val_repair$df_row) |>
           handle_retry(dat_name, val_log, val_edit, val_dat)
-        gargoyle::trigger("update_val")
+        val_repair$df_row <- val_repair$df_row |>
+          dplyr::mutate("ID" = dplyr::row_number())
       }
 
+      gargoyle::trigger("update_val")
       if (!val_edit[[dat_name]]) removeModal()
     }) |>
       bindEvent(input$retry)
