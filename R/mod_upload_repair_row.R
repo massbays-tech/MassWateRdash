@@ -162,62 +162,75 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
 
       reactable::reactable(
         dat,
-        columns = col_def,
-        rowStyle = function(index) {
-          if (dat[index, "bad_row"] == TRUE) {
-            list(background = "#ffc107")
-          }
-        }
+        columns = col_def
       )
     }) |>
       bindEvent(gargoyle::watch("init_table"))
 
-    # Filter table ----
+    # Update table ----
     observe({
       req(val_repair$df_row)
 
-      filtered <- if (isTruthy(input$show_all)) {
+      gargoyle::watch("update_table")
+
+      dat <- if (isTruthy(input$show_all)) {
         val_repair$df_row
       } else {
         dplyr::filter(val_repair$df_row, .data$bad_row == TRUE)
       }
 
-      reactable::updateReactable("react_rows", data = filtered)
+      reactable::updateReactable(
+        "react_rows",
+        data = dat,
+        meta = list(
+          rowStyle = function(index) {
+            if (dat[index, "bad_row"] == TRUE) {
+              list(background = "#ffc107")
+            }
+          }
+        )
+      )
     }) |>
-      bindEvent(input$show_all, gargoyle::watch("update_table"))
+      bindEvent(input$show_all)
 
     # Update dataframe ----
     observe({
+      gargoyle::watch("update_table")
       val_repair$edit_row(input$var_text, input$show_all)
       gargoyle::trigger("update_table")
     }) |>
       bindEvent(input$var_text)
 
     observe({
+      gargoyle::watch("update_table")
       val_repair$edit_row(input$var_activity, input$show_all)
       gargoyle::trigger("update_table")
     }) |>
       bindEvent(input$var_activity)
 
     observe({
+      gargoyle::watch("update_table")
       val_repair$edit_row(input$var_param, input$show_all)
       gargoyle::trigger("update_table")
     }) |>
       bindEvent(input$var_param)
 
     observe({
+      gargoyle::watch("update_table")
       val_repair$edit_row(input$var_unit, input$show_all)
       gargoyle::trigger("update_table")
     }) |>
       bindEvent(input$var_unit)
 
     observe({
+      gargoyle::watch("update_table")
       val_repair$edit_row(input$var_depth, input$show_all)
       gargoyle::trigger("update_table")
     }) |>
       bindEvent(input$var_depth)
 
     observe({
+      gargoyle::watch("update_table")
       val_repair$edit_row(input$var_depth_unit, input$show_all)
       gargoyle::trigger("update_table")
     }) |>

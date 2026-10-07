@@ -36,14 +36,14 @@ mod_upload_repair_col_server <- function(id, val_repair) {
 
     # Edit Variables ----
     output$col_table <- reactable::renderReactable({
-      if (is.null(val_repair$problem_col)) {
+      if (is.null(val_repair$df_col)) {
         return(NULL)
       }
 
       var_list <- c(" ", val_repair$missing_col)
 
       reactable::reactable(
-        val_repair$problem_col,
+        val_repair$df_col,
         columns = list(
           "Delete Column" = reactable::colDef(
             cell = reactable.extras::checkbox_extra(

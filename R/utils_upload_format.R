@@ -159,6 +159,9 @@ upload_custom_results <- function(dat, in_format, custom_format = NULL) {
   dat <- readxl::read_excel(dat$datapath, na = c("NA", "na", "")) |>
     dplyr::mutate_if(function(x) !lubridate::is.POSIXct(x), as.character)
 
+  # Drop blank rows
+  dat <- dat[!apply(is.na(dat), 1, all), ]
+
   message(msg, " ok\n")
 
   if (in_format == "masswater") {
@@ -238,6 +241,9 @@ upload_custom_sites <- function(dat, in_format, custom_format = NULL) {
   msg <- "Uploading site metadata..."
   dat <- readxl::read_excel(dat$datapath, na = c("NA", "na", "")) |>
     dplyr::mutate_if(function(x) !lubridate::is.POSIXct(x), as.character)
+
+  # Drop blank rows
+  dat <- dat[!apply(is.na(dat), 1, all), ]
 
   message(msg, " ok\n")
 

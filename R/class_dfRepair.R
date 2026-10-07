@@ -1,10 +1,8 @@
 dfRepair <- R6::R6Class(
   "dfRepair",
   public = list(
-    problem_col = NULL,
     missing_col = NULL,
     problem_rows = NULL,
-    repeat_errors = NULL,
     locs = NULL,
     df_col = NULL,
     df_var = NULL,
@@ -26,31 +24,31 @@ dfRepair <- R6::R6Class(
           check.names = FALSE
         )
 
-        self$problem_col <- df_col
         self$missing_col <- setdiff(target_col, all_col)
         self$problem_rows <- NULL
-        self$repeat_errors <- NULL
 
         self$df_col <- df_col
         self$df_var <- NULL
         self$df_row <- NULL
       } else {
-        df_var <- parse_repeat_errors(raw_dat, locs)
-
-        self$problem_col <- NULL
-        self$missing_col <- NULL
-        self$problem_rows <- parse_problem_rows(msg)
-        self$repeat_errors <- df_var
-
-        self$df_col <- NULL
-        self$df_var <- df_var
-        self$df_row <- if (is.null(raw_dat)) {
-          NULL
-        } else {
-          raw_dat |>
+        bad_rows <- parse_problem_rows(msg)
+        
+        if (!is.null(raw_dat)) {
+          raw_dat <- raw_dat |>
             dplyr::mutate("ID" = dplyr::row_number()) |>
             dplyr::mutate("bad_row" = FALSE)
+          
+          if (length(bad_rows) > 0) {
+            raw_dat[bad_rows, "bad_row"] <- TRUE
+          }
         }
+        
+        self$missing_col <- NULL
+        self$problem_rows <- bad_rows
+
+        self$df_col <- NULL
+        self$df_var <- parse_repeat_errors(raw_dat, locs)
+        self$df_row <- raw_dat
       }
     },
     edit_row = function(val, show_all) {
@@ -58,8 +56,7 @@ dfRepair <- R6::R6Class(
 
       if (!show_all) {
         # Find equivalent row number for filtered data
-        dat <- self$df_row |>
-          dplyr::filter(.data$bad_row == TRUE)
+        dat <- dplyr::filter(self$df_row, .data$bad_row == TRUE)
         id_num <- dat[row_num, "ID"]
         row_num <- which(self$df_row$ID == id_num)
       }
@@ -67,14 +64,11 @@ dfRepair <- R6::R6Class(
       self$df_row[row_num, val$column] <- val$value
     },
     initialize = function(
-      problem_col = NULL, missing_col = NULL, problem_rows = NULL,
-      repeat_errors = NULL, locs = NULL, df_col = NULL, df_var = NULL,
-      df_row = NULL
+      missing_col = NULL, problem_rows = NULL, locs = NULL, df_col = NULL,
+      df_var = NULL, df_row = NULL
     ) {
-      self$problem_col <- problem_col
       self$missing_col <- missing_col
       self$problem_rows <- problem_rows
-      self$repeat_errors <- repeat_errors
       self$locs <- locs
       self$df_col <- df_col
       self$df_var <- df_var

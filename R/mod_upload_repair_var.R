@@ -40,7 +40,7 @@ mod_upload_repair_var_server <- function(id, val_repair) {
 
     # Edit Variables ----
     output$var_table <- reactable::renderReactable({
-      if (is.null(val_repair$repeat_errors)) {
+      if (is.null(val_repair$df_var)) {
         return(NULL)
       }
 
@@ -57,7 +57,7 @@ mod_upload_repair_var_server <- function(id, val_repair) {
       }
 
       reactable::reactable(
-        val_repair$repeat_errors,
+        val_repair$df_var,
         columns = list(
           "Replace With" = reactable::colDef(
             cell = reactable.extras::dropdown_extra(

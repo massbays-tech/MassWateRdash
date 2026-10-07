@@ -107,9 +107,9 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_edit, val_dat) {
       bindEvent(gargoyle::watch("update_val"), input$open_editor)
 
     observe({
-      if (!is.null(val_repair$problem_col)) {
+      if (!is.null(val_repair$df_col)) {
         updateTabsetPanel(inputId = "tabset", selected = "edit_col")
-      } else if (!is.null(val_repair$repeat_errors)) {
+      } else if (!is.null(val_repair$df_var)) {
         updateTabsetPanel(inputId = "tabset", selected = "edit_var")
       } else {
         updateTabsetPanel(inputId = "tabset", selected = "edit_row")
