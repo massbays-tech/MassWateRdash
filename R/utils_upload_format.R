@@ -150,11 +150,15 @@ parse_format <- function(.data, sheet_name) {
 #' @param custom_format List containing the following variables: col_name,
 #' param, param_unit, qualifier, activity. Each variable is a named list
 #' containing old and new variable names.
+#' @param date_format String. Date format. Uses the same formatting as
+#' [lubridate::parse_date_time()]. Default value "m/d/Y".
 #'
 #' @return Dataframe that has been formatted for MassWateR
 #'
 #' @noRd
-upload_custom_results <- function(dat, in_format, custom_format = NULL) {
+upload_custom_results <- function(
+  dat, in_format, custom_format = NULL, date_format = "m/d/Y"
+) {
   msg <- "Uploading result data..."
   dat <- readxl::read_excel(dat$datapath, na = c("NA", "na", "")) |>
     dplyr::mutate_if(function(x) !lubridate::is.POSIXct(x), as.character)
@@ -165,11 +169,11 @@ upload_custom_results <- function(dat, in_format, custom_format = NULL) {
   message(msg, " ok\n")
 
   if (in_format == "masswater") {
-    dat <- wqformat::format_mwr_results(dat)
+    dat <- wqformat::format_mwr_results(dat, date_format)
   } else if (in_format == "custom") {
-    dat <- format_custom_results(dat, custom_format)
+    dat <- format_custom_results(dat, custom_format, date_format)
   } else {
-    dat <- wqformat::format_results(dat, in_format, "masswater")
+    dat <- wqformat::format_results(dat, in_format, "masswater", date_format)
   }
 
   dat
@@ -184,11 +188,13 @@ upload_custom_results <- function(dat, in_format, custom_format = NULL) {
 #' @param var_list List containing the following variables: col_name, param,
 #' param_unit, qualifier, activity. Each variable is a named list containing old
 #' and new variable names.
+#' @param date_format String. Date format. Uses the same formatting as
+#' [lubridate::parse_date_time()]. Default value "m/d/Y".
 #'
 #' @return Updated dataframe that has been formatted for MassWateR
 #'
 #' @noRd
-format_custom_results <- function(.data, var_list) {
+format_custom_results <- function(.data, var_list, date_format = "m/d/Y") {
   dat <- .data
 
   message("Reformatting data...")
@@ -222,7 +228,7 @@ format_custom_results <- function(.data, var_list) {
     try_rename("Result Unit", var_list$param_unit) |>
     try_rename("Result Measure Qualifier", var_list$qualifier) |>
     try_rename("Activity Type", var_list$activity) |>
-    wqformat::format_mwr_results()
+    wqformat::format_mwr_results(date_format)
 }
 
 #' Upload non-MassWateR site metadata

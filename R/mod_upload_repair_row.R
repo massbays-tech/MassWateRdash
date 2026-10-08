@@ -87,7 +87,7 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
 
       col_def <- list(
         "ID" = reactable::colDef(show = FALSE),
-        "bad_row" = reactable::colDef(show = FALSE)
+        "bad_row" = reactable::colDef(show = FALSE, )
       )
 
       for (i in col_list) {
@@ -100,14 +100,14 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
         col_def[["Activity Type"]] <- reactable::colDef(
           cell = reactable.extras::dropdown_extra(
             ns("var_activity"),
-            unique(c(mwr_activity, dat$`Activity Type`)),
+            unique(c(" ", mwr_activity, dat$`Activity Type`)),
             class = "dropdown-extra"
           )
         )
         col_def[["Activity Depth/Height Unit"]] <- reactable::colDef(
           cell = reactable.extras::dropdown_extra(
             ns("var_depth_unit"),
-            unique(c("ft", "m", dat$`Activity Depth/Height Unit`)),
+            unique(c(" ", "ft", "m", dat$`Activity Depth/Height Unit`)),
             class = "dropdown-extra"
           )
         )
@@ -115,7 +115,7 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
           cell = reactable.extras::dropdown_extra(
             ns("var_depth"),
             unique(
-              c("Surface", "Midwater", "Near Bottom", "Bottom",
+              c(" ", "Surface", "Midwater", "Near Bottom", "Bottom",
                 dat$`Activity Relative Depth Name`)
             ),
             class = "dropdown-extra"
@@ -124,14 +124,14 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
         col_def[["Characteristic Name"]] <- reactable::colDef(
           cell = reactable.extras::dropdown_extra(
             ns("var_param"),
-            unique(c(mwr_param, dat$`Characteristic Name`)),
+            unique(c(" ", mwr_param, dat$`Characteristic Name`)),
             class = "dropdown-extra"
           )
         )
         col_def[["Result Unit"]] <- reactable::colDef(
           cell = reactable.extras::dropdown_extra(
             ns("var_unit"),
-            unique(c(mwr_unit, dat$`Result Unit`)),
+            unique(c(" ", mwr_unit, dat$`Result Unit`)),
             class = "dropdown-extra"
           )
         )
@@ -139,14 +139,14 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
         col_def[["Parameter"]] <- reactable::colDef(
           cell = reactable.extras::dropdown_extra(
             ns("var_param"),
-            unique(c(mwr_param, dat$Parameter)),
+            unique(c(" ", mwr_param, dat$Parameter)),
             class = "dropdown-extra"
           )
         )
         col_def[["uom"]] <- reactable::colDef(
           cell = reactable.extras::dropdown_extra(
             ns("var_unit"),
-            unique(c(mwr_unit, dat$uom)),
+            unique(c(" ", mwr_unit, dat$uom)),
             class = "dropdown-extra"
           )
         )
@@ -154,7 +154,7 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
         col_def[["Parameter"]] <- reactable::colDef(
           cell = reactable.extras::dropdown_extra(
             ns("var_param"),
-            unique(c(mwr_param, dat$Parameter)),
+            unique(c(" ", mwr_param, dat$Parameter)),
             class = "dropdown-extra"
           )
         )
@@ -162,7 +162,14 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
 
       reactable::reactable(
         dat,
-        columns = col_def
+        columns = col_def,
+        rowStyle = htmlwidgets::JS(
+          "function(rowInfo) {
+              if (rowInfo.values['bad_row'] == true) {
+                return { backgroundColor: '#f9cfb4' }
+              }
+            }"
+        )
       )
     }) |>
       bindEvent(gargoyle::watch("init_table"))
@@ -181,17 +188,10 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
 
       reactable::updateReactable(
         "react_rows",
-        data = dat,
-        meta = list(
-          rowStyle = function(index) {
-            if (dat[index, "bad_row"] == TRUE) {
-              list(background = "#ffc107")
-            }
-          }
-        )
+        data = dat
       )
     }) |>
-      bindEvent(input$show_all)
+      bindEvent(input$show_all, gargoyle::watch("update_table"))
 
     # Update dataframe ----
     observe({

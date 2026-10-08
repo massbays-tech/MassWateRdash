@@ -116,13 +116,13 @@ test_that("update_hot_col works", {
 test_that("update_hot_var works", {
   # Set variables
   df_bad <- tst$resdat
-  df_bad[["Activity Type"]] <- c("Field Msr/Obs", NA, "foo", "bar")
+  df_bad[["Activity Type"]] <- c("Field Msr/Obs", "foo", "bar", "foofy")
 
   df_hot <- data.frame(
-    "Invalid Activity Type" = c("bar", NA, "foo"),
+    "Invalid Activity Type" = c("bar", "foo", "foofy"),
     "Replace With" = c(
-      "Quality Control-Calibration Check", "Sample-Routine",
-      "Quality Control Sample-Lab Duplicate"
+      "Quality Control Sample-Lab Duplicate", "Sample-Routine",
+      "Quality Control-Calibration Check"
     ),
     "Row Count" = 1,
     check.names = FALSE

@@ -10,26 +10,43 @@ mod_upload_format_ui <- function(id, in_modal = FALSE) {
 
   fmt_sidebar <- bslib::sidebar(
     width = 350,
-    # * Results ----
-    h2("Results Data"),
+    # * Format ----
+    h2("Input Format"),
     dropdown(
-      ns("result_format"),
-      label = "Select Results Format",
+      ns("in_format"),
+      label = "Select Input Format",
       choices = c(
-        "blank", "MA_BRC", "ME_FOCB", "ME_DEP", "masswater", "RI_DEM",
+        "masswater", "MA_BRC", "ME_FOCB", "ME_DEP", "RI_DEM",
         "RI_WW", "wqdashboard", "WQX", "custom"
       ),
       choice_names = c(
-        " ", "Blackstone River Coalition", "Friends of Casco Bay",
-        "Maine DEP", "MassWateR", "RI DEM", "URI Watershed Watch",
+        "MassWateR", "Blackstone River Coalition", "Friends of Casco Bay",
+        "Maine DEP", "RI DEM", "Watershed Watch (URI)",
         "WQdashboard", "WQX", "Other"
       ),
       sorted = FALSE,
       multiple = FALSE
     ),
+    dropdown(
+      ns("date_format"),
+      label = "Select Date Format",
+      choices = c(
+        "mdY", "mdy", "dmY", "dmy", "Ymd", "ymd", "mdYHM", "mdyHM", "dmYHM",
+        "dmyHM", "YmdHM", "ymdHM"
+      ),
+      choice_names = c(
+        "MM/DD/YYYY", "MM/DD/YY", "DD/MM/YYYY", "DD/MM/YY", "YYYY/MM/DD",
+        "YY/MM/DD", "MM/DD/YYYY H:M", "MM/DD/YY H:M",  "DD/MM/YYYY H:M",
+        "DD/MM/YY H:M", "YYYY/MM/DD H:M", "YY/MM/DD H:M"
+      ),
+      sorted = FALSE,
+      multiple = FALSE
+    ),
+    # * Results ----
+    h2("Results Data"),
     conditionalPanel(
       condition = paste0(
-        'output["', ns("show_result_custom"), '"] == "show"'
+        'output["', ns("show_custom"), '"] == "show"'
       ),
       fileInput(
         ns("result_custom"),
@@ -49,23 +66,9 @@ mod_upload_format_ui <- function(id, in_modal = FALSE) {
     ),
     # * Sites ----
     h2("Site Metadata"),
-    dropdown(
-      ns("site_format"),
-      label = "Select Site Format",
-      choices = c(
-        "blank", "MA_BRC", "ME_FOCB", "masswater", "RI_WW", "wqdashboard",
-        "WQX", "custom"
-      ),
-      choice_names = c(
-        " ", "Blackstone River Coalition", "Friends of Casco Bay",
-        "MassWateR", "URI Watershed Watch", "WQdashboard", "WQX", "Other"
-      ),
-      sorted = FALSE,
-      multiple = FALSE
-    ),
     conditionalPanel(
       condition = paste0(
-        'output["', ns("show_site_custom"), '"] == "show"'
+        'output["', ns("show_custom"), '"] == "show"'
       ),
       fileInput(
         ns("site_custom"),
@@ -140,50 +143,36 @@ mod_upload_format_server <- function(id) {
     )
 
     # Toggle UI ----
-    # * Results ----
-    output$show_result_custom <- renderText({
-      req(input$result_format)
-      if (input$result_format == "custom") {
+    output$show_custom <- renderText({
+      req(input$in_format)
+      if (input$in_format == "custom") {
         "show"
       } else {
         "hide"
       }
     })
-    outputOptions(output, "show_result_custom", suspendWhenHidden = FALSE)
+    outputOptions(output, "show_custom", suspendWhenHidden = FALSE)
 
     output$show_result_upload <- renderText({
-      req(input$result_format)
-      chk <- !input$result_format %in% c("custom", "blank")
-      chk2 <- input$result_format == "custom" & !is.null(val$custom_result)
+      req(input$in_format)
+      chk <- input$in_format == "custom" & is.null(val$custom_result)
 
-      if (chk | chk2) {
-        return("show")
-      } else {
+      if (chk) {
         return("hide")
+      } else {
+        return("show")
       }
     })
     outputOptions(output, "show_result_upload", suspendWhenHidden = FALSE)
 
-    # * Sites ----
-    output$show_site_custom <- renderText({
-      req(input$site_format)
-      if (input$site_format == "custom") {
-        "show"
-      } else {
-        "hide"
-      }
-    })
-    outputOptions(output, "show_site_custom", suspendWhenHidden = FALSE)
-
     output$show_site_upload <- renderText({
-      req(input$site_format)
-      chk <- !input$site_format %in% c("custom", "blank")
-      chk2 <- input$site_format == "custom" & !is.null(val$custom_site)
+      req(input$in_format)
+      chk <- input$in_format == "custom" & is.null(val$custom_site)
 
-      if (chk | chk2) {
-        return("show")
-      } else {
+      if (chk) {
         return("hide")
+      } else {
+        return("show")
       }
     })
     outputOptions(output, "show_site_upload", suspendWhenHidden = FALSE)
@@ -221,7 +210,7 @@ mod_upload_format_server <- function(id) {
 
     # * Result Data ----
     observe({
-      req(input$result_format)
+      req(input$in_format)
       req(input$result_upload)
 
       val$message_log <- "Uploading result data..."
@@ -232,8 +221,9 @@ mod_upload_format_server <- function(id) {
           capture_local_messages(
             upload_custom_results(
               input$result_upload,
-              input$result_format,
-              val$custom_result
+              input$in_format,
+              custom_format = val$custom_result,
+              date_format = input$date_format
             )
           )
         },
@@ -286,7 +276,7 @@ mod_upload_format_server <- function(id) {
 
     # * Site Metadata ----
     observe({
-      req(input$site_format)
+      req(input$in_format)
       req(input$site_upload)
 
       val$message_log <- "Uploading site metadata..."
@@ -297,7 +287,7 @@ mod_upload_format_server <- function(id) {
           capture_local_messages(
             upload_custom_sites(
               input$site_upload,
-              input$site_format,
+              input$in_format,
               val$custom_site
             )
           )
@@ -328,7 +318,7 @@ mod_upload_format_server <- function(id) {
     })
 
     output$custom_result_status <- renderUI({
-      if (input$result_format == "custom") {
+      if (input$in_format == "custom") {
         fl_status(
           tester = FALSE,
           file_input = input$result_custom,
@@ -348,7 +338,7 @@ mod_upload_format_server <- function(id) {
     })
 
     output$custom_site_status <- renderUI({
-      if (input$site_format == "custom") {
+      if (input$in_format == "custom") {
         fl_status(
           tester = FALSE,
           file_input = input$site_custom,
