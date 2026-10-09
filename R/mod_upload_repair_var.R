@@ -30,7 +30,7 @@ mod_upload_repair_var_ui <- function(id) {
 #' @param id Namespace id for module. Should match `mod_upload_repair_ui()` id.
 #' @param dat_name String. Short dataframe name.
 #' @param val_log R6 class. Validation log and related functions.
-#' @param val_edit R6 class. Controls UI and modal visibility.
+#' @param val_visible R6 class. Controls UI and modal visibility.
 #' @param val_dat R6 class. Dataframes.
 #'
 #' @noRd
@@ -67,10 +67,10 @@ mod_upload_repair_var_server <- function(id, val_repair) {
         )
       )
     }) |>
-      bindEvent(gargoyle::watch("update_repair"))
+      bindEvent(gargoyle::watch("init_repair"))
 
     observe({
-      gargoyle::watch("update_repair")
+      gargoyle::watch("init_repair")
       gargoyle::watch("update_table")
 
       val_repair$df_var[input$dropdown$row, "Replace With"] <- input$dropdown$value

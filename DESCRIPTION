@@ -65,6 +65,7 @@ Imports:
     readxl,
     rlang,
     shiny,
+    shinyjs,
     shinyWidgets,
     stats,
     utils,

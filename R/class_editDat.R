@@ -1,5 +1,5 @@
-dfRepair <- R6::R6Class(
-  "dfRepair",
+editDat <- R6::R6Class(
+  "editDat",
   public = list(
     missing_col = NULL,
     problem_rows = NULL,
@@ -32,17 +32,18 @@ dfRepair <- R6::R6Class(
         self$df_row <- NULL
       } else {
         bad_rows <- parse_problem_rows(msg)
-        
+
         if (!is.null(raw_dat)) {
           raw_dat <- raw_dat |>
             dplyr::mutate("ID" = dplyr::row_number()) |>
+            dplyr::relocate("ID") |>
             dplyr::mutate("bad_row" = FALSE)
-          
+
           if (length(bad_rows) > 0) {
             raw_dat[bad_rows, "bad_row"] <- TRUE
           }
         }
-        
+
         self$missing_col <- NULL
         self$problem_rows <- bad_rows
 
@@ -51,13 +52,13 @@ dfRepair <- R6::R6Class(
         self$df_row <- raw_dat
       }
     },
-    edit_row = function(val, show_all) {
+    edit_row = function(val, filter_rows) {
       row_num <- val$row
 
-      if (!show_all) {
+      if (filter_rows) {
         # Find equivalent row number for filtered data
         dat <- dplyr::filter(self$df_row, .data$bad_row == TRUE)
-        id_num <- dat[row_num, "ID"]
+        id_num <- dat$ID[row_num]
         row_num <- which(self$df_row$ID == id_num)
       }
 

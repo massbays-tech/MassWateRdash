@@ -13,6 +13,7 @@ mod_upload_repair_row_ui <- function(id) {
 
   tagList(
     reactable.extras::reactable_extras_dependency(),
+    shinyjs::useShinyjs(),
     bslib::card(
       bslib::card_header(
         div(
@@ -51,32 +52,33 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
     output$problem_count <- renderText({
       paste(length(val_repair$problem_rows), "row(s) with issues")
     }) |>
-      bindEvent(gargoyle::watch("update_repair"))
+      bindEvent(gargoyle::watch("init_repair"))
 
-    # Init dataframe ----
-    observe({
-      req(val_repair$df_row)
+    # Set variables ----
+    filter_rows <- reactive({
+      bad_rows <- val_repair$problem_rows
+      if (isTruthy(input$show_all) | length(bad_rows) == 0) {
+        FALSE
+      } else {
+        TRUE
+      }
+    }) |>
+      bindEvent(gargoyle::watch("init_repair"), input$show_all)
 
-      dat <- val_repair$df_row |>
-        dplyr::mutate("bad_row" = FALSE)
+    dat_filter <- reactive({
+      gargoyle::watch("update_table")
 
-      problem_rows <- val_repair$problem_rows
-      if (length(problem_rows) > 0) {
-        dat[problem_rows, "bad_row"] <- TRUE
+      if (!filter_rows()) {
+        return (val_repair$df_row)
       }
 
-      val_repair$df_row <- dat
-
-      gargoyle::trigger("init_table")
-      gargoyle::trigger("update_table")
+      dplyr::filter(val_repair$df_row, .data$bad_row == TRUE)
     }) |>
-      bindEvent(gargoyle::watch("update_repair"))
+      bindEvent(gargoyle::watch("init_repair"), filter_rows())
 
-    # Create table ----
-    output$react_rows <- reactable::renderReactable({
-      req(val_repair$df_row)
-
-      dat <- dplyr::filter(val_repair$df_row, .data$bad_row == TRUE)
+    react_style <- reactive({
+      dat <- val_repair$df_row
+      req(dat)
 
       special_col <- c(
         "ID", "bad_row", "Activity Type", "Activity Depth/Height Unit",
@@ -86,8 +88,8 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
       col_list <- setdiff(colnames(dat), special_col)
 
       col_def <- list(
-        "ID" = reactable::colDef(show = FALSE),
-        "bad_row" = reactable::colDef(show = FALSE, )
+        "ID" = reactable::colDef(name = "Row"),
+        "bad_row" = reactable::colDef(show = FALSE)
       )
 
       for (i in col_list) {
@@ -160,9 +162,19 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
         )
       }
 
+      col_def
+    }) |>
+      bindEvent(gargoyle::watch("init_repair"))
+
+    # Create, update table ----
+    output$react_rows <- reactable::renderReactable({
+      # Reset cached values
+      # https://github.com/Appsilon/reactable.extras/issues/50
+      shinyjs::runjs("memory = {};")
+
       reactable::reactable(
-        dat,
-        columns = col_def,
+        dat_filter(),
+        columns = react_style(),
         rowStyle = htmlwidgets::JS(
           "function(rowInfo) {
               if (rowInfo.values['bad_row'] == true) {
@@ -172,66 +184,47 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
         )
       )
     }) |>
-      bindEvent(gargoyle::watch("init_table"))
-
-    # Update table ----
-    observe({
-      req(val_repair$df_row)
-
-      gargoyle::watch("update_table")
-
-      dat <- if (isTruthy(input$show_all)) {
-        val_repair$df_row
-      } else {
-        dplyr::filter(val_repair$df_row, .data$bad_row == TRUE)
-      }
-
-      reactable::updateReactable(
-        "react_rows",
-        data = dat
-      )
-    }) |>
-      bindEvent(input$show_all, gargoyle::watch("update_table"))
+      bindEvent(dat_filter(), react_style())
 
     # Update dataframe ----
     observe({
       gargoyle::watch("update_table")
-      val_repair$edit_row(input$var_text, input$show_all)
+      val_repair$edit_row(input$var_text, filter_rows())
       gargoyle::trigger("update_table")
     }) |>
       bindEvent(input$var_text)
 
     observe({
       gargoyle::watch("update_table")
-      val_repair$edit_row(input$var_activity, input$show_all)
+      val_repair$edit_row(input$var_activity, filter_rows())
       gargoyle::trigger("update_table")
     }) |>
       bindEvent(input$var_activity)
 
     observe({
       gargoyle::watch("update_table")
-      val_repair$edit_row(input$var_param, input$show_all)
+      val_repair$edit_row(input$var_param, filter_rows())
       gargoyle::trigger("update_table")
     }) |>
       bindEvent(input$var_param)
 
     observe({
       gargoyle::watch("update_table")
-      val_repair$edit_row(input$var_unit, input$show_all)
+      val_repair$edit_row(input$var_unit, filter_rows())
       gargoyle::trigger("update_table")
     }) |>
       bindEvent(input$var_unit)
 
     observe({
       gargoyle::watch("update_table")
-      val_repair$edit_row(input$var_depth, input$show_all)
+      val_repair$edit_row(input$var_depth, filter_rows())
       gargoyle::trigger("update_table")
     }) |>
       bindEvent(input$var_depth)
 
     observe({
       gargoyle::watch("update_table")
-      val_repair$edit_row(input$var_depth_unit, input$show_all)
+      val_repair$edit_row(input$var_depth_unit, filter_rows())
       gargoyle::trigger("update_table")
     }) |>
       bindEvent(input$var_depth_unit)

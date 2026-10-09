@@ -15,8 +15,8 @@ test_that("is_column_error works", {
 
 test_that("parse_problem_rows works", {
   expect_equal(
-    parse_problem_rows("row(s) 5, 7, 4"),
-    c(4, 5, 7)
+    parse_problem_rows("row(s) 41, 42, 52, 53, 2"),
+    c(41, 42, 52, 53)
   )
   expect_equal(
     parse_problem_rows("column(s) 5, 7, 4"),

@@ -59,10 +59,10 @@ mod_upload_repair_col_server <- function(id, val_repair) {
         )
       )
     }) |>
-      bindEvent(gargoyle::watch("update_repair"))
+      bindEvent(gargoyle::watch("init_repair"))
 
     observe({
-      gargoyle::watch("update_repair")
+      gargoyle::watch("init_repair")
       gargoyle::watch("update_table")
 
       val_repair$df_col[input$dropdown$row, "New Column Name"] <- input$dropdown$value
@@ -71,7 +71,7 @@ mod_upload_repair_col_server <- function(id, val_repair) {
       bindEvent(input$dropdown)
 
     observe({
-      gargoyle::watch("update_repair")
+      gargoyle::watch("init_repair")
       gargoyle::watch("update_table")
 
       val_repair$df_col[input$check$row, "Delete Column"] <- input$check$value

@@ -39,7 +39,15 @@ parse_problem_rows <- function(msg) {
   }
   nums <- gsub("row\\(s\\)\\s+", "", hits)
   rows <- suppressWarnings(as.integer(unlist(strsplit(nums, "[, ]+"))))
-  sort(unique(rows[!is.na(rows)]))
+  rows <- unique(rows[!is.na(rows)])
+
+  # Very long messages get truncated - check if final number was truncated
+  len_rows <- length(rows)
+  if (len_rows > 1 & rows[len_rows] < rows[len_rows - 1]) {
+    rows <- rows[1:len_rows - 1]
+  }
+
+  sort(rows)
 }
 
 # Parse column indices and a column->row cell map from a validation message.
@@ -247,7 +255,7 @@ update_hot_rows <- function(.data) {
 
 # Handle retry after user edits in handsontable
 # .data -- edited_df from previous function, but pipeable
-handle_retry <- function(.data, data_name, val_log, val_edit, val_dat) {
+handle_retry <- function(.data, data_name, val_log, val_visible, val_dat) {
   val_log$msg <- ""
   edited_df <- .data
 
@@ -269,7 +277,7 @@ handle_retry <- function(.data, data_name, val_log, val_edit, val_dat) {
   val_dat$msg <- val_log$msg
 
   if (!is.null(result)) {
-    val_edit[[data_name]] <- FALSE
+    val_visible[[data_name]] <- FALSE
     val_dat$raw_dat <- NULL
   }
 }
