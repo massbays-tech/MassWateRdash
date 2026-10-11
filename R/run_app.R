@@ -60,7 +60,66 @@ run_app <- function(...) {
          .irs--shiny .irs-handle { border-color: #00A4CF !important; background-color: #00A4CF !important; }
          .irs--shiny .irs-handle > i:first-child { background-color: #00A4CF !important; }
          .irs--shiny .irs-handle.state_hover, .irs--shiny .irs-handle:hover { background-color: #00A4CF !important; }
-         .irs--shiny .irs-from, .irs--shiny .irs-to, .irs--shiny .irs-single { background-color: #00A4CF !important; }"
+         .irs--shiny .irs-from, .irs--shiny .irs-to, .irs--shiny .irs-single { background-color: #00A4CF !important; }
+
+         /* sidebar scrollbar mod for easier selection */
+         .bslib-sidebar-layout .bslib-sidebar-resize-handle .resize-indicator {
+           right: -6px !important;
+         }
+         .bslib-sidebar-layout.sidebar-right .bslib-sidebar-resize-handle .resize-indicator {
+           right: auto !important;
+           left: -6px !important;
+         }
+         .bslib-sidebar-layout .bslib-sidebar-resize-handle::before {
+           left: calc(100% + 2px) !important;
+           width: 6px !important;
+         }
+         .bslib-sidebar-layout .bslib-sidebar-resize-handle.handle-active::before {
+           left: calc(100% + 2px) !important;
+           width: 18px !important;
+         }
+         .bslib-sidebar-layout.sidebar-right .bslib-sidebar-resize-handle::before {
+           left: auto !important;
+           right: calc(100% + 2px) !important;
+           width: 6px !important;
+         }
+         .bslib-sidebar-layout.sidebar-right .bslib-sidebar-resize-handle.handle-active::before {
+           left: auto !important;
+           right: calc(100% + 2px) !important;
+           width: 18px !important;
+         }
+         /* the actual draggable hit target is much wider than its visible
+            indicator and sits on top of (z-index 1001) the native scrollbar
+            track, capturing every click meant for the scrollbar. Shrink it
+            and shift it just past the sidebar's outer edge so it no longer
+            overlaps the scrollbar's pixels. */
+         .bslib-sidebar-layout .bslib-sidebar-resize-handle {
+           width: 8px !important;
+           transform: translateX(28px);
+         }
+         .bslib-sidebar-layout.sidebar-right .bslib-sidebar-resize-handle {
+           transform: translateX(-28px);
+         }
+
+         .bslib-sidebar-layout > .sidebar {
+           scrollbar-width: auto;
+           scrollbar-color: rgba(0, 0, 0, 0.35) transparent;
+         }
+         .bslib-sidebar-layout > .sidebar::-webkit-scrollbar {
+           width: 14px;
+         }
+         .bslib-sidebar-layout > .sidebar::-webkit-scrollbar-track {
+           background: transparent;
+         }
+         .bslib-sidebar-layout > .sidebar::-webkit-scrollbar-thumb {
+           background-color: rgba(0, 0, 0, 0.35);
+           border-radius: 7px;
+           border: 3px solid transparent;
+           background-clip: content-box;
+         }
+         .bslib-sidebar-layout > .sidebar::-webkit-scrollbar-thumb:hover {
+           background-color: rgba(0, 0, 0, 0.55);
+         }"
       ))
     ),
     footer = tagList(

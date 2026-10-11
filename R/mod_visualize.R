@@ -101,11 +101,7 @@ mod_visualize_ui <- function(id) {
               "Esri.WorldStreetMap", "Esri.DeLorme", "Esri.WorldTopoMap",
               "Esri.WorldImagery", "Esri.WorldTerrain",
               "Esri.WorldShadedRelief", "Esri.OceanBasemap",
-              "Esri.NatGeoWorldMap", "Esri.WorldGrayCanvas", "CartoDB.Positron",
-              "CartoDB.PositronNoLabels", "CartoDB.PositronOnlyLabels",
-              "CartoDB.DarkMatter", "CartoDB.DarkMatterNoLabels",
-              "CartoDB.DarkMatterOnlyLabels", "CartoDB.Voyager",
-              "CartoDB.VoyagerNoLabels", "CartoDB.VoyagerOnlyLabels"
+              "Esri.NatGeoWorldMap", "Esri.WorldGrayCanvas"
             )
           ),
           plotOutput(ns("map_plot"))
