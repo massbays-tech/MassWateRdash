@@ -32,12 +32,12 @@ parse_problem_rows <- function(msg) {
   }
   msg <- gsub("\033\\[[0-9;]*[mGKHFABCDJK]", "", msg)
   hits <- regmatches(
-    msg, gregexpr("row\\(s\\)\\s+([0-9, ]+)", msg, perl = TRUE)
+    msg, gregexpr("row\\(s\\):?\\s+([0-9, ]+)", msg, perl = TRUE)
   )[[1]]
   if (length(hits) == 0) {
     return(integer(0))
   }
-  nums <- gsub("row\\(s\\)\\s+", "", hits)
+  nums <- gsub("row\\(s\\):?\\s+", "", hits)
   rows <- suppressWarnings(as.integer(unlist(strsplit(nums, "[, ]+"))))
   sort(unique(rows[!is.na(rows)]))
 }
@@ -73,14 +73,16 @@ parse_error_locations <- function(msg, col_names = NULL) {
 
     pA <- regmatches(
       ln,
-      gregexpr("([^,\n]+?)\\s+\\(row\\(s\\)\\s+[\\d, ]+\\)", ln, perl = TRUE)
+      gregexpr("([^,\n]+?)\\s+\\(row\\(s\\):?\\s+[\\d, ]+\\)", ln, perl = TRUE)
     )[[1]]
     if (length(pA) > 0) {
       for (hit in pA) {
         col_nm <- trimws(sub("\\s*\\(row\\(s\\).*", "", hit))
-        rows_str <- regmatches(hit, regexpr("row\\(s\\)\\s+[\\d, ]+", hit))
+        rows_str <- regmatches(
+          hit, regexpr("row\\(s\\):?\\s+[\\d, ]+", hit, perl = TRUE)
+        )
         rows <- sort(unique(suppressWarnings(as.integer(
-          unlist(strsplit(gsub("row\\(s\\)\\s+", "", rows_str), "[, ]+"))
+          unlist(strsplit(gsub("row\\(s\\):?\\s+", "", rows_str), "[, ]+"))
         ))))
         rows <- rows[!is.na(rows)]
         if (nchar(col_nm) > 0 && length(rows) > 0) {
@@ -92,10 +94,10 @@ parse_error_locations <- function(msg, col_names = NULL) {
 
     if (!is.null(col_names)) {
       rows_str <- regmatches(
-        ln, gregexpr("row\\(s\\)\\s+[\\d, ]+", ln, perl = TRUE)
+        ln, gregexpr("row\\(s\\):?\\s+[\\d, ]+", ln, perl = TRUE)
       )[[1]]
       rows <- sort(unique(suppressWarnings(as.integer(
-        unlist(strsplit(gsub("row\\(s\\)\\s+", "", rows_str), "[, ]+"))
+        unlist(strsplit(gsub("row\\(s\\):?\\s+", "", rows_str), "[, ]+"))
       ))))
       rows <- rows[!is.na(rows)]
       if (length(rows) > 0) {

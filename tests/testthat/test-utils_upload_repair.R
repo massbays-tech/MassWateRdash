@@ -19,6 +19,10 @@ test_that("parse_problem_rows works", {
     c(4, 5, 7)
   )
   expect_equal(
+    parse_problem_rows("row(s): 5, 7, 4"),
+    c(4, 5, 7)
+  )
+  expect_equal(
     parse_problem_rows("column(s) 5, 7, 4"),
     integer(0)
   )
@@ -28,8 +32,43 @@ test_that("parse_problem_rows works", {
   )
 })
 
-# test_that("parse_error_locations works", {
-# })
+test_that("parse_error_locations works", {
+  # Pattern B: no column prefix pairing, "row(s): N, M" (colon variant), two
+  # columns named in the same line - e.g. checkMWRresults' depth data check
+  msg <- paste0(
+    "\tChecking depth data present...\n",
+    "\tNo data in Activity Depth/Height Measure and Activity Relative ",
+    "Depth Name on row(s): 8, 9"
+  )
+  col_names <- c(
+    "Activity Depth/Height Measure", "Activity Relative Depth Name"
+  )
+  locs <- parse_error_locations(msg, col_names)
+  expect_equal(locs$col_indices, integer(0))
+  expect_equal(locs$cell_map[["Activity Depth/Height Measure"]], c(8, 9))
+  expect_equal(locs$cell_map[["Activity Relative Depth Name"]], c(8, 9))
+
+  # Pattern B without colon
+  msg <- "\tIncorrect Activity Type found: bad in row(s) 3, 4"
+  locs <- parse_error_locations(msg, "Activity Type")
+  expect_equal(locs$cell_map[["Activity Type"]], c(3, 4))
+
+  # Pattern A: "ColName (row(s) N, M)" explicit pairing
+  msg <- "Parameter (row(s) 1, 2)"
+  locs <- parse_error_locations(msg)
+  expect_equal(locs$cell_map[["Parameter"]], c(1, 2))
+
+  # column index flagged via "(column N)"
+  msg <- "bad header (column 3)"
+  locs <- parse_error_locations(msg)
+  expect_equal(locs$col_indices, 3)
+
+  # no error message
+  expect_equal(
+    parse_error_locations(" "),
+    list(col_indices = integer(0), cell_map = list())
+  )
+})
 #
 #
 # test_that("handle_retry works", {
