@@ -141,15 +141,15 @@ run_app <- function(...) {
     ),
 
     bslib::nav_panel(
-      class = 'fill-height',
+      class = "fill-height",
       title = "Overview",
-      value = 'overview',
+      value = "overview",
       bslib::navset_card_underline(
         full_screen = TRUE,
-        height = '100%',
+        height = "100%",
         bslib::nav_panel(
-          title = '',
-          class = 'card-scroll',
+          title = "",
+          class = "card-scroll",
           shiny::includeMarkdown(app_sys("app/www/overview.md"))
         )
       )
@@ -207,9 +207,10 @@ run_app <- function(...) {
 
     # Show/hide nav items ---
     observe({
-      chk <- length(unlist(fsetls()))
+      # Check - how many items in fsetls are null?
+      fsetls <- fsetls()[sapply(fsetls(), is.null)]
 
-      if (chk < 6) {
+      if (length(fsetls) > 0) {
         bslib::nav_hide("navbar", "outlier")
         bslib::nav_hide("navbar", "qc")
         bslib::nav_hide("navbar", "wqx")
