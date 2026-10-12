@@ -112,7 +112,7 @@ mod_upload_format_ui <- function(id, in_modal = FALSE) {
     # Validation text ----
     bslib::card(
       bslib::card_header("Data Validation Messages"),
-      verbatimTextOutput(ns("validation_messages"), placeholder = FALSE)
+      uiOutput(ns("validation_messages"), placeholder = FALSE)
     )
   )
 
@@ -349,8 +349,8 @@ mod_upload_format_server <- function(id) {
       }
     })
 
-    output$validation_messages <- renderText({
-      val$message_log
+    output$validation_messages <- renderUI({
+      format_log(val$message_log)
     })
 
     # Return data ----

@@ -73,7 +73,9 @@ mod_upload_repair_var_server <- function(id, val_repair) {
       gargoyle::watch("init_repair")
       gargoyle::watch("update_table")
 
-      val_repair$df_var[input$dropdown$row, "Replace With"] <- input$dropdown$value
+      val <- input$dropdown
+      val_repair$df_var[val$row, "Replace With"] <- val$value
+
       gargoyle::trigger("update_table")
     }) |>
       bindEvent(input$dropdown)

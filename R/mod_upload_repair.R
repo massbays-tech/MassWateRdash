@@ -102,14 +102,12 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_visible, val_dat
     mod_upload_repair_row_server("repair_row", val_repair, dat_name)
 
     # Update tabs, variables ----
-    # When open editor, update val_dat & selected tab
-
+    # When open editor or upload data, update val_dat & selected tab
     observe({
-      gargoyle::watch("data_upload")
       val_repair$parse_msg(val_dat$msg, val_dat$raw_dat, dat_name)
       gargoyle::trigger("init_repair")
     }) |>
-      bindEvent(input$open_editor)
+      bindEvent(input$open_editor, gargoyle::watch("data_upload"))
 
     observe({
       tab <- if (!is.null(val_repair$df_col)) {

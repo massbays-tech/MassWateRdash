@@ -56,8 +56,8 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
 
     # Set variables ----
     filter_rows <- reactive({
-      bad_rows <- val_repair$problem_rows
-      if (isTruthy(input$show_all) | length(bad_rows) == 0) {
+      chk <- length(val_repair$problem_rows) == 0
+      if (isTruthy(input$show_all) | chk) {
         FALSE
       } else {
         TRUE
