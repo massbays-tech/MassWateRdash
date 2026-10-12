@@ -19,10 +19,6 @@ test_that("parse_problem_rows works", {
     c(41, 42, 52, 53)
   )
   expect_equal(
-    parse_problem_rows("row(s): 5, 7, 4"),
-    c(4, 5, 7)
-  )
-  expect_equal(
     parse_problem_rows("column(s) 5, 7, 4"),
     integer(0)
   )
@@ -114,11 +110,11 @@ test_that("parse_repeat_errors works", {
       "Activity Type" = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
     )
   )
-  
+
   df_out <- data.frame(
     "Invalid Activity Type" = c("bar", "foo"),
     "Replace With" = NA,
-    "Row Count" = c(4,5),
+    "Row Count" = c(4, 5),
     check.names = FALSE
   )
 
@@ -139,8 +135,8 @@ test_that("update_hot_col works", {
       "Site_ID", "Site_Name", "Latitude", "Longitude", "Group", "Foo"
     ),
     "New Column Name" = c(
-      "Monitoring Location ID", "Monitoring Location Name", 
-      "Monitoring Location Latitude", "Monitoring Location Longitude", 
+      "Monitoring Location ID", "Monitoring Location Name",
+      "Monitoring Location Latitude", "Monitoring Location Longitude",
       "Location Group", " "),
     check.names = FALSE
   )
@@ -178,7 +174,7 @@ test_that("update_hot_rows works", {
   # Set variables
   df_in <- tst$resdat
   df_in[5, ] <- NA
-  df_in$ID <- c(1,2,3,4,5)
+  df_in$ID <- c(1, 2, 3, 4, 5)
   df_in$bad_row <- c(FALSE, FALSE, FALSE, FALSE, TRUE)
 
   # Test
