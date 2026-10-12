@@ -168,7 +168,7 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
 
     # Create, update table ----
     output$react_rows <- reactable::renderReactable({
-      # Reset cached values
+      # Reset cached values - work around solution for major bug
       # https://github.com/Appsilon/reactable.extras/issues/50
       shinyjs::runjs("memory = {};")
 
