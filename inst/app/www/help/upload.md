@@ -1,7 +1,7 @@
 This tab is used to upload and format data used for the rest of the dashboard. Five types of data (six files) are used with the MassWateR package.  See the MassWateR <a href="https://massbays-tech.github.io/MassWateR/articles/inputs.html" target="_blank">inputs vignette</a> for detailed information on these files.
 
 1. Water quality **results** organized by sample location and date.
-2. Summary of data quality objectives that describe quality control **accuracy**, **frequency**, and **completeness** measures for data in the results file. These are separate files, one for accuracy and frequency and another for completeness.
+2. Summary of data quality objectives that describe quality control **accuracy**, **frequency**, and **completeness** measures for data in the results file. These are separate files, one for accuracy and another for frequency and completeness.
 3. A **site metadata** file, including location names, latitude, longitude, and additional grouping factors for sites.
 4. A **WQX metadata** file required for generating output to facilitate data upload to WQX. 
 5. Optional information on the number of **censored** or missing observations by parameter, used only in the quality control report. 
