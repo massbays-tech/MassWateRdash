@@ -98,7 +98,7 @@ mod_visualize_ui <- function(id) {
             choices = c(
               "none" = "NULL", "OpenStreetMap", "OpenStreetMap.DE",
               "OpenStreetMap.France", "OpenStreetMap.HOT", "OpenTopoMap",
-              "Esri.WorldStreetMap", "Esri.DeLorme", "Esri.WorldTopoMap",
+              "Esri.WorldStreetMap", "Esri.WorldTopoMap",
               "Esri.WorldImagery", "Esri.WorldTerrain",
               "Esri.WorldShadedRelief", "Esri.OceanBasemap",
               "Esri.NatGeoWorldMap", "Esri.WorldGrayCanvas"

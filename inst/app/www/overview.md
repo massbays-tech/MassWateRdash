@@ -6,7 +6,7 @@
 
 <a href='https://massbays-tech.github.io/MassWateR' target='_blank'><img src='toimg/logo.png' style='display: block; margin: 1rem auto 1.5rem auto; width: 180px;' /></a>
 
-**MassWateR** is an R package for quality control, analysis, and sharing of discrete surface water quality data. The package was created through partnership with the <a href='https://www.mass.gov/orgs/massachusetts-bays-national-estuary-partnership' target='_blank'>Mass Bays National Estuary Partnership</a>.
+This dashboard is a browser-based, step-by-step tool for using the **MassWateR** workflow. MassWateR is an R package for quality control, analysis, and sharing of discrete surface water quality data. The package was created through partnership with the <a href='https://www.mass.gov/orgs/massachusetts-bays-national-estuary-partnership' target='_blank'>Mass Bays National Estuary Partnership</a>.
 
 ### About this Dashboard
 
