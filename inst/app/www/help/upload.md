@@ -6,12 +6,12 @@ This tab is used to upload and format data used for the rest of the dashboard. F
 4. A **WQX metadata** file required for generating output to facilitate data upload to WQX. 
 5. Optional information on the number of **censored** or missing observations by parameter, used only in the quality control report. 
 
-The dashboard can be run in **test mode** by flipping the switch in the top left.  This loads pre-existing files to use with the package. 
-
 Choosing the option to **convert from another format** opens up a box to convert existing data into the format required by MassWateR.  This option makes use of the <a href="https://github.com/massbays-tech/wqformat" target="_blank">wqformat</a> package. 
 
 Uploading data files will run the standard suite of checks used by MassWateR that ensure the data are the correct format.  Please see the <a href="https://massbays-tech.github.io/MassWateR/articles/inputs.html" target="_blank">inputs vignette</a> for more information on these formats and the checks that are applied. Templates are available on the package's <a href="https://massbays-tech.github.io/MassWateR/RESOURCES.html" target="_blank">resources</a> page. An interactive popup will appear if the data require correction.  Follow the on-screen prompts to correct the data, then click "Try upload again" to load the corrected data from within the app.
 
 Input data can be downloaded in a zipped folder once uploaded by clicking the **Download data** button.  The button is only visible after data are uploaded.
+
+The dashboard can be run in **test mode** by flipping the switch at the very bottom of the sidebar, below the file inputs.  This loads pre-existing files to use with the package. 
 
 To see this text again, click the <i class="far fa-circle-question fa-lg" style="color: #007BC2;"></i> icon at the top left of the tab.

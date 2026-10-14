@@ -14,22 +14,12 @@ mod_upload_ui <- function(id) {
     bslib::page_sidebar(
       sidebar = bslib::sidebar(
         title = div(
-          style = "display: flex; justify-content: space-between; align-items: center;",
-          "Upload Data Files",
+          style = "display: flex; justify-content: space-between; align-items: center; gap: 12px;",
+          span(style = "white-space: nowrap; flex-shrink: 0;", "Upload Data Files"),
+          uiOutput(ns("download_data_btn")),
           help_btn(ns("show_help"))
         ),
         width = 500,
-        div(
-          style = "display: flex; align-items: center; gap: 12px;",
-          div(
-            style = "flex: 0 0 auto;",
-            shinyWidgets::materialSwitch(ns("tester"), "Test mode", FALSE)
-          ),
-          div(
-            style = "flex: 1;",
-            uiOutput(ns("download_data_btn"))
-          )
-        ),
         actionButton(
           ns("show_format_modal"),
           "Convert from another format",
@@ -67,7 +57,8 @@ mod_upload_ui <- function(id) {
           ns("censdat"),
           "Upload Censored Data (.xlsx) (optional)",
           accept = ".xlsx"
-        )
+        ),
+        shinyWidgets::materialSwitch(ns("tester"), "Test mode", FALSE)
       ),
       bslib::layout_columns(
         fill = FALSE,
@@ -403,7 +394,7 @@ mod_upload_server <- function(id, active_tab) {
       if (!any_loaded) {
         return(NULL)
       }
-      dl_btn(ns("download_data"), "Download data", size = "sm")
+      dl_btn(ns("download_data"), "Download data", block = FALSE, size = "sm")
     })
 
     output$download_data <- downloadHandler(
