@@ -80,19 +80,10 @@ dl_btn <- function(id, label, block = TRUE, size = "md") {
     block = block,
     size = size
   )
-  btn <- htmltools::tagAppendAttributes(
+  htmltools::tagAppendAttributes(
     btn,
     style = "background-color: #64C147 !important; border-color: #64C147 !important; color: white !important;"
   )
-
-  # shiny/shinyWidgets hardcode target="_blank" on the hidden download link,
-  # which is known to break downloads in Firefox (the new tab can lose the
-  # session before the file is ready, returning a 500). Removing it keeps
-  # the download in the current tab and works consistently across browsers.
-  htmltools::tagQuery(btn)$
-    find("a.shiny-download-link")$
-    removeAttrs("target")$
-    allTags()
 }
 
 #' Create tab help button

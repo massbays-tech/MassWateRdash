@@ -54,7 +54,7 @@ raw_read_fns <- list(
   censdat = function(path) readxl::read_excel(path, na = c("NA", "na", ""))
 )
 
-# Retry functions: run check + format on an edited data frame from handsontable
+# Retry functions: run check + format on an edited data frame from the repair editor
 retry_fns <- list(
   resdat = function(df) {
     if (

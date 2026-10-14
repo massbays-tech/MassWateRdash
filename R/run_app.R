@@ -23,17 +23,8 @@ run_app <- function(...) {
     id = "navbar",
     header = tags$head(
       tab_help_deps(),
-      tags$script(HTML(
-        "$(document).on('shown.bs.modal', function(e) {
-          $(e.target).find('.rhandsontable').each(function() {
-            var ht = HTMLWidgets.getInstance(this);
-            if (ht && ht.hot) { ht.hot.render(); }
-          });
-        });"
-      )),
       tags$style(HTML(
-        ".rhandsontable .htCore thead th { white-space: nowrap; }
-         .modal-dialog.modal-xl { max-width: 90vw; }
+        ".modal-dialog.modal-xl { max-width: 90vw; }
          .modal-title { flex-grow: 1; }
          .value-box-value { font-size: 1.5rem !important; }
          .fill-height { height: calc(100vh - 58px); overflow: hidden; }

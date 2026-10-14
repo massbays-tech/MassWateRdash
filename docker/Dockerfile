@@ -20,8 +20,8 @@ RUN R -e "install.packages('tinytex')" && \
 # CRAN packages not already in rocker/shiny-verse
 RUN R -e "install.packages(c( \
     'bslib', 'bsicons', 'here', 'shinyWidgets', \
-    'writexl', 'reactable', 'flextable', \
-    'markdown', 'rhandsontable', 'remotes', \
+    'writexl', 'reactable', 'reactable.extras', 'flextable', \
+    'markdown', 'remotes', 'shinyjs', \
     'config', 'gargoyle', 'golem', 'pkgload' \
   ), repos='https://packagemanager.posit.co/cran/latest')"
 

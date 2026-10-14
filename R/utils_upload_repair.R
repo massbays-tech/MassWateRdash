@@ -159,10 +159,10 @@ parse_repeat_errors <- function(dat, locs) {
 
 #' Update column names
 #'
-#' @description `update_hot_col()` parses a rhandsontable containing column
+#' @description `update_hot_col()` parses an edited table containing column
 #' names and updates the column names for `raw_dat`.
 #'
-#' @param .data Dataframe. Hot table containing updated column names.
+#' @param .data Dataframe. Edited table containing updated column names.
 #' @param raw_dat Dataframe containing raw data. This is the table that will be
 #' updated.
 #'
@@ -202,13 +202,10 @@ update_hot_col <- function(.data, raw_dat) {
 
 #' Update Variables
 #'
-#' @description `update_hot_var()` parses a rhandsontable containing variable
+#' @description `update_hot_var()` parses an edited table containing variable
 #' name substitutions and updates the variables in `raw_dat`.
 #'
-#' Temp note: `input$hot_var` should be run through `hot_to_r` before
-#' running this function; had trouble testing it otherwise.
-#'
-#' @param .data Dataframe. Hot table containing replacement variables. Must
+#' @param .data Dataframe. Edited table containing replacement variables. Must
 #' include the columns "Delete Rows", "Invalid [...]", and "Replace With".
 #' @param raw_dat Dataframe containing raw data. This is the table that will be
 #' updated.
@@ -236,11 +233,8 @@ update_hot_var <- function(.data, raw_dat) {
 
 #' Update Rows
 #'
-#' @description `update_hot_rows()` parses a rhandsontable containing substitute
+#' @description `update_hot_rows()` parses an edited table containing substitute
 #' rows and update `raw_dat`.
-#'
-#' Temp note: `input$hot_rows` should be run through `hot_to_r` before
-#' running this function; had trouble testing it otherwise.
 #'
 #' @param .data Dataframe.
 #'
@@ -255,7 +249,7 @@ update_hot_rows <- function(.data) {
   dat[!apply(is.na(dat) | dat == "" | dat == FALSE, 1, all), ]
 }
 
-# Handle retry after user edits in handsontable
+# Handle retry after user edits in the repair editor
 # .data -- edited_df from previous function, but pipeable
 handle_retry <- function(.data, data_name, val_log, val_visible, val_dat) {
   val_log$msg <- ""
