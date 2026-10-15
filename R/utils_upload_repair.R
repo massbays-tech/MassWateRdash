@@ -157,6 +157,24 @@ parse_repeat_errors <- function(dat, locs) {
     dplyr::mutate("Replace With" = NA, .before = "Row Count")
 }
 
+#' Generate list of suggested variables
+#'
+#' @description `list_vars()` generates a list of suggested variables for the
+#' various dropdowns used in `mod_upload_repair_row`.
+#'
+#' @param var_suggest List or string. Suggested variable names.
+#' @param var_other List or string. Variables actually present in column.
+#' Default value `NA`. `NA` values excluded from final list.
+#'
+#' @return List of variables suggested by MassWateR and/or already present in
+#' the target column.
+#'
+#' @noRd
+list_vars <- function(var_suggest, var_other = NA) {
+  x <- c(" ", var_suggest, sort(var_other))
+  unique(x)
+}
+
 #' Update column names
 #'
 #' @description `update_hot_col()` parses an edited table containing column

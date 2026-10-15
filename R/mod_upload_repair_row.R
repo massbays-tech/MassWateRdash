@@ -66,7 +66,7 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
       bindEvent(gargoyle::watch("init_repair"), input$show_all)
 
     dat_filter <- reactive({
-      gargoyle::watch("update_table")
+      gargoyle::watch("update_row")
 
       if (!filter_rows()) {
         return (val_repair$df_row)
@@ -102,23 +102,23 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
         col_def[["Activity Type"]] <- reactable::colDef(
           cell = reactable.extras::dropdown_extra(
             ns("var_activity"),
-            unique(c(" ", mwr_activity, dat$`Activity Type`)),
+            list_vars(mwr_activity, dat$`Activity Type`),
             class = "dropdown-extra"
           )
         )
         col_def[["Activity Depth/Height Unit"]] <- reactable::colDef(
           cell = reactable.extras::dropdown_extra(
             ns("var_depth_unit"),
-            unique(c(" ", "ft", "m", dat$`Activity Depth/Height Unit`)),
+            list_vars(c("ft", "m"), dat$`Activity Depth/Height Unit`),
             class = "dropdown-extra"
           )
         )
         col_def[["Activity Relative Depth Name"]] <- reactable::colDef(
           cell = reactable.extras::dropdown_extra(
             ns("var_depth"),
-            unique(
-              c(" ", "Surface", "Midwater", "Near Bottom", "Bottom",
-                dat$`Activity Relative Depth Name`)
+            list_vars(
+              c("Surface", "Midwater", "Bottom"),
+              dat$`Activity Relative Depth Name`
             ),
             class = "dropdown-extra"
           )
@@ -126,14 +126,14 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
         col_def[["Characteristic Name"]] <- reactable::colDef(
           cell = reactable.extras::dropdown_extra(
             ns("var_param"),
-            unique(c(" ", mwr_param, dat$`Characteristic Name`)),
+            list_vars(mwr_param, dat$`Characteristic Name`),
             class = "dropdown-extra"
           )
         )
         col_def[["Result Unit"]] <- reactable::colDef(
           cell = reactable.extras::dropdown_extra(
             ns("var_unit"),
-            unique(c(" ", mwr_unit, dat$`Result Unit`)),
+            list_vars(mwr_unit, dat$`Result Unit`),
             class = "dropdown-extra"
           )
         )
@@ -141,14 +141,14 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
         col_def[["Parameter"]] <- reactable::colDef(
           cell = reactable.extras::dropdown_extra(
             ns("var_param"),
-            unique(c(" ", mwr_param, dat$Parameter)),
+            list_vars(mwr_param, dat$Parameter),
             class = "dropdown-extra"
           )
         )
         col_def[["uom"]] <- reactable::colDef(
           cell = reactable.extras::dropdown_extra(
             ns("var_unit"),
-            unique(c(" ", mwr_unit, dat$uom)),
+            list_vars(mwr_unit, dat$uom),
             class = "dropdown-extra"
           )
         )
@@ -156,7 +156,7 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
         col_def[["Parameter"]] <- reactable::colDef(
           cell = reactable.extras::dropdown_extra(
             ns("var_param"),
-            unique(c(" ", mwr_param, dat$Parameter)),
+            list_vars(mwr_param, dat$Parameter),
             class = "dropdown-extra"
           )
         )
@@ -188,44 +188,44 @@ mod_upload_repair_row_server <- function(id, val_repair, dat_name) {
 
     # Update dataframe ----
     observe({
-      gargoyle::watch("update_table")
+      gargoyle::watch("update_row")
       val_repair$edit_row(input$var_text, filter_rows())
-      gargoyle::trigger("update_table")
+      gargoyle::trigger("update_row")
     }) |>
       bindEvent(input$var_text)
 
     observe({
-      gargoyle::watch("update_table")
+      gargoyle::watch("update_row")
       val_repair$edit_row(input$var_activity, filter_rows())
-      gargoyle::trigger("update_table")
+      gargoyle::trigger("update_row")
     }) |>
       bindEvent(input$var_activity)
 
     observe({
-      gargoyle::watch("update_table")
+      gargoyle::watch("update_row")
       val_repair$edit_row(input$var_param, filter_rows())
-      gargoyle::trigger("update_table")
+      gargoyle::trigger("update_row")
     }) |>
       bindEvent(input$var_param)
 
     observe({
-      gargoyle::watch("update_table")
+      gargoyle::watch("update_row")
       val_repair$edit_row(input$var_unit, filter_rows())
-      gargoyle::trigger("update_table")
+      gargoyle::trigger("update_row")
     }) |>
       bindEvent(input$var_unit)
 
     observe({
-      gargoyle::watch("update_table")
+      gargoyle::watch("update_row")
       val_repair$edit_row(input$var_depth, filter_rows())
-      gargoyle::trigger("update_table")
+      gargoyle::trigger("update_row")
     }) |>
       bindEvent(input$var_depth)
 
     observe({
-      gargoyle::watch("update_table")
+      gargoyle::watch("update_row")
       val_repair$edit_row(input$var_depth_unit, filter_rows())
-      gargoyle::trigger("update_table")
+      gargoyle::trigger("update_row")
     }) |>
       bindEvent(input$var_depth_unit)
 

@@ -121,6 +121,18 @@ test_that("parse_repeat_errors works", {
   expect_equal(parse_repeat_errors(df_res, locs), df_out)
 })
 
+test_that("list_vars works", {
+  expect_equal(
+    list_vars(c("foo", "bar"), c("foo", "owl", "foofy")),
+    c(" ", "foo", "bar", "foofy", "owl")
+  )
+  expect_equal(
+    list_vars(c("foo", "bar")),
+    c(" ", "foo", "bar")
+  )
+})
+
+
 test_that("update_hot_col works", {
   # Set variables
   df_bad <- tst$sitdat

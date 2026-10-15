@@ -45,12 +45,17 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_visible, val_dat
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Toggle edit button visibility
+    # Show/hide edit button -----
     output$show_btn <- renderText({
       val_visible[[dat_name]]
     }) |>
       bindEvent(gargoyle::watch("data_upload"))
     outputOptions(output, "show_btn", suspendWhenHidden = FALSE)
+
+    # R6, gargoyle, modules ----
+    val_repair <- editDat$new()
+    gargoyle::init("init_repair", "update_col", "update_var", "update_row")
+    mod_upload_repair_row_server("repair_row", val_repair, dat_name)
 
     # Create modal ----
     observe({
@@ -70,11 +75,18 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_visible, val_dat
             type = "hidden",
             tabPanelBody(
               "edit_col",
-              mod_upload_repair_col_ui(ns("repair_col"))
+              reactable.extras::reactable_extras_dependency(),
+              bslib::card(
+                bslib::card_header("Column Names"),
+                reactable::reactableOutput(ns("col_table"))
+              )
             ),
             tabPanelBody(
               "edit_var",
-              mod_upload_repair_var_ui(ns("repair_var"))
+              bslib::card(
+                bslib::card_header("Invalid Variables"),
+                reactable::reactableOutput(ns("var_table"))
+              )
             ),
             tabPanelBody(
               "edit_row",
@@ -94,18 +106,15 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_visible, val_dat
     }) |>
       bindEvent(input$open_editor)
 
-    # R6, gargoyle, modules ----
-    val_repair <- editDat$new()
-    gargoyle::init("init_repair", "update_table")
-    mod_upload_repair_col_server("repair_col", val_repair)
-    mod_upload_repair_var_server("repair_var", val_repair)
-    mod_upload_repair_row_server("repair_row", val_repair, dat_name)
-
     # Update tabs, variables ----
     # When open editor or upload data, update val_dat & selected tab
     observe({
       val_repair$parse_msg(val_dat$msg, val_dat$raw_dat, dat_name)
+
       gargoyle::trigger("init_repair")
+      gargoyle::trigger("update_col")
+      gargoyle::trigger("update_var")
+      gargoyle::trigger("update_row")
     }) |>
       bindEvent(input$open_editor, gargoyle::watch("data_upload"))
 
@@ -128,10 +137,99 @@ mod_upload_repair_server <- function(id, dat_name, val_log, val_visible, val_dat
     }) |>
       bindEvent(gargoyle::watch("data_upload"))
 
+    # Edit columns ----
+    output$col_table <- reactable::renderReactable({
+      if (is.null(val_repair$df_col)) {
+        return(NULL)
+      }
+
+      var_list <- c(" ", val_repair$missing_col)
+
+      reactable::reactable(
+        val_repair$df_col,
+        columns = list(
+          "Delete Column" = reactable::colDef(
+            cell = reactable.extras::checkbox_extra(
+              ns("del_col"), class = "checkbox-extra"
+            ),
+            align = "left"
+          ),
+          "New Column Name" = reactable::colDef(
+            cell = reactable.extras::dropdown_extra(
+              ns("new_col"), var_list, class = "dropdown-extra"
+            )
+          )
+        )
+      )
+    }) |>
+      bindEvent(gargoyle::watch("init_repair"))
+
+    observe({
+      gargoyle::watch("update_col")
+
+      val <- input$new_col
+      val_repair$df_col[val$row, "New Column Name"] <- val$value
+
+      gargoyle::trigger("update_col")
+    }) |>
+      bindEvent(input$new_col)
+
+    observe({
+      gargoyle::watch("update_col")
+
+      val <- input$del_col
+      val_repair$df_col[val$row, "Delete Column"] <- val$value
+
+      gargoyle::trigger("update_col")
+    }) |>
+      bindEvent(input$del_col)
+
+    # Mass edit variables ----
+    output$var_table <- reactable::renderReactable({
+      if (is.null(val_repair$df_var)) {
+        return(NULL)
+      }
+
+      target_col <- names(val_repair$locs$cell_map)[1]
+
+      var_list <- if (target_col == "Activity Type") {
+        c(" ", mwr_activity)
+      } else if (target_col == "Activity Depth/Height Unit") {
+        c(" ", "ft", "m")
+      } else if (target_col %in% c("Parameter", "Characteristic Name")) {
+        c(" ", mwr_param)
+      } else {
+        c(" ", mwr_unit)
+      }
+
+      reactable::reactable(
+        val_repair$df_var,
+        columns = list(
+          "Replace With" = reactable::colDef(
+            cell = reactable.extras::dropdown_extra(
+              ns("new_var"), var_list, class = "dropdown-extra"
+            )
+          )
+        )
+      )
+    }) |>
+      bindEvent(gargoyle::watch("init_repair"))
+
+    observe({
+      gargoyle::watch("update_var")
+
+      val <- input$new_var
+      val_repair$df_var[val$row, "Replace With"] <- val$value
+
+      gargoyle::trigger("update_var")
+    }) |>
+      bindEvent(input$new_var)
+
     # Retry ----
     observe({
-      gargoyle::watch("init_repair")
-      gargoyle::watch("update_table")
+      gargoyle::watch("update_col")
+      gargoyle::watch("update_var")
+      gargoyle::watch("update_row")
 
       if (input$tabset == "edit_col") {
         val_repair$df_col |>
