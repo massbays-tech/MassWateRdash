@@ -198,21 +198,27 @@ run_app <- function(...) {
 
     # Show/hide nav items ---
     observe({
-      # Check - how many items in fsetls are null?
       fsetls <- fsetls()
-      fsetls$cens <- NULL # exclude optional data from check
-      fsetls <- fsetls[sapply(fsetls, is.null)]
 
-      if (length(fsetls) > 0) {
-        bslib::nav_hide("navbar", "outlier")
-        bslib::nav_hide("navbar", "qc")
-        bslib::nav_hide("navbar", "wqx")
-        bslib::nav_hide("navbar", "visualize")
-      } else {
+      chk <- !is.null(fsetls$res) & !is.null(fsetls$sit)
+      chk2 <- !is.null(fsetls$acc) & !is.null(fsetls$frecom) &
+        !is.null(fsetls$wqx)
+
+      if (chk & chk2) {
         bslib::nav_show("navbar", "outlier")
         bslib::nav_show("navbar", "qc")
         bslib::nav_show("navbar", "wqx")
         bslib::nav_show("navbar", "visualize")
+      } else if (chk) {
+        bslib::nav_show("navbar", "outlier")
+        bslib::nav_hide("navbar", "qc")
+        bslib::nav_show("navbar", "wqx")
+        bslib::nav_show("navbar", "visualize")
+      } else {
+        bslib::nav_hide("navbar", "outlier")
+        bslib::nav_hide("navbar", "qc")
+        bslib::nav_hide("navbar", "wqx")
+        bslib::nav_hide("navbar", "visualize")
       }
     }) |>
       bindEvent(fsetls())
