@@ -66,7 +66,8 @@ mod_wqx_server <- function(id, fsetls, active_tab) {
         defaultColDef = reactable::colDef(
           resizable = TRUE
         ),
-        filterable = TRUE
+        filterable = TRUE,
+        pagination = FALSE
       )
     })
 
@@ -79,7 +80,8 @@ mod_wqx_server <- function(id, fsetls, active_tab) {
         defaultColDef = reactable::colDef(
           resizable = TRUE
         ),
-        filterable = TRUE
+        filterable = TRUE,
+        pagination = FALSE
       )
     })
 
@@ -92,7 +94,8 @@ mod_wqx_server <- function(id, fsetls, active_tab) {
         defaultColDef = reactable::colDef(
           resizable = TRUE
         ),
-        filterable = TRUE
+        filterable = TRUE,
+        pagination = FALSE
       )
     })
 
