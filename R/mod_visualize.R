@@ -260,10 +260,17 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
           min = 72,
           max = 600
         ),
+        numericInput(
+          ns("plot_fontsize"),
+          "Font size",
+          value = 18,
+          min = 6,
+          max = 36
+        ),
         selectInput(
           ns("plot_format"),
           "Format",
-          choices = c("PNG" = "png", "PDF" = "pdf", "SVG" = "svg")
+          choices = c("PNG" = "png", "JPG" = "jpg", "PDF" = "pdf", "SVG" = "svg")
         ),
         footer = tagList(
           dl_btn(ns("download_plot"), "Download"),
@@ -304,7 +311,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
             dtrng = date_range,
             site = sites,
             confint = confint,
-            bssize = 18
+            bssize = input$plot_fontsize
           ) +
             ggplot2::labs(title = NULL)
         } else if (viz == "Date") {
@@ -318,7 +325,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
             dtrng = date_range,
             site = sites,
             confint = confint,
-            bssize = 18
+            bssize = input$plot_fontsize
           ) +
             ggplot2::labs(title = NULL)
         } else if (viz == "Site") {
@@ -332,7 +339,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
             dtrng = date_range,
             site = sites,
             confint = confint,
-            bssize = 18
+            bssize = input$plot_fontsize
           ) +
             ggplot2::labs(title = NULL)
         } else {
@@ -347,7 +354,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
             site = sites,
             addwater = watsel,
             maptype = mapsel,
-            bssize = 18
+            bssize = input$plot_fontsize
           ) +
             ggplot2::labs(title = NULL)
         }

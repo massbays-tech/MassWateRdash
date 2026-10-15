@@ -41,6 +41,13 @@ mod_outlier_ui <- function(id) {
           ns("type"),
           "Plot type",
           choices = c("box", "jitterbox", "jitter")
+        ),
+        actionButton(
+          ns("open_plot_download"),
+          "Download plot",
+          icon = icon("download"),
+          width = "100%",
+          style = "background-color: #64C147; border-color: #64C147; color: white;"
         )
       ),
       bslib::navset_card_underline(
@@ -166,6 +173,85 @@ mod_outlier_server <- function(id, fsetls, active_tab) {
         filterable = TRUE
       )
     })
+
+    # Download plot ----
+    observe({
+      showModal(modalDialog(
+        title = "Download plot",
+        size = "s",
+        numericInput(
+          ns("plot_width"),
+          "Width (inches)",
+          value = 10,
+          min = 1,
+          max = 30
+        ),
+        numericInput(
+          ns("plot_height"),
+          "Height (inches)",
+          value = 6,
+          min = 1,
+          max = 30
+        ),
+        numericInput(
+          ns("plot_dpi"),
+          "Resolution (DPI)",
+          value = 150,
+          min = 72,
+          max = 600
+        ),
+        numericInput(
+          ns("plot_fontsize"),
+          "Font size",
+          value = 18,
+          min = 6,
+          max = 36
+        ),
+        selectInput(
+          ns("plot_format"),
+          "Format",
+          choices = c("PNG" = "png", "JPG" = "jpg", "PDF" = "pdf", "SVG" = "svg")
+        ),
+        footer = tagList(
+          dl_btn(ns("download_plot"), "Download"),
+          modalButton("Cancel")
+        ),
+        easyClose = TRUE
+      ))
+    }) |>
+      bindEvent(input$open_plot_download)
+
+    output$download_plot <- downloadHandler(
+      filename = function() {
+        paste0(input$param, "_outlier.", input$plot_format)
+      },
+      content = function(file) {
+        param <- input$param
+        date_range <- as.character(input$date_range)
+        group <- input$group
+        type <- input$type
+
+        p <- anlzMWRoutlier(
+          res = fsetls()$res,
+          param = param,
+          acc = fsetls()$acc,
+          group = group,
+          type = type,
+          dtrng = date_range,
+          bssize = input$plot_fontsize
+        ) +
+          ggplot2::labs(title = NULL)
+
+        ggplot2::ggsave(
+          filename = file,
+          plot = p,
+          width = input$plot_width,
+          height = input$plot_height,
+          dpi = input$plot_dpi,
+          device = input$plot_format
+        )
+      }
+    )
 
     # Download ----
     output$dl_word <- downloadHandler(
