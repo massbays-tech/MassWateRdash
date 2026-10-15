@@ -27,19 +27,6 @@ mod_qc_ui <- function(id) {
         )
       ),
       bslib::nav_panel(
-        "Accuracy",
-        bslib::navset_pill(
-          bslib::nav_panel(
-            "Percent",
-            reactable::reactableOutput(ns("tabaccper"))
-          ),
-          bslib::nav_panel(
-            "Summary",
-            reactable::reactableOutput(ns("tabaccsum"))
-          )
-        )
-      ),
-      bslib::nav_panel(
         "Frequency",
         bslib::navset_pill(
           bslib::nav_panel(
@@ -49,6 +36,19 @@ mod_qc_ui <- function(id) {
           bslib::nav_panel(
             "Summary",
             reactable::reactableOutput(ns("tabfresum"))
+          )
+        )
+      ),
+      bslib::nav_panel(
+        "Accuracy",
+        bslib::navset_pill(
+          bslib::nav_panel(
+            "Percent",
+            reactable::reactableOutput(ns("tabaccper"))
+          ),
+          bslib::nav_panel(
+            "Summary",
+            reactable::reactableOutput(ns("tabaccsum"))
           )
         )
       ),
