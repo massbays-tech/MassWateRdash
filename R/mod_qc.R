@@ -131,7 +131,7 @@ mod_qc_server <- function(id, fsetls, active_tab) {
         type = "percent",
         warn = F
       ) |>
-        flextable_to_reactable()
+        flextable_to_reactable(pagination = FALSE)
     })
 
     # frequency summary table
@@ -159,7 +159,7 @@ mod_qc_server <- function(id, fsetls, active_tab) {
         type = "percent",
         warn = F
       ) |>
-        flextable_to_reactable()
+        flextable_to_reactable(pagination = FALSE)
     })
 
     # accuracy table summary
@@ -187,7 +187,7 @@ mod_qc_server <- function(id, fsetls, active_tab) {
         warn = F,
         parameterwd = 1.15
       ) |>
-        flextable_to_reactable()
+        flextable_to_reactable(pagination = FALSE)
     })
 
     # individual field duplicates

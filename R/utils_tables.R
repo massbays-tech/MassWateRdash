@@ -14,11 +14,13 @@
 #' When set, rows are grouped by this column so the label stays attached to
 #' its block when the table is sorted by another column. `NULL` for tables
 #' with no such grouping column.
+#' @param pagination Logical. If `FALSE`, all rows are shown by default
+#' instead of paging.
 #'
 #' @return A reactable, or `NULL` if `ft` is `NULL`.
 #'
 #' @noRd
-flextable_to_reactable <- function(ft, group_by = NULL) {
+flextable_to_reactable <- function(ft, group_by = NULL, pagination = TRUE) {
   if (is.null(ft)) {
     return(NULL)
   }
@@ -109,6 +111,7 @@ flextable_to_reactable <- function(ft, group_by = NULL) {
     defaultExpanded = TRUE,
     bordered = TRUE,
     resizable = TRUE,
+    pagination = pagination,
     defaultColDef = reactable::colDef(minWidth = 110)
   )
 }
