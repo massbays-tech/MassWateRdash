@@ -199,7 +199,9 @@ run_app <- function(...) {
     # Show/hide nav items ---
     observe({
       # Check - how many items in fsetls are null?
-      fsetls <- fsetls()[sapply(fsetls(), is.null)]
+      fsetls <- fsetls()
+      fsetls$cens <- NULL # exclude optional data from check
+      fsetls <- fsetls[sapply(fsetls, is.null)]
 
       if (length(fsetls) > 0) {
         bslib::nav_hide("navbar", "outlier")
