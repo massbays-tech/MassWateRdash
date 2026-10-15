@@ -16,8 +16,8 @@ mod_upload_format_ui <- function(id, in_modal = FALSE) {
       ns("in_format"),
       label = "Select Input Format",
       choices = c(
-        "masswater", "MA_BRC", "ME_FOCB", "ME_DEP", "RI_DEM",
-        "RI_WW", "wqdashboard", "WQX", "custom"
+        "masswater", "ma_brc", "me_focb", "me_dep", "ri_dem",
+        "ri_ww", "wqdashboard", "wqx", "custom"
       ),
       choice_names = c(
         "MassWateR", "Blackstone River Coalition", "Friends of Casco Bay",
@@ -30,18 +30,15 @@ mod_upload_format_ui <- function(id, in_modal = FALSE) {
     dropdown(
       ns("date_format"),
       label = "Select Date Format",
-      choices = c(
-        "mdY", "mdy", "dmY", "dmy", "Ymd", "ymd", "mdYHM", "mdyHM", "dmYHM",
-        "dmyHM", "YmdHM", "ymdHM"
-      ),
+      choices = c("Y/m/d", "y/m/d", "m/d/Y", "m/d/y", "d/m/Y", "d/m/y"),
       choice_names = c(
-        "MM/DD/YYYY", "MM/DD/YY", "DD/MM/YYYY", "DD/MM/YY", "YYYY/MM/DD",
-        "YY/MM/DD", "MM/DD/YYYY H:M", "MM/DD/YY H:M",  "DD/MM/YYYY H:M",
-        "DD/MM/YY H:M", "YYYY/MM/DD H:M", "YY/MM/DD H:M"
+        "yyyy/mm/dd", "yy/mm/dd", "mm/dd/yyyy", "mm/dd/yy", "dd/mm/yyyy",
+        "dd/mm/yy"
       ),
       sorted = FALSE,
       multiple = FALSE
     ),
+    checkboxInput(ns("is_datetime"), "Date column includes time"),
     # * Results ----
     h2("Results Data"),
     conditionalPanel(
@@ -132,6 +129,8 @@ mod_upload_format_ui <- function(id, in_modal = FALSE) {
 #' @noRd
 mod_upload_format_server <- function(id) {
   moduleServer(id, function(input, output, session) {
+    ns <- session$ns
+
     # Set variables ----
     val <- reactiveValues(
       message_log = "",
@@ -145,6 +144,7 @@ mod_upload_format_server <- function(id) {
     # Toggle UI ----
     output$show_custom <- renderText({
       req(input$in_format)
+
       if (input$in_format == "custom") {
         "show"
       } else {
@@ -152,6 +152,17 @@ mod_upload_format_server <- function(id) {
       }
     })
     outputOptions(output, "show_custom", suspendWhenHidden = FALSE)
+
+    observe({
+      req(input$in_format)
+
+      if (input$in_format == "ma_brc") {
+        updateCheckboxInput(session, "is_datetime", value = TRUE)
+      } else if (input$in_format != "custom") {
+        updateCheckboxInput(session, "is_datetime", value = FALSE)
+      }
+    }) |>
+      bindEvent(input$in_format)
 
     output$show_result_upload <- renderText({
       req(input$in_format)
@@ -216,6 +227,12 @@ mod_upload_format_server <- function(id) {
       val$message_log <- "Uploading result data..."
       val$error_log <- ""
 
+      date_format <- if (isTruthy(input$is_datetime)) {
+        paste(input$date_format, "H:M")
+      } else {
+        input$date_format
+      }
+
       dat <- tryCatch(
         {
           capture_local_messages(
@@ -223,7 +240,7 @@ mod_upload_format_server <- function(id) {
               input$result_upload,
               input$in_format,
               custom_format = val$custom_result,
-              date_format = input$date_format
+              date_format = date_format
             )
           )
         },
