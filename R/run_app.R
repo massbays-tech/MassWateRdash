@@ -200,20 +200,26 @@ run_app <- function(...) {
     observe({
       fsetls <- fsetls()
 
-      chk <- !is.null(fsetls$res) & !is.null(fsetls$sit)
-      chk2 <- !is.null(fsetls$acc) & !is.null(fsetls$frecom) &
-        !is.null(fsetls$wqx)
+      chk <- !is.null(fsetls$res) & !is.null(fsetls$sit) & !is.null(fsetls$acc)
+      chk2 <- !is.null(fsetls$wqx)
 
-      if (chk & chk2) {
+      if (chk & chk2 & !is.null(fsetls$frecom)) {
         bslib::nav_show("navbar", "outlier")
         bslib::nav_show("navbar", "qc")
         bslib::nav_show("navbar", "wqx")
         bslib::nav_show("navbar", "visualize")
-      } else if (chk) {
+      } else if (chk & chk2) {
         bslib::nav_show("navbar", "outlier")
-        bslib::nav_hide("navbar", "qc")
         bslib::nav_show("navbar", "wqx")
         bslib::nav_show("navbar", "visualize")
+
+        bslib::nav_hide("navbar", "qc")
+      } else if (chk) {
+        bslib::nav_show("navbar", "outlier")
+        bslib::nav_show("navbar", "visualize")
+
+        bslib::nav_hide("navbar", "qc")
+        bslib::nav_hide("navbar", "wqx")
       } else {
         bslib::nav_hide("navbar", "outlier")
         bslib::nav_hide("navbar", "qc")
