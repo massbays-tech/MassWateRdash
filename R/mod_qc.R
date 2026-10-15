@@ -203,7 +203,7 @@ mod_qc_server <- function(id, fsetls, active_tab) {
         warn = F,
         caption = F
       ) |>
-        flextable_to_reactable(group_by = "Parameter")
+        flextable_to_reactable(group_by = "Parameter", pagination = FALSE)
     })
 
     # individual lab duplicates
@@ -219,7 +219,7 @@ mod_qc_server <- function(id, fsetls, active_tab) {
         warn = F,
         caption = F
       ) |>
-        flextable_to_reactable(group_by = "Parameter")
+        flextable_to_reactable(group_by = "Parameter", pagination = FALSE)
     })
 
     # individual field blanks
@@ -235,7 +235,7 @@ mod_qc_server <- function(id, fsetls, active_tab) {
         warn = F,
         caption = F
       ) |>
-        flextable_to_reactable(group_by = "Parameter")
+        flextable_to_reactable(group_by = "Parameter", pagination = FALSE)
     })
 
     # individual lab blanks
@@ -251,7 +251,7 @@ mod_qc_server <- function(id, fsetls, active_tab) {
         warn = F,
         caption = F
       ) |>
-        flextable_to_reactable(group_by = "Parameter")
+        flextable_to_reactable(group_by = "Parameter", pagination = FALSE)
     })
 
     # individual lab spikes/instrument checks
@@ -267,7 +267,7 @@ mod_qc_server <- function(id, fsetls, active_tab) {
         warn = F,
         caption = F
       ) |>
-        flextable_to_reactable(group_by = "Parameter")
+        flextable_to_reactable(group_by = "Parameter", pagination = FALSE)
     })
 
     # Download ----
