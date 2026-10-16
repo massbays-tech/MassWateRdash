@@ -23,6 +23,7 @@ run_app <- function(...) {
     id = "navbar",
     header = tags$head(
       tab_help_deps(),
+      shinyjs::useShinyjs(),
       tags$style(HTML(
         ".modal-dialog.modal-xl { max-width: 90vw; }
          .modal-title { flex-grow: 1; }
@@ -31,6 +32,8 @@ run_app <- function(...) {
          .card-scroll .card-body { overflow-y: auto; }
          .shiny-download-link:hover { filter: brightness(0.88); }
          #show_format_modal:hover, #open_plot_download:hover { filter: brightness(0.88); }
+         #open_text_size { color: rgba(0, 0, 0, 0.65) !important; }
+         #open_text_size:hover { color: #00A4CF !important; }
          :root { --bs-primary: #00A4CF; --bs-primary-rgb: 0, 164, 207; }
          .progress-bar { background-color: #00A4CF !important; }
          .nav-pills .nav-link.active { background-color: #00A4CF !important; }
@@ -176,6 +179,16 @@ run_app <- function(...) {
     bslib::nav_spacer(),
 
     bslib::nav_item(
+      actionButton(
+        "open_text_size",
+        label = NULL,
+        icon = icon("gear"),
+        class = "btn btn-link",
+        title = "Text size settings"
+      )
+    ),
+
+    bslib::nav_item(
       tags$a(
         href = "https://github.com/massbays-tech/MassWateRdash",
         target = "_blank",
@@ -188,6 +201,38 @@ run_app <- function(...) {
   server <- function(input, output, session) {
     # Active tab ----
     active_tab <- reactive(input$navbar)
+
+    # Text size ----
+    observe({
+      current <- if (is.null(input$text_size)) 100 else input$text_size
+
+      showModal(modalDialog(
+        title = "Text size",
+        size = "s",
+        sliderInput(
+          "text_size",
+          NULL,
+          min = 50,
+          max = 150,
+          value = current,
+          step = 10,
+          post = "%",
+          width = "100%"
+        ),
+        easyClose = TRUE,
+        footer = modalButton("Close")
+      ))
+    }) |>
+      bindEvent(input$open_text_size)
+
+    observe({
+      req(input$text_size)
+
+      shinyjs::runjs(
+        paste0("document.documentElement.style.fontSize = '", input$text_size, "%';")
+      )
+    }) |>
+      bindEvent(input$text_size)
 
     # Modules ----
     fsetls <- mod_upload_server("upload", active_tab)
