@@ -83,7 +83,16 @@ mod_qc_ui <- function(id) {
       ),
       bslib::nav_panel(
         "Report",
-        dl_btn(ns("dl_qc"), "Download quality control report")
+        dl_btn(ns("dl_qc"), "Download quality control report"),
+        div(
+          style = "display: flex; justify-content: center;
+                   white-space: nowrap; margin-top: 10px;",
+          checkboxInput(
+            ns("qc_savesheet"),
+            "Also include a spreadsheet (.xlsx) of the report tables",
+            value = FALSE
+          )
+        )
       )
     )
   )
@@ -273,14 +282,34 @@ mod_qc_server <- function(id, fsetls, active_tab) {
     # Download ----
     output$dl_qc <- downloadHandler(
       filename = function() {
-        "qcreport.docx"
+        if (isTRUE(input$qc_savesheet)) "qcreport.zip" else "qcreport.docx"
       },
       content = function(file) {
+        if (!isTRUE(input$qc_savesheet)) {
+          qcMWRreview(
+            fset = fsetls(),
+            output_dir = dirname(file),
+            output_file = basename(file)
+          )
+          return(invisible())
+        }
+
+        # qcMWRreview() with savesheet = TRUE writes both a .docx and .xlsx
+        # to output_dir, but a downloadHandler can only deliver one file, so
+        # generate both to a scratch dir and zip them for download
+        tmp_dir <- tempfile("qcreport_")
+        dir.create(tmp_dir)
+        on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
         qcMWRreview(
           fset = fsetls(),
-          output_dir = dirname(file),
-          output_file = basename(file)
+          output_dir = tmp_dir,
+          output_file = "qcreport.docx",
+          savesheet = TRUE
         )
+
+        fls <- list.files(tmp_dir, full.names = TRUE)
+        utils::zip(zipfile = file, files = fls, flags = "-qj")
       }
     )
   })
