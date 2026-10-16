@@ -41,6 +41,7 @@
 #' @importFrom shiny downloadButton
 #' @importFrom shiny downloadHandler
 #' @importFrom shiny fileInput
+#' @importFrom shiny freezeReactiveValue
 #' @importFrom shiny h2
 #' @importFrom shiny HTML
 #' @importFrom shiny htmlOutput

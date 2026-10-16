@@ -1,6 +1,6 @@
 This tab is used to visualize results from your input data files.  See the MassWateR <a href="https://massbays-tech.github.io/MassWateR/articles/analysis.html" target="_blank">analysis vignette</a> for detailed information on the plots and methods used to create them.
 
-The controls on the left sidebar can be used to select the parameter, date range, sites, threshold type (as a line on the plot), and plot type (e.g., boxplot, barplot, etc.).  These options will change based on the selected sub-tab on the right.  A download button can be used to download an image of the visible plot.
+The controls on the left sidebar can be used to select the parameter, date range, sites, location group (if available in the Site Data file, allows site grouping/selection by common location), threshold type (as a line on the plot), and plot type (e.g., boxplot, barplot, etc.).  These options will change based on the selected sub-tab on the right.  A download button can be used to download an image of the visible plot.
 
 Four types of plots can be viewed with the right sub-tabs:
 
