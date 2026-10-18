@@ -46,7 +46,6 @@ dropdown <- function(
     selected = selected,
     options = list(
       `actions-box` = allow_actions,
-      `live-search` = TRUE,
       `selected-text-format` = "count > 1",
       `max-options` = max_options,
       container = "body"

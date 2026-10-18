@@ -7,7 +7,6 @@ test_that("dropdown works", {
     selected = c("a", "b", "c"),
     options = list(
       `actions-box` = TRUE,
-      `live-search` = TRUE,
       `selected-text-format` = "count > 1",
       `max-options` = NULL,
       container = "body"
@@ -35,7 +34,6 @@ test_that("dropdown works", {
     selected = "Struthio casuarius",
     options = list(
       `actions-box` = FALSE,
-      `live-search` = TRUE,
       `selected-text-format` = "count > 1",
       `max-options` = NULL,
       container = "body"
@@ -65,7 +63,6 @@ test_that("dropdown works", {
     selected = "c",
     options = list(
       `actions-box` = FALSE,
-      `live-search` = TRUE,
       `selected-text-format` = "count > 1",
       `max-options` = 2,
       container = "body"
