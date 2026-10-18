@@ -243,33 +243,28 @@ run_app <- function(...) {
 
     # Show/hide nav items ---
     observe({
-      fsetls <- fsetls()
+      fls <- fsetls()
 
-      chk <- !is.null(fsetls$res) & !is.null(fsetls$sit) & !is.null(fsetls$acc)
-      chk2 <- !is.null(fsetls$wqx)
+      has_res <- !is.null(fls$res)
+      has_acc <- !is.null(fls$acc)
+      has_frecom <- !is.null(fls$frecom)
+      has_sit <- !is.null(fls$sit)
+      has_wqx <- !is.null(fls$wqx)
 
-      if (chk & chk2 & !is.null(fsetls$frecom)) {
-        bslib::nav_show("navbar", "outlier")
-        bslib::nav_show("navbar", "qc")
-        bslib::nav_show("navbar", "wqx")
-        bslib::nav_show("navbar", "visualize")
-      } else if (chk & chk2) {
-        bslib::nav_show("navbar", "outlier")
-        bslib::nav_show("navbar", "wqx")
-        bslib::nav_show("navbar", "visualize")
+      # censdat is optional and not a requirement for the qc tab
+      show <- list(
+        outlier = has_res & has_acc,
+        qc = has_res & has_acc & has_frecom,
+        wqx = has_res & has_acc & has_sit & has_wqx,
+        visualize = has_res & has_acc & has_sit
+      )
 
-        bslib::nav_hide("navbar", "qc")
-      } else if (chk) {
-        bslib::nav_show("navbar", "outlier")
-        bslib::nav_show("navbar", "visualize")
-
-        bslib::nav_hide("navbar", "qc")
-        bslib::nav_hide("navbar", "wqx")
-      } else {
-        bslib::nav_hide("navbar", "outlier")
-        bslib::nav_hide("navbar", "qc")
-        bslib::nav_hide("navbar", "wqx")
-        bslib::nav_hide("navbar", "visualize")
+      for (tab in names(show)) {
+        if (show[[tab]]) {
+          bslib::nav_show("navbar", tab)
+        } else {
+          bslib::nav_hide("navbar", tab)
+        }
       }
     }) |>
       bindEvent(fsetls())
