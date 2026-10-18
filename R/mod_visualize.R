@@ -35,10 +35,24 @@ mod_visualize_ui <- function(id) {
         dropdown(ns("sites"), "Select sites", choices = NULL),
         conditionalPanel(
           condition = paste0(
-            'output["', ns("has_locgroup"), '"] == "TRUE" && output["',
-            ns("tab_name"), '"] != "Date"'
+            'output["', ns("has_locgroup"), '"] == "TRUE"'
           ),
           dropdown(ns("locgroup"), "Location group", choices = NULL)
+        ),
+        conditionalPanel(
+          condition = paste0(
+            'output["', ns("has_resultatt"), '"] == "TRUE"'
+          ),
+          dropdown(ns("resultatt"), "Result attribute", choices = NULL)
+        ),
+        conditionalPanel(
+          condition = paste0(
+            'output["', ns("has_resultatt"), '"] == "TRUE" && output["',
+            ns("tab_name"), '"] == "Site"'
+          ),
+          checkboxInput(
+            ns("byresultatt"), "Group sites by result attribute"
+          )
         ),
         conditionalPanel(
           condition = paste0('output["', ns("tab_name"), '"] != "Map"'),
@@ -61,7 +75,7 @@ mod_visualize_ui <- function(id) {
           selectInput(
             ns("group"),
             "Plot grouping",
-            choices = c("site", "locgroup", "all")
+            choices = c("site", "Location group" = "locgroup", "all")
           )
         ),
         conditionalPanel(
@@ -202,6 +216,27 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         valid_sites <- setdiff(valid_sites, excluded_sites)
       }
 
+      res_all <- fsetls()$res
+      if (
+        "Result Attribute" %in% names(res_all) && length(input$resultatt) > 0
+      ) {
+        # keep a site if it has at least one row with no attribute (not
+        # covered by the filter) or one matching the selected attribute(s)
+        qualifying_sites <- res_all |>
+          dplyr::filter(
+            .data$`Characteristic Name` == param,
+            .data$`Activity Start Date` >= date_range[1],
+            .data$`Activity Start Date` <= date_range[2],
+            is.na(.data$`Result Attribute`) |
+              trimws(.data$`Result Attribute`) == "" |
+              .data$`Result Attribute` %in% input$resultatt
+          ) |>
+          dplyr::pull(.data$`Monitoring Location ID`) |>
+          unique()
+
+        valid_sites <- intersect(valid_sites, qualifying_sites)
+      }
+
       valid_sites <- sort(valid_sites)
 
       freezeReactiveValue(input, "sites")
@@ -212,7 +247,8 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       )
     }) |>
       bindEvent(
-        fsetls()$res, input$param, input$date_range, input$locgroup
+        fsetls()$res, input$param, input$date_range, input$locgroup,
+        input$resultatt
       )
 
     # Location group ----
@@ -267,7 +303,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
 
     observe({
       choices <- if (length(locgroup_vals()) > 0) {
-        c("site", "locgroup", "all")
+        c("site", "Location group" = "locgroup", "all")
       } else {
         c("site", "all")
       }
@@ -283,6 +319,65 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       )
     }) |>
       bindEvent(locgroup_vals())
+
+    # Result attribute ----
+    resultatt_vals <- reactive({
+      res <- fsetls()$res
+      param <- input$param
+      date_range <- input$date_range
+
+      if (
+        is.null(res) || !"Result Attribute" %in% names(res) ||
+          is.null(param) || is.null(date_range)
+      ) {
+        return(character(0))
+      }
+
+      dat <- res |>
+        dplyr::filter(
+          .data$`Characteristic Name` == param,
+          .data$`Activity Start Date` >= date_range[1],
+          .data$`Activity Start Date` <= date_range[2]
+        )
+
+      # narrow further by the currently selected location group(s), same
+      # candidate-site logic used by locgroup_vals()
+      sit <- fsetls()$sit
+      if (
+        !is.null(sit) && "Location Group" %in% names(sit) &&
+          length(input$locgroup) > 0
+      ) {
+        excluded_sites <- sit |>
+          dplyr::filter(!.data$`Location Group` %in% input$locgroup) |>
+          dplyr::pull(.data$`Monitoring Location ID`) |>
+          unique()
+
+        dat <- dat |>
+          dplyr::filter(!.data$`Monitoring Location ID` %in% excluded_sites)
+      }
+
+      vals <- trimws(dat$`Result Attribute`)
+      vals[!is.na(vals) & vals != ""] |>
+        unique() |>
+        sort()
+    })
+
+    output$has_resultatt <- renderText({
+      paste(length(resultatt_vals()) > 0)
+    })
+    outputOptions(output, "has_resultatt", suspendWhenHidden = FALSE)
+
+    observe({
+      vals <- resultatt_vals()
+
+      freezeReactiveValue(input, "resultatt")
+      shinyWidgets::updatePickerInput(
+        inputId = "resultatt",
+        choices = vals,
+        selected = vals
+      )
+    }) |>
+      bindEvent(resultatt_vals())
 
     output$tab_name <- renderText({
       input$viz_selected
@@ -399,6 +494,11 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         thresh <- if (is.null(input$thresh)) "none" else input$thresh
         confint <- isTRUE(as.logical(input$confint))
         locgroup <- if (length(input$locgroup) == 0) NULL else input$locgroup
+        resultatt <- if (length(input$resultatt) == 0) {
+          NULL
+        } else {
+          input$resultatt
+        }
 
         p <- if (viz == "Season") {
           anlzMWRseason(
@@ -411,6 +511,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
             dtrng = date_range,
             site = sites,
             locgroup = locgroup,
+            resultatt = resultatt,
             confint = confint,
             bssize = input$plot_fontsize
           ) +
@@ -425,6 +526,8 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
             group = input$group,
             dtrng = date_range,
             site = sites,
+            locgroup = locgroup,
+            resultatt = resultatt,
             confint = confint,
             bssize = input$plot_fontsize
           ) +
@@ -440,6 +543,8 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
             dtrng = date_range,
             site = sites,
             locgroup = locgroup,
+            resultatt = resultatt,
+            byresultatt = isTRUE(input$byresultatt),
             confint = confint,
             bssize = input$plot_fontsize
           ) +
@@ -455,6 +560,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
             dtrng = date_range,
             site = sites,
             locgroup = locgroup,
+            resultatt = resultatt,
             addwater = watsel,
             maptype = mapsel,
             bssize = input$plot_fontsize
@@ -483,6 +589,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       type <- input$type
       confint <- isTRUE(as.logical(input$confint))
       locgroup <- if (length(input$locgroup) == 0) NULL else input$locgroup
+      resultatt <- if (length(input$resultatt) == 0) NULL else input$resultatt
 
       req(fsetls()$res, fsetls()$acc, param, date_range, sites)
 
@@ -496,6 +603,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         dtrng = date_range,
         site = sites,
         locgroup = locgroup,
+        resultatt = resultatt,
         confint = confint,
         bssize = 18,
         warn = FALSE
@@ -511,6 +619,8 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       sites <- input$sites
       group <- input$group
       confint <- isTRUE(as.logical(input$confint))
+      locgroup <- if (length(input$locgroup) == 0) NULL else input$locgroup
+      resultatt <- if (length(input$resultatt) == 0) NULL else input$resultatt
 
       req(fsetls()$res, fsetls()$acc, param, date_range, sites)
 
@@ -523,6 +633,8 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         group = group,
         dtrng = date_range,
         site = sites,
+        locgroup = locgroup,
+        resultatt = resultatt,
         confint = confint,
         bssize = 18,
         warn = FALSE
@@ -539,6 +651,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       type <- input$type
       confint <- isTRUE(as.logical(input$confint))
       locgroup <- if (length(input$locgroup) == 0) NULL else input$locgroup
+      resultatt <- if (length(input$resultatt) == 0) NULL else input$resultatt
 
       req(fsetls()$res, fsetls()$acc, param, date_range, sites)
 
@@ -552,6 +665,8 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         dtrng = date_range,
         site = sites,
         locgroup = locgroup,
+        resultatt = resultatt,
+        byresultatt = isTRUE(input$byresultatt),
         confint = confint,
         bssize = 18,
         warn = FALSE
@@ -567,6 +682,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       watsel <- input$watsel
       mapsel <- input$mapsel
       locgroup <- if (length(input$locgroup) == 0) NULL else input$locgroup
+      resultatt <- if (length(input$resultatt) == 0) NULL else input$resultatt
 
       req(fsetls()$res, fsetls()$acc, fsetls()$sit, param, date_range, sites)
 
@@ -585,6 +701,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         dtrng = date_range,
         site = sites,
         locgroup = locgroup,
+        resultatt = resultatt,
         addwater = watsel,
         maptype = mapsel,
         bssize = 18,
