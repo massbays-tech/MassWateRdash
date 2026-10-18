@@ -64,7 +64,8 @@ mod_upload_ui <- function(id) {
         fill = FALSE,
         bslib::value_box(
           title = "Results Data",
-          value = htmlOutput(ns("resdat_status"))
+          value = htmlOutput(ns("resdat_status")),
+          uiOutput(ns("resview_btn"))
         ),
         bslib::value_box(
           title = "Accuracy Data",
@@ -421,6 +422,51 @@ mod_upload_server <- function(id, active_tab) {
         old_wd <- setwd(tmp_dir)
         on.exit(setwd(old_wd), add = TRUE)
         utils::zip(file, list.files(tmp_dir))
+      }
+    )
+
+    # Results summary view ----
+    output$resview_btn <- renderUI({
+      gargoyle::watch("data_upload")
+
+      any_loaded <- isTRUE(input$tester) || !is.null(val_res$dat)
+      if (!any_loaded) {
+        return(NULL)
+      }
+      dl_btn(ns("dl_resview"), "All unique values", block = TRUE, size = "xs") |>
+        htmltools::tagAppendAttributes(
+          title = "Download a spreadsheet of unique values in each results column"
+        )
+    })
+
+    output$dl_resview <- downloadHandler(
+      filename = function() {
+        "resultsview.xlsx"
+      },
+      content = function(file) {
+        respth <- if (isTRUE(input$tester)) {
+          system.file("extdata", "ExampleResults.xlsx", package = "MassWateR")
+        } else {
+          input$resdat$datapath
+        }
+
+        # readMWRresultsview() always writes a .csv regardless of the
+        # extension in output_file, so re-save it as a real .xlsx
+        tmp_dir <- tempfile("resultsview_")
+        dir.create(tmp_dir)
+        on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
+        readMWRresultsview(
+          respth = respth,
+          output_dir = tmp_dir,
+          output_file = "resultsview.csv"
+        )
+
+        dat <- utils::read.csv(
+          file.path(tmp_dir, "resultsview.csv"),
+          check.names = FALSE
+        )
+        writexl::write_xlsx(dat, path = file)
       }
     )
 

@@ -12,6 +12,8 @@ Uploading data files will run the standard suite of checks used by MassWateR tha
 
 Input data can be downloaded in a zipped folder once uploaded by clicking the **Download data** button.  The button is only visible after data are uploaded.
 
+Once the results data are uploaded, a spreadsheet can be downloaded that shows the unique values in each column by clicking the download button in the status box for the upload.  See the <a href="https://massbays-tech.github.io/MassWateR/reference/readMWRresultsview.html" target="_blank">help file</a> for the corresponding MassWateR function for more information. 
+
 The dashboard can be run in **test mode** by flipping the switch at the very bottom of the sidebar, below the file inputs.  This loads pre-existing files to use with the package. 
 
 To see this text again, click the <i class="far fa-circle-question fa-lg" style="color: #007BC2;"></i> icon at the top left of the tab.

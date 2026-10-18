@@ -24,6 +24,7 @@
 #' @importFrom MassWateR readMWRcens
 #' @importFrom MassWateR readMWRfrecom
 #' @importFrom MassWateR readMWRresults
+#' @importFrom MassWateR readMWRresultsview
 #' @importFrom MassWateR readMWRsites
 #' @importFrom MassWateR readMWRwqx
 #' @importFrom MassWateR tabMWRacc
