@@ -26,6 +26,12 @@ test_that("parse_problem_rows works", {
     parse_problem_rows(" "),
     integer(0)
   )
+  # a single matched row previously crashed the truncation check with
+  # "argument is of length zero" (rows[len_rows - 1] indexed rows[0])
+  expect_equal(
+    parse_problem_rows("Incorrect entries in Result Value found: 33x in row(s) 4"),
+    4L
+  )
 })
 
 test_that("parse_error_locations works", {

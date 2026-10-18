@@ -43,7 +43,7 @@ parse_problem_rows <- function(msg) {
 
   # Very long messages get truncated - check if final number was truncated
   len_rows <- length(rows)
-  if (len_rows > 1 & rows[len_rows] < rows[len_rows - 1]) {
+  if (len_rows > 1 && rows[len_rows] < rows[len_rows - 1]) {
     rows <- rows[1:len_rows - 1]
   }
 
