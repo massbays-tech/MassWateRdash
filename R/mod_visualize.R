@@ -303,7 +303,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
 
     observe({
       choices <- if (length(locgroup_vals()) > 0) {
-        c("site", "Location group" = "locgroup", "all")
+        c("site", "location group" = "locgroup", "all")
       } else {
         c("site", "all")
       }
@@ -591,7 +591,11 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       locgroup <- if (length(input$locgroup) == 0) NULL else input$locgroup
       resultatt <- if (length(input$resultatt) == 0) NULL else input$resultatt
 
-      req(fsetls()$res, fsetls()$acc, param, date_range, sites)
+      req(
+        fsetls()$res, fsetls()$acc, param, date_range, sites,
+        length(locgroup_vals()) == 0 || length(input$locgroup) > 0,
+        length(resultatt_vals()) == 0 || length(input$resultatt) > 0
+      )
 
       anlzMWRseason(
         res = fsetls()$res,
@@ -622,7 +626,11 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       locgroup <- if (length(input$locgroup) == 0) NULL else input$locgroup
       resultatt <- if (length(input$resultatt) == 0) NULL else input$resultatt
 
-      req(fsetls()$res, fsetls()$acc, param, date_range, sites)
+      req(
+        fsetls()$res, fsetls()$acc, param, date_range, sites,
+        length(locgroup_vals()) == 0 || length(input$locgroup) > 0,
+        length(resultatt_vals()) == 0 || length(input$resultatt) > 0
+      )
 
       anlzMWRdate(
         res = fsetls()$res,
@@ -653,7 +661,11 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       locgroup <- if (length(input$locgroup) == 0) NULL else input$locgroup
       resultatt <- if (length(input$resultatt) == 0) NULL else input$resultatt
 
-      req(fsetls()$res, fsetls()$acc, param, date_range, sites)
+      req(
+        fsetls()$res, fsetls()$acc, param, date_range, sites,
+        length(locgroup_vals()) == 0 || length(input$locgroup) > 0,
+        length(resultatt_vals()) == 0 || length(input$resultatt) > 0
+      )
 
       anlzMWRsite(
         res = fsetls()$res,
@@ -684,7 +696,11 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       locgroup <- if (length(input$locgroup) == 0) NULL else input$locgroup
       resultatt <- if (length(input$resultatt) == 0) NULL else input$resultatt
 
-      req(fsetls()$res, fsetls()$acc, fsetls()$sit, param, date_range, sites)
+      req(
+        fsetls()$res, fsetls()$acc, fsetls()$sit, param, date_range, sites,
+        length(locgroup_vals()) == 0 || length(input$locgroup) > 0,
+        length(resultatt_vals()) == 0 || length(input$resultatt) > 0
+      )
 
       if (watsel == "NULL") {
         watsel <- NULL
