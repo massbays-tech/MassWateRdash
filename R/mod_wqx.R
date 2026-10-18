@@ -92,7 +92,7 @@ mod_wqx_server <- function(id, fsetls, active_tab) {
         defaultColDef = reactable::colDef(
           resizable = TRUE
         ),
-        pagination = FALSE
+        defaultPageSize = 100
       )
     })
 
