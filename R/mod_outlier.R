@@ -170,7 +170,7 @@ mod_outlier_server <- function(id, fsetls, active_tab) {
           footerStyle = list(fontWeight = "bold"),
           resizable = TRUE
         ),
-        filterable = TRUE
+        pagination = FALSE
       )
     })
 
