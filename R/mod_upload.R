@@ -433,7 +433,7 @@ mod_upload_server <- function(id, active_tab) {
       if (!any_loaded) {
         return(NULL)
       }
-      dl_btn(ns("dl_resview"), "All unique values", block = TRUE, size = "xs") |>
+      dl_btn(ns("dl_resview"), "Review Results values", block = TRUE, size = "xs") |>
         htmltools::tagAppendAttributes(
           title = "Download a spreadsheet of unique values in each results column"
         )
