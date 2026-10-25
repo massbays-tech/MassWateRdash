@@ -35,19 +35,6 @@ mod_visualize_ui <- function(id) {
         dropdown(ns("sites"), "Select sites", choices = NULL),
         conditionalPanel(
           condition = paste0(
-            'output["', ns("has_resultatt"), '"] == "TRUE"'
-          ),
-          shinyWidgets::materialSwitch(
-            ns("use_resultatt"), "Filter by result attribute",
-            value = FALSE, status = "primary"
-          ),
-          conditionalPanel(
-            condition = paste0('input["', ns("use_resultatt"), '"] == true'),
-            dropdown(ns("resultatt"), "Result attribute", choices = NULL)
-          )
-        ),
-        conditionalPanel(
-          condition = paste0(
             'output["', ns("has_locgroup"), '"] == "TRUE"'
           ),
           shinyWidgets::materialSwitch(
@@ -57,6 +44,19 @@ mod_visualize_ui <- function(id) {
           conditionalPanel(
             condition = paste0('input["', ns("use_locgroup"), '"] == true'),
             dropdown(ns("locgroup"), "Location group", choices = NULL)
+          )
+        ),
+        conditionalPanel(
+          condition = paste0(
+            'output["', ns("has_resultatt"), '"] == "TRUE"'
+          ),
+          shinyWidgets::materialSwitch(
+            ns("use_resultatt"), "Filter by result attribute",
+            value = FALSE, status = "primary"
+          ),
+          conditionalPanel(
+            condition = paste0('input["', ns("use_resultatt"), '"] == true'),
+            dropdown(ns("resultatt"), "Result attribute", choices = NULL)
           )
         ),
         conditionalPanel(
@@ -200,17 +200,29 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
     }) |>
       bindEvent(fsetls()$res, input$param)
 
+    # only the rows the MassWateR plot functions use, i.e. surface field
+    # samples, so QC rows don't add sites or result attributes that can never
+    # appear in a plot
+    plot_res <- reactive({
+      req(fsetls()$res)
+
+      fsetls()$res |>
+        MassWateR::utilMWRfiltersurface() |>
+        dplyr::filter(
+          .data$`Activity Type` %in% c("Field Msr/Obs", "Sample-Routine")
+        )
+    })
+
     # rows for the current parameter and date range, NULL until those exist
     param_rows <- reactive({
-      res <- fsetls()$res
       param <- input$param
       date_range <- input$date_range
 
-      if (is.null(res) || is.null(param) || is.null(date_range)) {
+      if (is.null(fsetls()$res) || is.null(param) || is.null(date_range)) {
         return(NULL)
       }
 
-      res |>
+      plot_res() |>
         dplyr::filter(
           .data$`Characteristic Name` == param,
           .data$`Activity Start Date` >= date_range[1],
