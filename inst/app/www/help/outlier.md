@@ -2,6 +2,6 @@ This tab is used to view potential outliers in the results data file.  See the M
 
 The controls on the left sidebar can be used to select the parameter, date range, grouping factor, and plot type.  The latter two are for the plots shown in the plot sub-tab.  A download button can be used to download an image of the visible plot if the plot sub-tab is selected.
 
-The right side shows the outliers for the selected options.  Cycle through the sub-tabs to view the results as a **plot** or displayed separately in a **table**. The third **report** sub-tab can be used to download a complete outlier report.  The report can be downloaded as a Word file with all plots included or as a zipped file with images for all plots.
+The right side shows the outliers for the selected options.  Cycle through the sub-tabs to view the results as a **plot** or displayed separately in a **table**. The third **report** sub-tab can be used to download a complete outlier report.  The report can be downloaded as a Word file with all plots included or as a zipped file with images for all plots.  Date range filters do not apply to the plots in the report.
 
 To see this text again, click the <i class="far fa-circle-question fa-lg" style="color: #007BC2;"></i> icon at the top left of the tab.

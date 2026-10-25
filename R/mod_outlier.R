@@ -124,6 +124,31 @@ mod_outlier_server <- function(id, fsetls, active_tab) {
     }) |>
       bindEvent(fsetls()$res, input$param)
 
+    # Plot title ----
+    full_date_range <- reactive({
+      req(fsetls()$res, input$param)
+      fsetls()$res |>
+        dplyr::filter(.data$`Characteristic Name` == input$param) |>
+        dplyr::pull(.data$`Activity Start Date`) |>
+        range() |>
+        as.Date()
+    })
+
+    date_filtered <- reactive({
+      req(input$date_range)
+      !isTRUE(all(as.Date(input$date_range) == full_date_range()))
+    })
+
+    plot_title <- reactive({
+      param <- input$param
+      req(param)
+
+      MassWateR::utilMWRtitle(
+        param = param,
+        dtrng = if (isTRUE(date_filtered())) as.character(input$date_range) else NULL
+      )
+    })
+
     # Plot, table ----
     output$outlier_plot <- renderPlot({
       # inputs
@@ -143,7 +168,7 @@ mod_outlier_server <- function(id, fsetls, active_tab) {
         dtrng = date_range,
         bssize = 18
       ) +
-        ggplot2::labs(title = NULL)
+        ggplot2::labs(title = plot_title())
     })
 
     output$outlier_table <- reactable::renderReactable({
@@ -240,7 +265,7 @@ mod_outlier_server <- function(id, fsetls, active_tab) {
           dtrng = date_range,
           bssize = input$plot_fontsize
         ) +
-          ggplot2::labs(title = NULL)
+          ggplot2::labs(title = plot_title())
 
         ggplot2::ggsave(
           filename = file,
@@ -260,7 +285,9 @@ mod_outlier_server <- function(id, fsetls, active_tab) {
       },
       content = function(file) {
         # inputs
-        date_range <- as.character(input$date_range)
+        # note: dtrng is intentionally omitted here, the report always
+        # covers the full date range for each parameter since the
+        # dashboard's date filter applies only to the individual plot
         group <- input$group
         type <- input$type
 
@@ -268,7 +295,6 @@ mod_outlier_server <- function(id, fsetls, active_tab) {
           fset = fsetls(),
           group = group,
           type = type,
-          dtrng = date_range,
           format = "word",
           output_dir = dirname(file),
           output_file = basename(file)
@@ -282,7 +308,7 @@ mod_outlier_server <- function(id, fsetls, active_tab) {
       },
       content = function(file) {
         # inputs
-        date_range <- as.character(input$date_range)
+        # note: dtrng is intentionally omitted here, see dl_word
         group <- input$group
         type <- input$type
 
@@ -290,7 +316,6 @@ mod_outlier_server <- function(id, fsetls, active_tab) {
           fset = fsetls(),
           group = group,
           type = type,
-          dtrng = date_range,
           format = "zip",
           output_dir = dirname(file),
           output_file = basename(file)
