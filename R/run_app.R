@@ -123,7 +123,7 @@ run_app <- function(...) {
                  background: rgba(0,0,0,0.6); color: white; padding: 5px 12px;
                  border-radius: 4px; font-size: 0.85em;",
         bsicons::bs_icon("arrow-repeat"),
-        " Loading..."
+        " Thinking..."
       ),
       tags$style(
         "html.shiny-busy #loading-indicator { display: block !important; }"

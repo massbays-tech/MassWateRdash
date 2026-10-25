@@ -228,7 +228,7 @@ mod_outlier_server <- function(id, fsetls, active_tab) {
         numericInput(
           ns("plot_fontsize"),
           "Font size",
-          value = 18,
+          value = 12,
           min = 6,
           max = 36
         ),
