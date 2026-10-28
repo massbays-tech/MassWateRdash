@@ -518,6 +518,20 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       length(vals) > 0 && !setequal(intersect(input$locgroup, vals), vals)
     })
 
+    # Grouping the Date plot by location group drops sites with no group
+    # (MassWateR can't match them), so it needs at least one row from a
+    # grouped site after the site and result attribute filters. Otherwise
+    # MassWateR errors and the plot is left blank instead.
+    has_grouped_rows <- reactive({
+      rows <- site_rows()
+      att <- resultatt_sel()
+      if (!is.null(att)) {
+        rows <- rows[rows$`Result Attribute` %in% att, ]
+      }
+
+      any(groups_of(rows$`Monitoring Location ID`) != none_lab)
+    })
+
     byresultatt_sel <- reactive({
       isTRUE(input$byresultatt) && has_resultatt()
     })
@@ -800,7 +814,8 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
 
       req(
         fsetls()$res, fsetls()$acc, param, date_range, sites,
-        is.null(resultatt) || length(resultatt) > 0
+        is.null(resultatt) || length(resultatt) > 0,
+        group != "locgroup" || has_grouped_rows()
       )
 
       anlzMWRdate(
