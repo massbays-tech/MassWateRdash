@@ -37,27 +37,13 @@ mod_visualize_ui <- function(id) {
           condition = paste0(
             'output["', ns("has_locgroup"), '"] == "TRUE"'
           ),
-          shinyWidgets::materialSwitch(
-            ns("use_locgroup"), "Filter by location group",
-            value = FALSE, status = "primary"
-          ),
-          conditionalPanel(
-            condition = paste0('input["', ns("use_locgroup"), '"] == true'),
-            dropdown(ns("locgroup"), "Location group", choices = NULL)
-          )
+          dropdown(ns("locgroup"), "Location group", choices = NULL)
         ),
         conditionalPanel(
           condition = paste0(
             'output["', ns("has_resultatt"), '"] == "TRUE"'
           ),
-          shinyWidgets::materialSwitch(
-            ns("use_resultatt"), "Filter by result attribute",
-            value = FALSE, status = "primary"
-          ),
-          conditionalPanel(
-            condition = paste0('input["', ns("use_resultatt"), '"] == true'),
-            dropdown(ns("resultatt"), "Result attribute", choices = NULL)
-          )
+          dropdown(ns("resultatt"), "Result attribute", choices = NULL)
         ),
         conditionalPanel(
           condition = paste0(
@@ -265,7 +251,14 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
     # Location group ----
     # Sites and location groups are linked both ways. A group is selected when
     # any of its sites is selected, and adding or removing a group adds or
-    # removes its sites. Sites with no group are left alone.
+    # removes its sites. Sites with no location group, or missing from the
+    # site file, fall under "None", so every site belongs to one choice.
+    none_lab <- "None"
+
+    is_blank <- function(x) {
+      is.na(x) | trimws(x) == ""
+    }
+
     site_groups <- reactive({
       sit <- fsetls()$sit
       rows <- param_rows()
@@ -274,21 +267,36 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         return(NULL)
       }
 
-      sit |>
-        dplyr::filter(
-          .data$`Monitoring Location ID` %in% rows$`Monitoring Location ID`,
-          !is.na(.data$`Location Group`)
-        ) |>
+      sitgrp <- sit |>
+        dplyr::filter(!is_blank(.data$`Location Group`)) |>
         dplyr::distinct(.data$`Monitoring Location ID`, .data$`Location Group`)
+
+      dplyr::tibble(
+        `Monitoring Location ID` = unique(rows$`Monitoring Location ID`)
+      ) |>
+        dplyr::left_join(sitgrp, by = "Monitoring Location ID") |>
+        dplyr::mutate(
+          `Location Group` = ifelse(
+            is.na(.data$`Location Group`), none_lab, .data$`Location Group`
+          )
+        )
     })
 
+    # real groups sorted with "None" last, empty when there are no real groups
+    # so the dropdown stays hidden
     locgroup_vals <- reactive({
       sg <- site_groups()
       if (is.null(sg)) {
         return(character(0))
       }
 
-      sort(unique(sg$`Location Group`))
+      grps <- unique(sg$`Location Group`)
+      real <- sort(setdiff(grps, none_lab))
+      if (length(real) == 0) {
+        return(character(0))
+      }
+
+      c(real, if (none_lab %in% grps) none_lab)
     })
 
     groups_of <- function(sites) {
@@ -304,22 +312,56 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       sg$`Monitoring Location ID`[sg$`Location Group` %in% groups]
     }
 
-    # the switch keeps its value while hidden, so also require that the
-    # current parameter has location groups to choose from
-    locgroup_on <- reactive({
-      isTRUE(input$use_locgroup) && length(locgroup_vals()) > 0
-    })
-
     output$has_locgroup <- renderText({
       paste(length(locgroup_vals()) > 0)
     })
     outputOptions(output, "has_locgroup", suspendWhenHidden = FALSE)
 
+    # Each update pushed to one dropdown comes back from the browser as an
+    # input change. With quick clicks that echo can arrive after the user has
+    # already made another change, and treating it as a user edit would push
+    # stale values back to the other dropdown. So pushed values are
+    # remembered and their echoes ignored. Entries expire in case the browser
+    # never echoes, which happens when the pushed value matches what it
+    # already has. The inputs aren't frozen since that drops clicks made
+    # before the echo arrives.
+    pushed_sites <- reactiveVal(list())
+    pushed_locgroup <- reactiveVal(list())
+
+    live_pushes <- function(rv) {
+      Filter(
+        function(p) difftime(Sys.time(), p$time, units = "secs") < 5,
+        rv()
+      )
+    }
+
+    track_push <- function(rv, val) {
+      rv(c(live_pushes(rv), list(list(val = val, time = Sys.time()))))
+    }
+
+    # drops the matching push and any older ones, the browser applies
+    # updates in order
+    is_echo <- function(rv, val) {
+      pushes <- live_pushes(rv)
+      hit <- which(vapply(pushes, function(p) setequal(p$val, val), logical(1)))
+      if (length(hit) == 0) {
+        rv(pushes)
+        return(FALSE)
+      }
+
+      rv(pushes[-seq_len(hit[1])])
+      TRUE
+    }
+
     # sites -> groups, also refreshes the choices
     locgroup_choices <- reactiveVal(NULL)
     observe({
       vals <- locgroup_vals()
-      sel <- groups_of(input$sites)
+      sel <- if (is_echo(pushed_sites, input$sites)) {
+        intersect(input$locgroup, vals)
+      } else {
+        groups_of(input$sites)
+      }
 
       if (
         identical(vals, locgroup_choices()) && setequal(sel, input$locgroup)
@@ -328,7 +370,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       }
 
       locgroup_choices(vals)
-      freezeReactiveValue(input, "locgroup")
+      track_push(pushed_locgroup, sel)
       shinyWidgets::updatePickerInput(
         inputId = "locgroup",
         choices = vals,
@@ -337,24 +379,35 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
     }) |>
       bindEvent(locgroup_vals(), input$sites, ignoreNULL = FALSE)
 
-    # groups -> sites, only acts on changes the sites don't already explain,
-    # i.e. the user editing the group dropdown
+    # groups -> sites, only acts on user edits to the group dropdown
     observe({
       sel <- input$locgroup
-      cur <- groups_of(input$sites)
+      if (is_echo(pushed_locgroup, sel)) {
+        return()
+      }
+
+      # start from the latest pushed sites if their echo hasn't arrived yet
+      pending <- live_pushes(pushed_sites)
+      base <- if (length(pending) > 0) {
+        pending[[length(pending)]]$val
+      } else {
+        input$sites
+      }
+      cur <- groups_of(base)
 
       if (setequal(sel, cur)) {
         return()
       }
 
-      sites <- setdiff(input$sites, sites_in(setdiff(cur, sel)))
+      sites <- setdiff(base, sites_in(setdiff(cur, sel)))
       sites <- union(sites, sites_in(setdiff(sel, cur)))
       valid_sites <- valid_sites_calc()
+      sites <- valid_sites[valid_sites %in% sites]
 
-      freezeReactiveValue(input, "sites")
+      track_push(pushed_sites, sites)
       shinyWidgets::updatePickerInput(
         inputId = "sites",
-        selected = valid_sites[valid_sites %in% sites]
+        selected = sites
       )
     }) |>
       bindEvent(input$locgroup, ignoreNULL = FALSE, ignoreInit = TRUE)
@@ -379,18 +432,23 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       bindEvent(locgroup_vals())
 
     # Result attribute ----
-    # The switch shows when the parameter and date range have any result
-    # attributes. The choices narrow to the selected sites, one way only since
-    # an attribute applies to rows and doesn't map onto whole sites.
-    clean_att <- function(x) {
-      x <- trimws(x)
-      sort(unique(x[!is.na(x) & x != ""]))
+    # The dropdown shows when the parameter and date range have any result
+    # attributes, with "None" for rows that have no entry. The choices narrow
+    # to the selected sites, one way only since an attribute applies to rows
+    # and doesn't map onto whole sites.
+    att_label <- function(x) {
+      ifelse(is_blank(x), none_lab, trimws(x))
+    }
+
+    att_choices <- function(x) {
+      labs <- unique(att_label(x))
+      c(sort(setdiff(labs, none_lab)), if (none_lab %in% labs) none_lab)
     }
 
     has_resultatt <- reactive({
       rows <- param_rows()
       !is.null(rows) && "Result Attribute" %in% names(rows) &&
-        length(clean_att(rows$`Result Attribute`)) > 0
+        any(!is_blank(rows$`Result Attribute`))
     })
 
     resultatt_vals <- reactive({
@@ -399,11 +457,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         return(character(0))
       }
 
-      clean_att(rows$`Result Attribute`)
-    })
-
-    resultatt_on <- reactive({
-      isTRUE(input$use_resultatt) && has_resultatt()
+      att_choices(rows$`Result Attribute`)
     })
 
     output$has_resultatt <- renderText({
@@ -433,36 +487,39 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
     }) |>
       bindEvent(resultatt_vals())
 
-    # Derived selections used for plotting/download. NULL means the filter is
-    # switched off. When on, the selection is passed to MassWateR, which
-    # drops rows with no entry. utilMWRfilter() applies sites, then result
-    # attribute, then location group, and errors on values that don't exist
-    # at that step, so each selection is intersected with what's left after
-    # the filters before it. An empty result means no data and blanks the plot.
+    # Result attribute values passed to MassWateR for plotting/download. NULL
+    # means every choice is selected, so nothing is filtered. Otherwise the
+    # selected labels are mapped back to the raw values in the selected sites'
+    # rows, with "None" mapping to the empty entries (NA matches NA in
+    # utilMWRfilter()). Only values present after the site filter are passed
+    # since MassWateR errors on any others. An empty result means no data and
+    # blanks the plot.
     resultatt_sel <- reactive({
-      if (!resultatt_on()) {
+      vals <- resultatt_vals()
+      if (length(vals) == 0) {
         return(NULL)
       }
 
-      intersect(input$resultatt, resultatt_vals())
+      sel <- intersect(input$resultatt, vals)
+      if (setequal(sel, vals)) {
+        return(NULL)
+      }
+
+      raw <- unique(site_rows()$`Result Attribute`)
+      raw[att_label(raw) %in% sel]
     })
 
-    locgroup_sel <- reactive({
-      if (!locgroup_on()) {
-        return(NULL)
-      }
-
-      rows <- site_rows()
-      if (resultatt_on()) {
-        rows <- rows |>
-          dplyr::filter(trimws(.data$`Result Attribute`) %in% resultatt_sel())
-      }
-
-      intersect(input$locgroup, groups_of(rows$`Monitoring Location ID`))
+    # Location groups are never passed to MassWateR. The linked selection
+    # already narrows the sites to exactly the selected groups, and
+    # utilMWRfilter() can't match sites with no group. This only flags
+    # whether the group selection is narrowed, for the plot title.
+    locgroup_filtered <- reactive({
+      vals <- locgroup_vals()
+      length(vals) > 0 && !setequal(intersect(input$locgroup, vals), vals)
     })
 
     byresultatt_sel <- reactive({
-      isTRUE(input$byresultatt) && length(resultatt_vals()) > 0
+      isTRUE(input$byresultatt) && has_resultatt()
     })
 
     # Plot titles ----
@@ -502,7 +559,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         param = param,
         site = if (isTRUE(sites_filtered())) sites else NULL,
         dtrng = if (isTRUE(date_filtered())) input$date_range else NULL,
-        locgroup = locgroup_sel(),
+        locgroup = if (isTRUE(locgroup_filtered())) input$locgroup else NULL,
         resultatt = resultatt_sel()
       )
     })
@@ -621,7 +678,6 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         sites <- input$sites
         thresh <- if (is.null(input$thresh)) "none" else input$thresh
         confint <- isTRUE(as.logical(input$confint))
-        locgroup <- locgroup_sel()
         resultatt <- resultatt_sel()
 
         p <- if (viz == "Season") {
@@ -634,7 +690,6 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
             type = input$type,
             dtrng = date_range,
             site = sites,
-            locgroup = locgroup,
             resultatt = resultatt,
             confint = confint,
             bssize = input$plot_fontsize
@@ -650,7 +705,6 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
             group = input$group,
             dtrng = date_range,
             site = sites,
-            locgroup = locgroup,
             resultatt = resultatt,
             confint = confint,
             bssize = input$plot_fontsize
@@ -666,7 +720,6 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
             type = input$type,
             dtrng = date_range,
             site = sites,
-            locgroup = locgroup,
             resultatt = resultatt,
             byresultatt = byresultatt_sel(),
             confint = confint,
@@ -683,7 +736,6 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
             sit = fset$sit,
             dtrng = date_range,
             site = sites,
-            locgroup = locgroup,
             resultatt = resultatt,
             addwater = watsel,
             maptype = mapsel,
@@ -712,12 +764,10 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       sites <- input$sites
       type <- input$type
       confint <- isTRUE(as.logical(input$confint))
-      locgroup <- locgroup_sel()
       resultatt <- resultatt_sel()
 
       req(
         fsetls()$res, fsetls()$acc, param, date_range, sites,
-        is.null(locgroup) || length(locgroup) > 0,
         is.null(resultatt) || length(resultatt) > 0
       )
 
@@ -730,7 +780,6 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         type = type,
         dtrng = date_range,
         site = sites,
-        locgroup = locgroup,
         resultatt = resultatt,
         confint = confint,
         bssize = 18,
@@ -747,12 +796,10 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       sites <- input$sites
       group <- input$group
       confint <- isTRUE(as.logical(input$confint))
-      locgroup <- locgroup_sel()
       resultatt <- resultatt_sel()
 
       req(
         fsetls()$res, fsetls()$acc, param, date_range, sites,
-        is.null(locgroup) || length(locgroup) > 0,
         is.null(resultatt) || length(resultatt) > 0
       )
 
@@ -765,7 +812,6 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         group = group,
         dtrng = date_range,
         site = sites,
-        locgroup = locgroup,
         resultatt = resultatt,
         confint = confint,
         bssize = 18,
@@ -782,12 +828,10 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       sites <- input$sites
       type <- input$type
       confint <- isTRUE(as.logical(input$confint))
-      locgroup <- locgroup_sel()
       resultatt <- resultatt_sel()
 
       req(
         fsetls()$res, fsetls()$acc, param, date_range, sites,
-        is.null(locgroup) || length(locgroup) > 0,
         is.null(resultatt) || length(resultatt) > 0
       )
 
@@ -800,7 +844,6 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         type = type,
         dtrng = date_range,
         site = sites,
-        locgroup = locgroup,
         resultatt = resultatt,
         byresultatt = byresultatt_sel(),
         confint = confint,
@@ -817,12 +860,10 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       sites <- input$sites
       watsel <- input$watsel
       mapsel <- input$mapsel
-      locgroup <- locgroup_sel()
       resultatt <- resultatt_sel()
 
       req(
         fsetls()$res, fsetls()$acc, fsetls()$sit, param, date_range, sites,
-        is.null(locgroup) || length(locgroup) > 0,
         is.null(resultatt) || length(resultatt) > 0
       )
 
@@ -840,7 +881,6 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         sit = fsetls()$sit,
         dtrng = date_range,
         site = sites,
-        locgroup = locgroup,
         resultatt = resultatt,
         addwater = watsel,
         maptype = mapsel,
