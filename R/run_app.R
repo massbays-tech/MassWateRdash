@@ -179,12 +179,10 @@ run_app <- function(...) {
     bslib::nav_spacer(),
 
     bslib::nav_item(
-      actionButton(
-        "open_text_size",
-        label = NULL,
-        icon = icon("gear"),
-        class = "btn btn-link",
-        title = "Text size settings"
+      tags$a(
+        href = "https://github.com/massbays-tech/MassWateRdash/issues",
+        target = "_blank",
+        "Report an issue"
       )
     ),
 
@@ -193,6 +191,16 @@ run_app <- function(...) {
         href = "https://github.com/massbays-tech/MassWateRdash",
         target = "_blank",
         "Source Code"
+      )
+    ),
+
+    bslib::nav_item(
+      actionButton(
+        "open_text_size",
+        label = NULL,
+        icon = icon("gear"),
+        class = "btn btn-link",
+        title = "Text size settings"
       )
     )
   )
