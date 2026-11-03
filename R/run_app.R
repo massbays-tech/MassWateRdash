@@ -131,7 +131,12 @@ run_app <- function(...) {
     ),
     title = span(
       img(src = "toimg/logo.png", height = "40px", style = "margin-right: 10px;"),
-      "MassWateR Dashboard"
+      "MassWateR Dashboard",
+      tags$small(
+        paste0("v", utils::packageVersion("MassWateRdash")),
+        class = "text-muted",
+        style = "font-size: 0.6em; margin-left: 6px;"
+      )
     ),
 
     bslib::nav_panel(
