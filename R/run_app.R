@@ -31,7 +31,7 @@ run_app <- function(...) {
          .fill-height { height: calc(100vh - 58px); overflow: hidden; }
          .card-scroll .card-body { overflow-y: auto; }
          .shiny-download-link:hover { filter: brightness(0.88); }
-         #show_format_modal:hover, #open_plot_download:hover { filter: brightness(0.88); }
+         #show_format_modal:hover, #open_plot_download:hover, #visualize-custom_apply:hover { filter: brightness(0.88); }
          #open_text_size { color: rgba(0, 0, 0, 0.65) !important; }
          #open_text_size:hover { color: #00A4CF !important; }
          :root { --bs-primary: #00A4CF; --bs-primary-rgb: 0, 164, 207; }

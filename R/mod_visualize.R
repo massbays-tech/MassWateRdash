@@ -56,7 +56,31 @@ mod_visualize_ui <- function(id) {
         ),
         conditionalPanel(
           condition = paste0('output["', ns("tab_name"), '"] != "Map"'),
-          selectInput(ns("thresh"), "Threshold type", choices = "none")
+          selectInput(ns("thresh"), "Threshold type", choices = "none"),
+          conditionalPanel(
+            condition = paste0('input["', ns("thresh"), '"] == "custom"'),
+            textInput(
+              ns("custom_vals"),
+              tags$span(class = "small", "Threshold values"),
+              placeholder = "e.g., 5; 8.5"
+            ),
+            textInput(
+              ns("custom_labs"),
+              tags$span(class = "small", "Threshold labels"),
+              placeholder = "e.g., Low; High"
+            ),
+            helpText(
+              "Separate multiple thresholds with semicolons. Each value needs a label."
+            ),
+            uiOutput(ns("custom_err")),
+            actionButton(
+              ns("custom_apply"),
+              "Apply thresholds",
+              width = "100%",
+              class = "mb-3",
+              style = "background-color: #64C147; border-color: #64C147; color: white;"
+            )
+          )
         ),
         conditionalPanel(
           condition = paste0(
@@ -597,20 +621,63 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
       has_marine <- nrow(thresh_rows) > 0 &&
         any(!is.na(thresh_rows$Marine_1) | !is.na(thresh_rows$Marine_2))
 
+      # built-in thresholds are the default if available, otherwise none
       choices <- c(
         if (has_fresh) "fresh",
         if (has_marine) "marine",
-        "none"
+        "none",
+        "custom"
       )
 
       freezeReactiveValue(input, "thresh")
       updateSelectInput(
         session = session,
         inputId = "thresh",
-        choices = choices
+        choices = choices,
+        selected = choices[1]
       )
+
+      # custom thresholds are unit specific, so clear them for a new parameter
+      updateTextInput(session, "custom_vals", value = "")
+      updateTextInput(session, "custom_labs", value = "")
+      custom_thresh(NULL)
+      custom_err(NULL)
     }) |>
       bindEvent(input$param)
+
+    # Custom thresholds ----
+    custom_thresh <- reactiveVal(NULL)
+    custom_err <- reactiveVal(NULL)
+
+    # applied only on click, so the plot doesn't redraw while typing. Invalid
+    # entries keep the last valid thresholds
+    observe({
+      out <- parse_custom_thresh(input$custom_vals, input$custom_labs)
+      custom_err(out$error)
+      if (is.null(out$error)) {
+        custom_thresh(out$thresh)
+      }
+    }) |>
+      bindEvent(input$custom_apply)
+
+    output$custom_err <- renderUI({
+      req(custom_err())
+      div(class = "text-danger small mb-2", custom_err())
+    })
+
+    # threshold argument for MassWateR, custom lines are added afterwards
+    thresh_arg <- function() {
+      thresh <- if (is.null(input$thresh)) "none" else input$thresh
+      if (thresh == "custom") "none" else thresh
+    }
+
+    add_thresh <- function(p) {
+      if (isTRUE(input$thresh == "custom")) {
+        add_custom_thresh(p, custom_thresh())
+      } else {
+        p
+      }
+    }
 
     output$show_conf <- renderText({
       viz <- input$viz_selected
@@ -690,7 +757,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         param <- input$param
         date_range <- as.character(input$date_range)
         sites <- input$sites
-        thresh <- if (is.null(input$thresh)) "none" else input$thresh
+        thresh <- thresh_arg()
         confint <- isTRUE(as.logical(input$confint))
         resultatt <- resultatt_sel()
 
@@ -758,6 +825,10 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
             ggplot2::labs(title = plot_title())
         }
 
+        if (viz != "Map") {
+          p <- add_thresh(p)
+        }
+
         ggplot2::ggsave(
           filename = file,
           plot = p,
@@ -772,7 +843,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
     # Plots ----
     output$season_plot <- renderPlot({
       # inputs
-      thresh <- if (is.null(input$thresh)) "none" else input$thresh
+      thresh <- thresh_arg()
       param <- input$param
       date_range <- as.character(input$date_range)
       sites <- input$sites
@@ -785,7 +856,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         is.null(resultatt) || length(resultatt) > 0
       )
 
-      anlzMWRseason(
+      add_thresh(anlzMWRseason(
         res = fsetls()$res,
         param = param,
         acc = fsetls()$acc,
@@ -798,13 +869,13 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         confint = confint,
         bssize = 18,
         warn = FALSE
-      ) +
+      )) +
         ggplot2::labs(title = plot_title())
     })
 
     output$date_plot <- renderPlot({
       # inputs
-      thresh <- if (is.null(input$thresh)) "none" else input$thresh
+      thresh <- thresh_arg()
       param <- input$param
       date_range <- as.character(input$date_range)
       sites <- input$sites
@@ -818,7 +889,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         group != "locgroup" || has_grouped_rows()
       )
 
-      anlzMWRdate(
+      add_thresh(anlzMWRdate(
         res = fsetls()$res,
         param = param,
         acc = fsetls()$acc,
@@ -831,13 +902,13 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         confint = confint,
         bssize = 18,
         warn = FALSE
-      ) +
+      )) +
         ggplot2::labs(title = plot_title())
     })
 
     output$site_plot <- renderPlot({
       # inputs
-      thresh <- if (is.null(input$thresh)) "none" else input$thresh
+      thresh <- thresh_arg()
       param <- input$param
       date_range <- as.character(input$date_range)
       sites <- input$sites
@@ -850,7 +921,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         is.null(resultatt) || length(resultatt) > 0
       )
 
-      anlzMWRsite(
+      add_thresh(anlzMWRsite(
         res = fsetls()$res,
         param = param,
         acc = fsetls()$acc,
@@ -864,7 +935,7 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         confint = confint,
         bssize = 18,
         warn = FALSE
-      ) +
+      )) +
         ggplot2::labs(title = plot_title())
     })
 
