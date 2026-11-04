@@ -60,7 +60,9 @@ mod_upload_ui <- function(id) {
         ),
         shinyWidgets::materialSwitch(ns("tester"), "Test mode", FALSE)
       ),
-      bslib::layout_columns(
+      bslib::layout_column_wrap(
+        width = "200px",
+        heights_equal = "row",
         fill = FALSE,
         bslib::value_box(
           title = "Results Data",
@@ -90,6 +92,7 @@ mod_upload_ui <- function(id) {
       ),
       bslib::card(
         bslib::card_header("Data Validation Messages"),
+        min_height = 250,
         uiOutput(ns("validation_messages")),
         mod_upload_repair_ui(ns("resdat_editor"), "resdat"),
         mod_upload_repair_ui(ns("accdat_editor"), "accdat"),
