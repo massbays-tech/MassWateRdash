@@ -60,6 +60,31 @@ parse_custom_thresh <- function(values, labels) {
   )
 }
 
+#' Show plot errors in the app
+#'
+#' @description `show_plot_errors()` evaluates a plot expression and passes
+#' any error on as a `shiny::safeError()`. Shiny Server sanitizes errors by
+#' default, which hides informative MassWateR messages (e.g., unit
+#' mismatches) behind a generic message.
+#'
+#' @param expr Expression that creates a plot.
+#'
+#' @return The value of `expr`.
+#'
+#' @noRd
+show_plot_errors <- function(expr) {
+  tryCatch(
+    expr,
+    error = function(e) {
+      # req() and validate() conditions are handled by shiny as usual
+      if (inherits(e, "shiny.silent.error") || inherits(e, "validation")) {
+        stop(e)
+      }
+      stop(shiny::safeError(e))
+    }
+  )
+}
+
 #' Add custom threshold lines to a plot
 #'
 #' @description `add_custom_thresh()` adds horizontal threshold lines to a

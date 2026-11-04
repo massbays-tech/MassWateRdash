@@ -856,21 +856,23 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         is.null(resultatt) || length(resultatt) > 0
       )
 
-      add_thresh(anlzMWRseason(
-        res = fsetls()$res,
-        param = param,
-        acc = fsetls()$acc,
-        sit = fsetls()$sit,
-        thresh = thresh,
-        type = type,
-        dtrng = date_range,
-        site = sites,
-        resultatt = resultatt,
-        confint = confint,
-        bssize = 18,
-        warn = FALSE
-      )) +
-        ggplot2::labs(title = plot_title())
+      show_plot_errors({
+        add_thresh(anlzMWRseason(
+          res = fsetls()$res,
+          param = param,
+          acc = fsetls()$acc,
+          sit = fsetls()$sit,
+          thresh = thresh,
+          type = type,
+          dtrng = date_range,
+          site = sites,
+          resultatt = resultatt,
+          confint = confint,
+          bssize = 18,
+          warn = FALSE
+        )) +
+          ggplot2::labs(title = plot_title())
+      })
     })
 
     output$date_plot <- renderPlot({
@@ -889,21 +891,23 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         group != "locgroup" || has_grouped_rows()
       )
 
-      add_thresh(anlzMWRdate(
-        res = fsetls()$res,
-        param = param,
-        acc = fsetls()$acc,
-        sit = fsetls()$sit,
-        thresh = thresh,
-        group = group,
-        dtrng = date_range,
-        site = sites,
-        resultatt = resultatt,
-        confint = confint,
-        bssize = 18,
-        warn = FALSE
-      )) +
-        ggplot2::labs(title = plot_title())
+      show_plot_errors({
+        add_thresh(anlzMWRdate(
+          res = fsetls()$res,
+          param = param,
+          acc = fsetls()$acc,
+          sit = fsetls()$sit,
+          thresh = thresh,
+          group = group,
+          dtrng = date_range,
+          site = sites,
+          resultatt = resultatt,
+          confint = confint,
+          bssize = 18,
+          warn = FALSE
+        )) +
+          ggplot2::labs(title = plot_title())
+      })
     })
 
     output$site_plot <- renderPlot({
@@ -921,22 +925,24 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         is.null(resultatt) || length(resultatt) > 0
       )
 
-      add_thresh(anlzMWRsite(
-        res = fsetls()$res,
-        param = param,
-        acc = fsetls()$acc,
-        sit = fsetls()$sit,
-        thresh = thresh,
-        type = type,
-        dtrng = date_range,
-        site = sites,
-        resultatt = resultatt,
-        byresultatt = byresultatt_sel(),
-        confint = confint,
-        bssize = 18,
-        warn = FALSE
-      )) +
-        ggplot2::labs(title = plot_title())
+      show_plot_errors({
+        add_thresh(anlzMWRsite(
+          res = fsetls()$res,
+          param = param,
+          acc = fsetls()$acc,
+          sit = fsetls()$sit,
+          thresh = thresh,
+          type = type,
+          dtrng = date_range,
+          site = sites,
+          resultatt = resultatt,
+          byresultatt = byresultatt_sel(),
+          confint = confint,
+          bssize = 18,
+          warn = FALSE
+        )) +
+          ggplot2::labs(title = plot_title())
+      })
     })
 
     output$map_plot <- renderPlot({
@@ -960,20 +966,22 @@ mod_visualize_server <- function(id, fsetls, active_tab) {
         mapsel <- NULL
       }
 
-      anlzMWRmap(
-        res = fsetls()$res,
-        param = param,
-        acc = fsetls()$acc,
-        sit = fsetls()$sit,
-        dtrng = date_range,
-        site = sites,
-        resultatt = resultatt,
-        addwater = watsel,
-        maptype = mapsel,
-        bssize = 18,
-        warn = FALSE
-      ) +
-        ggplot2::labs(title = plot_title())
+      show_plot_errors({
+        anlzMWRmap(
+          res = fsetls()$res,
+          param = param,
+          acc = fsetls()$acc,
+          sit = fsetls()$sit,
+          dtrng = date_range,
+          site = sites,
+          resultatt = resultatt,
+          addwater = watsel,
+          maptype = mapsel,
+          bssize = 18,
+          warn = FALSE
+        ) +
+          ggplot2::labs(title = plot_title())
+      })
     })
   })
 }
