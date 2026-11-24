@@ -3,3 +3,6 @@
 .RData
 .Ruserdata
 /data-raw/TEST_*
+
+/.quarto/
+**/*.quarto_ipynb

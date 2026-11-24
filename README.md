@@ -31,3 +31,31 @@ remotes::install_github("massbays-tech/MassWateRdash")
 library(MassWateRdash)
 run_app()
 ```
+
+## Workflow
+
+This diagram shows which input files are needed to populate each tab of the dashboard. All files are uploaded on the **Upload & Validate** tab, where they are checked by MassWateR. Each tab appears in the navigation bar once its required files have been uploaded and validated. Files can also be converted from another format before upload, or the example files can be loaded with test mode.
+
+```mermaid
+flowchart LR
+    files["<b>Input files (.xlsx)</b><br/>Results<br/>DQO Accuracy<br/>DQO Frequency & Completeness<br/>Sites<br/>WQX Meta<br/><i>Censored (optional)</i>"]
+
+    conv(["Convert from another format"]) -.-> files
+    test(["Test mode (example files)"]) -.-> upload
+
+    files --> upload["1 Upload & Validate<br/>MassWateR checks each file"]
+
+    upload --> outlier["<b>2 Outlier assessment</b><br/>Results + Accuracy"]
+    upload --> qc["<b>3 QC reporting</b><br/>Results + Accuracy +<br/>Frequency & Completeness<br/><i>Censored optional</i>"]
+    upload --> wqxtab["<b>4 WQX output</b><br/>Results + Accuracy +<br/>Sites + WQX Meta"]
+    upload --> viz["<b>5 Visualize</b><br/>Results + Accuracy + Sites"]
+
+    classDef file fill:#E6F6FB,stroke:#00A4CF,color:#212529
+    classDef opt fill:#FFFFFF,stroke:#00A4CF,stroke-dasharray:4 3,color:#212529
+    classDef tab fill:#EDF8E8,stroke:#64C147,color:#212529
+    class files file
+    class conv,test opt
+    class upload,outlier,qc,wqxtab,viz tab
+```
+
+Each tab box lists the files it needs. Dashed boxes and arrows are optional. The DQO Accuracy file is needed for every tab because MassWateR uses its quantitation limits to fill in results reported below detection or above quantitation. The Sites file provides the site coordinates and location groups used by the WQX output and the Visualize plots and map.
