@@ -146,3 +146,21 @@ test_that("format_log works", {
     div(HTML("foo<br>bar"))
   )
 })
+
+test_that("write_frecom_xlsx writes a file readMWRfrecom can read", {
+  frecompth <- system.file(
+    "extdata/ExampleDQOFrequencyCompleteness.xlsx",
+    package = "MassWateR"
+  )
+  frecomdat <- MassWateR::readMWRfrecom(frecompth, runchk = FALSE)
+
+  pth <- tempfile(fileext = ".xlsx")
+  write_frecom_xlsx(frecomdat, pth)
+
+  out <- suppressMessages(MassWateR::readMWRfrecom(pth))
+  expect_equal(
+    as.data.frame(out),
+    as.data.frame(frecomdat),
+    ignore_attr = TRUE
+  )
+})

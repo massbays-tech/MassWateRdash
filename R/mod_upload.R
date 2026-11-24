@@ -407,19 +407,24 @@ mod_upload_server <- function(id, active_tab) {
       content = function(file) {
         fls <- fsetls()
         file_map <- list(
-          "results.csv" = fls$res,
-          "accuracy.csv" = fls$acc,
-          "frequency_completeness.csv" = fls$frecom,
-          "sites.csv" = fls$sit,
-          "wqx_metadata.csv" = fls$wqx,
-          "censored.csv" = fls$cens
+          "results.xlsx" = fls$res,
+          "accuracy.xlsx" = fls$acc,
+          "frequency_completeness.xlsx" = fls$frecom,
+          "sites.xlsx" = fls$sit,
+          "wqx_metadata.xlsx" = fls$wqx,
+          "censored.xlsx" = fls$cens
         )
         tmp_dir <- tempfile(pattern = "masswater_dl_")
         dir.create(tmp_dir)
         for (nm in names(file_map)) {
           df <- file_map[[nm]]
-          if (!is.null(df)) {
-            write.csv(df, file.path(tmp_dir, nm), row.names = FALSE)
+          if (is.null(df)) {
+            next
+          }
+          if (nm == "frequency_completeness.xlsx") {
+            write_frecom_xlsx(df, file.path(tmp_dir, nm))
+          } else {
+            writexl::write_xlsx(df, file.path(tmp_dir, nm))
           }
         }
         old_wd <- setwd(tmp_dir)

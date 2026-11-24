@@ -207,3 +207,39 @@ format_log <- function(msg) {
   lines <- lines[nchar(trimws(lines)) > 0]
   div(HTML(paste(lines, collapse = "<br>")))
 }
+
+#' Write frequency and completeness data to Excel
+#'
+#' @description `write_frecom_xlsx()` writes the DQO frequency and completeness
+#' data in the layout of the MassWateR template, so the file can be uploaded
+#' again. The template has a two-row header, with "Frequency %" and
+#' "Completeness %" above the column names and no name for the completeness
+#' column. A plain export would flatten this and fail `readMWRfrecom()`.
+#'
+#' @param frecomdat Dataframe. Frequency and completeness data as returned by
+#' `MassWateR::readMWRfrecom()`.
+#' @param path String. Path to the output .xlsx file.
+#'
+#' @return The path to the file, invisibly.
+#'
+#' @noRd
+write_frecom_xlsx <- function(frecomdat, path) {
+  ncl <- ncol(frecomdat)
+  cmp <- which(names(frecomdat) == "% Completeness")
+
+  hdr1 <- rep(NA_character_, ncl)
+  hdr1[2] <- "Frequency %"
+  hdr1[cmp] <- "Completeness %"
+
+  hdr2 <- names(frecomdat)
+  hdr2[cmp] <- NA_character_
+
+  body <- as.data.frame(
+    lapply(frecomdat, function(x) ifelse(is.na(x), NA_character_, as.character(x)))
+  )
+  out <- rbind(hdr1, hdr2, as.matrix(body))
+  out <- as.data.frame(out)
+
+  writexl::write_xlsx(out, path, col_names = FALSE)
+  invisible(path)
+}
