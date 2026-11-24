@@ -4,7 +4,7 @@ This tab is used to upload and format data used for the rest of the dashboard. F
 2. Summary of data quality objectives that describe quality control **accuracy**, **frequency**, and **completeness** measures for data in the results file. These are separate files, one for accuracy and another for frequency and completeness.
 3. A **site metadata** file, including location names, latitude, longitude, and additional grouping factors for sites.
 4. A **WQX metadata** file required for generating output to facilitate data upload to WQX. 
-5. Optional information on the number of **censored** or missing observations by parameter, used only in the quality control report. 
+5. Optional information on the number of **censored** or missing observations by parameter, used only for the completeness checks on the QC reporting tab and in the quality control report. 
 
 The diagram below shows which files are needed for each tab.  Each tab appears in the navigation bar once its required files have been uploaded and validated.
 
@@ -14,7 +14,7 @@ Choosing the option to **convert from another format** opens up a box to convert
 
 Uploading data files will run the standard suite of checks used by MassWateR that ensure the data are the correct format.  Please see the <a href="https://massbays-tech.github.io/MassWateR/articles/inputs.html" target="_blank">inputs vignette</a> for more information on these formats and the checks that are applied. Templates are available on the package's <a href="https://massbays-tech.github.io/MassWateR/RESOURCES.html" target="_blank">resources</a> page. An interactive popup will appear if the data require correction.  Follow the on-screen prompts to correct the data, then click "Try upload again" to load the corrected data from within the app.
 
-Input data can be downloaded in a zipped folder once uploaded by clicking the **Download data** button.  The button is only visible after data are uploaded.
+Input data can be downloaded in a zipped folder once uploaded by clicking the **Download data** button.  The button is only visible after data are uploaded. The folder contains one .xlsx file for each uploaded data type, including any corrections made in the app, and the files can be uploaded again. Some values may differ from the original files because MassWateR standardizes them when the data are read (e.g., WQX parameter names are converted to simple names).
 
 Once the results data are uploaded, a spreadsheet can be downloaded that shows the unique values in each column by clicking the download button in the status box for the upload.  See the <a href="https://massbays-tech.github.io/MassWateR/reference/readMWRresultsview.html" target="_blank">help file</a> for the corresponding MassWateR function for more information. 
 
